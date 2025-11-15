@@ -200,9 +200,8 @@ export const PersistentTabBar = () => {
     if (tabIndex >= 0) {
       // 🎯 PREDICTIVE animation - move bubble immediately before navigation!
       bubbleX.value = withSpring(tabIndex * tabWidth, {
-        damping: 15,
-        stiffness: 200,
-        mass: 0.5,
+        damping: 12,
+        stiffness: 150,
       });
 
       // Update colors immediately
@@ -211,8 +210,8 @@ export const PersistentTabBar = () => {
 
       // Bounce effect
       bubbleScale.value = withSequence(
-        withSpring(1.15, { damping: 10, stiffness: 500 }),
-        withSpring(1, { damping: 12, stiffness: 250 }),
+        withSpring(1.2, { damping: 8, stiffness: 400 }),
+        withSpring(1, { damping: 10, stiffness: 200 }),
       );
 
       // Update last visited tab

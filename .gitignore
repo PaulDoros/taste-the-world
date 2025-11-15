@@ -8,7 +8,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-
+README.md
+STEPS.md
+ANIMATIONS.md
 # Native
 .kotlin/
 *.orig.*

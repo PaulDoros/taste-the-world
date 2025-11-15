@@ -1,16 +1,22 @@
-import { Tabs } from "expo-router";
+import { Tabs } from 'expo-router';
 
 /**
  * Tab Layout Configuration
- * Uses PersistentTabBar for navigation (shows on all screens)
+ * Uses PersistentTabBar for navigation (defined in app/_layout.tsx)
  */
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          display: "none", // Hide default tab bar - we use PersistentTabBar instead
+        tabBarStyle: { display: 'none' }, // Hide default tab bar, using PersistentTabBar instead
+        // Tab transition animations
+        animation: 'shift',
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 200,
+          },
         },
       }}
     >
@@ -18,7 +24,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Explore",
+          title: 'Explore',
         }}
       />
 
@@ -26,7 +32,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="shopping-list"
         options={{
-          title: "Shopping",
+          title: 'Shopping',
         }}
       />
 
@@ -34,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="pantry"
         options={{
-          title: "Pantry",
+          title: 'Pantry',
         }}
       />
 
@@ -42,7 +48,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
+          title: 'History',
         }}
       />
 
@@ -50,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: 'Settings',
         }}
       />
     </Tabs>
