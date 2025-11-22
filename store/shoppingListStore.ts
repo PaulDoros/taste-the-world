@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ingredient } from '@/types';
 
 /**
@@ -37,78 +39,87 @@ interface ShoppingListStore {
  * Shopping List Store
  * Manages shopping list items with Zustand
  */
-export const useShoppingListStore = create<ShoppingListStore>((set, get) => ({
-  items: [],
+export const useShoppingListStore = create<ShoppingListStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
 
-  // Add a single item
-  addItem: (item) => {
-    const newItem: ShoppingListItem = {
-      ...item,
-      id: `${item.recipeId}-${item.name}-${Date.now()}`, // Unique ID
-      checked: false,
-      addedAt: Date.now(),
-    };
+      // Add a single item
+      addItem: (item) => {
+        const newItem: ShoppingListItem = {
+          ...item,
+          id: `${item.recipeId}-${item.name}-${Date.now()}`, // Unique ID
+          checked: false,
+          addedAt: Date.now(),
+        };
 
-    set((state) => ({
-      items: [...state.items, newItem],
-    }));
-  },
+        set((state) => ({
+          items: [...state.items, newItem],
+        }));
+      },
 
-  // Add multiple items (from a recipe)
-  addMultipleItems: (items) => {
-    const newItems: ShoppingListItem[] = items.map((item) => ({
-      ...item,
-      id: `${item.recipeId}-${item.name}-${Date.now()}`,
-      checked: false,
-      addedAt: Date.now(),
-    }));
+      // Add multiple items (from a recipe)
+      addMultipleItems: (items) => {
+        const baseTimestamp = Date.now();
+        const newItems: ShoppingListItem[] = items.map((item, index) => ({
+          ...item,
+          id: `${item.recipeId}-${item.name}-${baseTimestamp}-${index}`,
+          checked: false,
+          addedAt: baseTimestamp,
+        }));
 
-    set((state) => ({
-      items: [...state.items, ...newItems],
-    }));
-  },
+        set((state) => ({
+          items: [...state.items, ...newItems],
+        }));
+      },
 
-  // Remove an item
-  removeItem: (id) => {
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== id),
-    }));
-  },
+      // Remove an item
+      removeItem: (id) => {
+        set((state) => ({
+          items: state.items.filter((item) => item.id !== id),
+        }));
+      },
 
-  // Toggle item checked status
-  toggleItemChecked: (id) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      ),
-    }));
-  },
+      // Toggle item checked status
+      toggleItemChecked: (id) => {
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === id ? { ...item, checked: !item.checked } : item
+          ),
+        }));
+      },
 
-  // Clear all checked items
-  clearCheckedItems: () => {
-    set((state) => ({
-      items: state.items.filter((item) => !item.checked),
-    }));
-  },
+      // Clear all checked items
+      clearCheckedItems: () => {
+        set((state) => ({
+          items: state.items.filter((item) => !item.checked),
+        }));
+      },
 
-  // Clear all items
-  clearAllItems: () => {
-    set({ items: [] });
-  },
+      // Clear all items
+      clearAllItems: () => {
+        set({ items: [] });
+      },
 
-  // Get total item count
-  getItemCount: () => {
-    return get().items.length;
-  },
+      // Get total item count
+      getItemCount: () => {
+        return get().items.length;
+      },
 
-  // Get checked item count
-  getCheckedItemCount: () => {
-    return get().items.filter((item) => item.checked).length;
-  },
+      // Get checked item count
+      getCheckedItemCount: () => {
+        return get().items.filter((item) => item.checked).length;
+      },
 
-  // Get unchecked item count
-  getUncheckedItemCount: () => {
-    return get().items.filter((item) => !item.checked).length;
-  },
-}));
+      // Get unchecked item count
+      getUncheckedItemCount: () => {
+        return get().items.filter((item) => !item.checked).length;
+      },
+    }),
+    {
+      name: 'shopping-list-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
 

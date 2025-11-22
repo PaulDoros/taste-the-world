@@ -22,8 +22,30 @@ configureReanimatedLogger({
   strict: false, // Disable strict mode warnings for production-like behavior
 });
 
+// Suppress React Native Web deprecation warning for pointerEvents
+// This is a known issue in react-native-web that doesn't affect functionality
+// The warning appears during SSR but doesn't impact app behavior
+if (__DEV__) {
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    const message = args[0];
+    if (
+      typeof message === 'string' &&
+      message.includes('props.pointerEvents is deprecated')
+    ) {
+      // Suppress this specific warning from react-native-web
+      return;
+    }
+    originalWarn.apply(console, args);
+  };
+}
+
 import { useColorScheme } from "@/components/useColorScheme";
 import { PersistentTabBar } from "@/components/PersistentTabBar";
+import { ConvexProvider } from "convex/react";
+import { convex } from "@/lib/convex";
+import { TamaguiProvider } from "tamagui";
+import config from "../tamagui.config";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -66,38 +88,63 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="country/[id]"
-          options={{
-            animation: "slide_from_right",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="recipe/[id]"
-          options={{
-            animation: "slide_from_right",
-            headerShown: false,
-          }}
-        />
-      </Stack>
-      {/* Persistent Tab Bar - Shows on all screens */}
-      {/* <PersistentTabBar /> */}
-      <PersistentTabBar />
-    </ThemeProvider>
+    <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
+      <ConvexProvider client={convex}>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: "modal",
+              animation: "slide_from_bottom",
+            }}
+          />
+          <Stack.Screen
+            name="country/[id]"
+            options={{
+              animation: "slide_from_right",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="recipe/[id]"
+            options={{
+              animation: "slide_from_right",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="country-recipes"
+            options={{
+              animation: "slide_from_right",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="auth/login"
+            options={{
+              animation: "slide_from_right",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="auth/signup"
+            options={{
+              animation: "slide_from_right",
+              headerShown: false,
+            }}
+          />
+        </Stack>
+        {/* Persistent Tab Bar - Shows on all screens */}
+        {/* <PersistentTabBar /> */}
+        <PersistentTabBar />
+      </ThemeProvider>
+    </ConvexProvider>
+    </TamaguiProvider>
   );
 }

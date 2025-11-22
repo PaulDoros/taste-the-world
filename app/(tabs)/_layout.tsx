@@ -20,9 +20,17 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* Home / Explore Countries Tab */}
+      {/* Home Tab */}
       <Tabs.Screen
         name="index"
+        options={{
+          title: 'Home',
+        }}
+      />
+
+      {/* Explore Tab */}
+      <Tabs.Screen
+        name="explore"
         options={{
           title: 'Explore',
         }}

@@ -1,160 +1,180 @@
-import { useState, useCallback } from "react";
-import { View, Text, FlatList, RefreshControl } from "react-native";
+import { useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+} from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Country } from '@/types';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useCountries } from '@/hooks/useCountries';
+import { useAuth } from '@/hooks/useAuth';
+import { useFeaturedContent } from '@/hooks/useFeaturedContent';
+import { haptics } from '@/utils/haptics';
+import { HomeHero } from '@/components/home/HomeHero';
+import { FeaturedSection } from '@/components/home/FeaturedSection';
+import { RegionGrid } from '@/components/home/RegionGrid';
+import { AuthCTA } from '@/components/home/AuthCTA';
 
-import { CountryCard } from "@/components/CountryCard";
-import { SearchBar } from "@/components/SearchBar";
-import { FilterBar } from "@/components/FilterBar";
-import { StaggeredListItem } from "@/components/StaggeredList";
-import { SkeletonGrid } from "@/components/SkeletonLoader";
-import { Country } from "@/types";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { isPremiumCountry } from "@/constants/Config";
-import { useCountries } from "@/hooks/useCountries";
-import { haptics } from "@/utils/haptics";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-
-// Define filter types
-type RegionFilter =
-  | "All"
-  | "Africa"
-  | "Americas"
-  | "Asia"
-  | "Europe"
-  | "Oceania";
-type PremiumFilter = "All" | "Free" | "Premium";
-
-export default function CountryExplorerScreen() {
+/**
+ * Home Screen
+ * Main landing page with featured content, quick actions, and personalized experience
+ *
+ * Architecture:
+ * - Separates data fetching logic into custom hooks (useFeaturedContent)
+ * - UI components are pure and memoized (HomeHero, FeaturedSection, etc.)
+ * - Business logic extracted to hooks and utilities
+ * - Performance optimized with memoization and efficient algorithms
+ */
+export default function HomeScreen() {
   const { countries, loading, error, refetch } = useCountries();
-  const [userIsPremium] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Filter states
-  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>("All");
-  const [selectedPremium, setSelectedPremium] = useState<PremiumFilter>("All");
+  const { isAuthenticated, user } = useAuth();
+  const {
+    featuredCountries,
+    featuredRecipes,
+    loadingRecipes,
+    recipesError,
+    getRegionCount,
+    refetchRecipes,
+  } = useFeaturedContent(countries);
 
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
-  const insets = useSafeAreaInsets(); // Get actual safe area insets
-  const tabBarHeight = useBottomTabBarHeight();
-  // Calculate bottom padding: tab bar (90px) + safe area bottom + extra space (30px)
-  const bottomPadding = tabBarHeight + insets.bottom + 16;
+  const colors = Colors[colorScheme ?? 'light'];
+  const insets = useSafeAreaInsets();
 
-  // Pull to refresh
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    haptics.light();
-    await refetch();
-    haptics.success();
-    setRefreshing(false);
-  }, [refetch]);
-
-  // Clear all filters
-  const handleClearAllFilters = () => {
-    setSelectedRegion("All");
-    setSelectedPremium("All");
-    setSearchQuery("");
-    haptics.light();
-  };
-
-  // Filter countries based on search, region, and premium status
-  const filteredCountries = countries.filter((country) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        country.name.common.toLowerCase().includes(query) ||
-        country.name.official.toLowerCase().includes(query) ||
-        country.region.toLowerCase().includes(query) ||
-        country.capital?.[0]?.toLowerCase().includes(query);
-
-      if (!matchesSearch) return false;
-    }
-
-    // Region filter
-    if (selectedRegion !== "All") {
-      if (country.region !== selectedRegion) return false;
-    }
-
-    // Premium filter
-    if (selectedPremium !== "All") {
-      const isCountryPremium = isPremiumCountry(country.name.common);
-      if (selectedPremium === "Free" && isCountryPremium) return false;
-      if (selectedPremium === "Premium" && !isCountryPremium) return false;
-    }
-
-    return true;
-  });
-
-  const handleCountryPress = (country: Country) => {
-    const needsPremium = isPremiumCountry(country.name.common);
-
-    if (needsPremium && !userIsPremium) {
-      haptics.warning();
-      alert("🔒 Upgrade to Premium to access " + country.name.common);
-    } else {
+  // Memoized handlers to prevent unnecessary re-renders
+  const handleCountryPress = useCallback(
+    (country: Country) => {
       haptics.light();
       router.push(`/country/${country.cca2}` as any);
-    }
-  };
+    },
+    [router]
+  );
 
+  const handleRecipePress = useCallback(
+    (recipeId: string) => {
+      haptics.light();
+      router.push(`/recipe/${recipeId}` as any);
+    },
+    [router]
+  );
+
+  const handleBrowseAll = useCallback(() => {
+    haptics.medium();
+    router.push('/(tabs)/explore' as any);
+  }, [router]);
+
+  const onRefresh = useCallback(async () => {
+    haptics.light();
+    await Promise.all([refetch(), refetchRecipes()]);
+    haptics.success();
+  }, [refetch, refetchRecipes]);
+
+  // Enhanced loading state with skeleton-style placeholders
   if (loading && countries.length === 0) {
     return (
       <SafeAreaView
         className="flex-1"
         style={{ backgroundColor: colors.background }}
-        edges={["top", "left", "right"]}
+        edges={['top']}
       >
-        {/* Header */}
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
-        >
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 32,
-              fontWeight: "700",
-              letterSpacing: -0.5,
-              marginBottom: 4,
-            }}
-          >
-            Explore Countries
-          </Text>
-          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-            Discover authentic cuisines from around the world
-          </Text>
-        </View>
+        <View className="flex-1 px-5 pt-6 pb-10 justify-between">
+          {/* Skeleton content */}
+          <View className="gap-6">
+            {/* Hero skeleton */}
+            <View className="h-40 rounded-3xl bg-slate-200 dark:bg-slate-700 mb-2" />
 
-        {/* Skeleton Loader */}
-        <SkeletonGrid count={6} />
+            {/* Featured skeleton row */}
+            <View className="gap-3">
+              <View className="h-4 w-32 rounded-full bg-slate-200 dark:bg-slate-700" />
+              <View className="flex-row gap-3">
+                <View className="flex-1 h-32 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                <View className="flex-1 h-32 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+              </View>
+            </View>
+
+            {/* Region skeleton */}
+            <View className="gap-3">
+              <View className="h-4 w-40 rounded-full bg-slate-200 dark:bg-slate-700" />
+              <View className="flex-row flex-wrap gap-3">
+                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+              </View>
+            </View>
+          </View>
+
+          {/* Loader + label */}
+          <View className="items-center">
+            <ActivityIndicator color={colors.tint} />
+            <Text
+              className="mt-3 text-sm"
+              style={{ color: colors.text }}
+              accessibilityLabel="Loading content"
+            >
+              Getting things ready for you...
+            </Text>
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
 
-  if (error) {
+  // Enhanced error state with card-style message
+  if (error && countries.length === 0) {
     return (
-      <View
-        className="flex-1 items-center justify-center px-6"
+      <SafeAreaView
+        className="flex-1"
         style={{ backgroundColor: colors.background }}
+        edges={['top']}
       >
-        <Text
-          className="text-lg font-bold mb-2"
-          style={{ color: colors.error }}
-        >
-          Oops!
-        </Text>
-        <Text className="text-center" style={{ color: colors.text }}>
-          {error}
-        </Text>
-      </View>
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="w-full rounded-3xl border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/50 px-5 py-6">
+            <Text
+              className="text-lg font-bold mb-1"
+              style={{ color: colors.error }}
+              accessibilityRole="alert"
+            >
+              Oops, something went wrong
+            </Text>
+            <Text className="text-xs mb-3" style={{ color: colors.text }}>
+              We couldn&apos;t load your content. Check your connection and try
+              again.
+            </Text>
+
+            {!!error && (
+              <Text
+                className="text-xs mb-4"
+                style={{ color: colors.text }}
+                numberOfLines={2}
+              >
+                {String(error)}
+              </Text>
+            )}
+
+            <Pressable
+              onPress={onRefresh}
+              className="self-start px-6 py-3 rounded-xl mt-1 shadow-sm"
+              style={{ backgroundColor: colors.tint }}
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading"
+            >
+              <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                Try again
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -162,120 +182,62 @@ export default function CountryExplorerScreen() {
     <SafeAreaView
       className="flex-1"
       style={{ backgroundColor: colors.background }}
-      edges={["top", "left", "right"]} // Don't apply to bottom - let FlatList handle it
+      edges={['top']}
     >
-      {/* Header */}
-      <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
-      >
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 32,
-            fontWeight: "700",
-            letterSpacing: -0.5,
-            marginBottom: 4,
-          }}
-        >
-          Explore Countries
-        </Text>
-        <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-          Discover authentic cuisines from around the world
-        </Text>
-      </View>
-
-      {/* Modern Search Bar Component */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search countries, capitals, regions..."
-        colors={colors}
-      />
-
-      {/* Modern Filter Bar Component */}
-      <FilterBar
-        selectedRegion={selectedRegion}
-        selectedPremium={selectedPremium}
-        onRegionChange={setSelectedRegion}
-        onPremiumChange={setSelectedPremium}
-        onClearAll={handleClearAllFilters}
-        colors={colors}
-      />
-
-      {/* Results Count */}
-      {(searchQuery.length > 0 ||
-        selectedRegion !== "All" ||
-        selectedPremium !== "All") && (
-        <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-          <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
-            {filteredCountries.length}{" "}
-            {filteredCountries.length === 1 ? "country" : "countries"} found
-          </Text>
-        </View>
-      )}
-
-      {/* Countries Grid */}
-      <FlatList
-        data={filteredCountries}
-        keyExtractor={(item) => item.cca2}
-        numColumns={2}
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: 350, // Dynamic: tab bar + safe area + extra space
-        }}
-        columnWrapperStyle={{
-          gap: 12,
-        }}
-        renderItem={({ item, index }) => (
-          <StaggeredListItem index={index}>
-            <CountryCard
-              country={item}
-              isPremium={isPremiumCountry(item.name.common)}
-              onPress={() => handleCountryPress(item)}
-            />
-          </StaggeredListItem>
-        )}
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={loading || loadingRecipes}
             onRefresh={onRefresh}
             tintColor={colors.tint}
             colors={[colors.tint]}
           />
         }
-        ListEmptyComponent={
-          <View style={{ alignItems: "center", paddingTop: 40 }}>
-            <FontAwesome5
-              name="search"
-              size={48}
-              color={colors.text}
-              style={{ opacity: 0.2 }}
-            />
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 16,
-                marginTop: 16,
-                opacity: 0.6,
-              }}
-            >
-              No countries found
-            </Text>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 14,
-                marginTop: 4,
-                opacity: 0.4,
-              }}
-            >
-              Try adjusting your search or filters
-            </Text>
-          </View>
-        }
-      />
+        contentContainerStyle={{
+          paddingBottom: 100 + insets.bottom + 32,
+        }}
+        accessibilityLabel="Home screen content"
+      >
+        {/* Hero Section - No extra wrapper needed */}
+        <HomeHero
+          isAuthenticated={isAuthenticated}
+          userName={user?.name}
+          countriesCount={countries.length}
+          onBrowseAll={handleBrowseAll}
+        />
+
+        {/* Featured Countries */}
+        {featuredCountries.length > 0 && (
+          <FeaturedSection
+            title="Featured Countries"
+            subtitle="Popular destinations to explore"
+            countries={featuredCountries}
+            onSeeAll={handleBrowseAll}
+            onCountryPress={handleCountryPress}
+            onRecipePress={handleRecipePress}
+            delay={200}
+          />
+        )}
+
+        {/* Featured Recipes */}
+        {featuredRecipes.length > 0 && (
+          <FeaturedSection
+            title="Popular Recipes"
+            subtitle="Trending dishes from around the world"
+            recipes={featuredRecipes}
+            onCountryPress={handleCountryPress}
+            onRecipePress={handleRecipePress}
+            delay={400}
+          />
+        )}
+
+        {/* Explore by Region */}
+        <RegionGrid getRegionCount={getRegionCount} delay={600} />
+
+        {/* Authentication CTA */}
+        {!isAuthenticated && <AuthCTA delay={800} />}
+      </ScrollView>
     </SafeAreaView>
   );
 }

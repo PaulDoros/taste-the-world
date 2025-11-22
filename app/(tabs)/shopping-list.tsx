@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -6,211 +6,187 @@ import {
   Pressable,
   Alert,
   TextInput,
-} from "react-native";
+} from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { FontAwesome5 } from "@expo/vector-icons";
+} from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   FadeInUp,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import {
-  useShoppingListStore,
-  ShoppingListItem,
-} from "@/store/shoppingListStore";
-import { usePantryStore } from "@/store/pantryStore";
-import { haptics } from "@/utils/haptics";
-import { canConvert, getConvertedDisplay } from "@/utils/measurementConverter";
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { usePantryStore } from '@/store/pantryStore';
+import { haptics } from '@/utils/haptics';
+import { canConvert, getConvertedDisplay } from '@/utils/measurementConverter';
+import { useAuth } from '@/hooks/useAuth';
+import { useShoppingList, UnifiedShoppingListItem } from '@/hooks/useShoppingList';
+import { ShoppingListItem } from '@/components/ShoppingListItem';
 
 export default function ShoppingListScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAuth(); // Keep user from useAuth if needed for other logic
 
-  // Shopping list store
-  const items = useShoppingListStore((state) => state.items);
-  const addItem = useShoppingListStore((state) => state.addItem);
-  const removeItem = useShoppingListStore((state) => state.removeItem);
-  const updateItemQuantity = useShoppingListStore(
-    (state) => state.updateItemQuantity,
-  );
-  const toggleItemChecked = useShoppingListStore(
-    (state) => state.toggleItemChecked,
-  );
-  const clearCheckedItems = useShoppingListStore(
-    (state) => state.clearCheckedItems,
-  );
-  const clearAllItems = useShoppingListStore((state) => state.clearAllItems);
-  const getCheckedItemCount = useShoppingListStore(
-    (state) => state.getCheckedItemCount,
-  );
+  // Use unified hook
+  const {
+    items,
+    addItem,
+    removeItem,
+    toggleItemChecked,
+    clearCheckedItems,
+    clearAllItems,
+    isAuthenticated
+  } = useShoppingList();
 
-  // Pantry store
+  // Pantry store (still local for now, or could be moved to Convex too later)
   const addToPantry = usePantryStore((state) => state.addItem);
 
-  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [filter, setFilter] = useState<'all' | 'checked' | 'unchecked'>('all');
   const [showConversions, setShowConversions] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemMeasure, setNewItemMeasure] = useState("");
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemMeasure, setNewItemMeasure] = useState('');
 
   // Calculate bottom padding: tab bar (90px) + safe area bottom + extra space (30px)
   const bottomPadding = 90 + insets.bottom + 30;
 
   // Filter items based on selected filter
   const filteredItems = items.filter((item) => {
-    if (filter === "active") return !item.checked;
-    if (filter === "completed") return item.checked;
+    if (filter === 'unchecked') return !item.checked;
+    if (filter === 'checked') return item.checked;
     return true;
   });
 
+  const checkedCount = (items || []).filter(i => i.checked).length;
+
   const handleClearCompleted = () => {
-    const checkedCount = getCheckedItemCount();
     if (checkedCount === 0) {
       haptics.warning();
-      Alert.alert("No Items", "There are no completed items to clear.");
+      Alert.alert('No Items', 'There are no completed items to clear.');
       return;
     }
 
     haptics.light();
     Alert.alert(
-      "Clear Completed",
-      `Remove ${checkedCount} completed ${checkedCount === 1 ? "item" : "items"}?`,
+      'Clear Completed',
+      `Remove ${checkedCount} completed ${checkedCount === 1 ? 'item' : 'items'}?`,
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => {
-            clearCheckedItems();
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            await clearCheckedItems();
             haptics.success();
           },
         },
-      ],
+      ]
     );
   };
 
   const handleClearAll = () => {
     if (items.length === 0) {
       haptics.warning();
-      Alert.alert("Empty List", "Your shopping list is already empty.");
+      Alert.alert('Empty List', 'Your shopping list is already empty.');
       return;
     }
 
     haptics.light();
     Alert.alert(
-      "Clear All",
-      `Remove all ${items.length} ${items.length === 1 ? "item" : "items"}?`,
+      'Clear All',
+      `Remove all ${items.length} ${items.length === 1 ? 'item' : 'items'}?`,
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Clear All",
-          style: "destructive",
-          onPress: () => {
-            clearAllItems();
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllItems();
             haptics.success();
           },
         },
-      ],
+      ]
     );
   };
 
-  const handleDeleteItem = (item: ShoppingListItem) => {
+  const handleDeleteItem = (item: UnifiedShoppingListItem) => {
     haptics.light();
-    Alert.alert("Remove Item", `Remove "${item.name}" from shopping list?`, [
+    Alert.alert('Remove Item', `Remove "${item.name}" from shopping list?`, [
       {
-        text: "Cancel",
-        style: "cancel",
+        text: 'Cancel',
+        style: 'cancel',
       },
       {
-        text: "Remove",
-        style: "destructive",
-        onPress: () => {
-          removeItem(item.id);
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          await removeItem(item._id);
           haptics.success();
         },
       },
     ]);
   };
 
-  const handleMoveToPantry = (item: ShoppingListItem) => {
+  const onToggleItem = async (id: string) => {
+    haptics.selection();
+    await toggleItemChecked(id);
+  };
+  const handleMoveToPantry = (item: UnifiedShoppingListItem) => {
     haptics.light();
     Alert.alert(
-      "Move to Pantry",
+      'Move to Pantry',
       `Move "${item.name}" (${item.measure}) to your pantry?`,
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Move",
-          onPress: () => {
+          text: 'Move',
+          onPress: async () => {
             addToPantry(item.name, item.measure);
-            removeItem(item.id);
+            await removeItem(item._id);
             haptics.success();
           },
         },
-      ],
+      ]
     );
   };
 
-  const handleEditQuantity = (item: ShoppingListItem) => {
-    haptics.light();
-    Alert.prompt(
-      "Edit Quantity",
-      `Update quantity for "${item.name}"`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Update",
-          onPress: (newQuantity?: string) => {
-            if (newQuantity && newQuantity.trim()) {
-              updateItemQuantity(item.id, newQuantity.trim());
-              haptics.success();
-            }
-          },
-        },
-      ],
-      "plain-text",
-      item.measure,
-    );
-  };
-
-  const handleAddCustomItem = () => {
+  const handleAddCustomItem = async () => {
     if (!newItemName.trim()) {
       haptics.warning();
-      Alert.alert("Empty Name", "Please enter an item name.");
+      Alert.alert('Empty Name', 'Please enter an item name.');
       return;
     }
 
-    addItem({
+    await addItem({
       name: newItemName.trim(),
-      measure: newItemMeasure.trim() || "as needed",
-      recipeId: "custom",
-      recipeName: "Custom Item",
+      measure: newItemMeasure.trim() || 'as needed',
+      recipeId: 'custom',
+      recipeName: 'Custom Item',
     });
 
-    setNewItemName("");
-    setNewItemMeasure("");
+    setNewItemName('');
+    setNewItemMeasure('');
     setShowAddInput(false);
     haptics.success();
   };
@@ -220,31 +196,33 @@ export default function ShoppingListScreen() {
 
     if (completedItems.length === 0) {
       haptics.warning();
-      Alert.alert("No Items", "There are no completed items to move.");
+      Alert.alert('No Items', 'There are no completed items to move.');
       return;
     }
 
     haptics.light();
     Alert.alert(
-      "Move to Pantry",
-      `Move ${completedItems.length} completed ${completedItems.length === 1 ? "item" : "items"} to pantry?`,
+      'Move to Pantry',
+      `Move ${completedItems.length} completed ${completedItems.length === 1 ? 'item' : 'items'} to pantry?`,
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Move All",
-          onPress: () => {
+          text: 'Move All',
+          onPress: async () => {
             // Add all completed items to pantry with their quantities
-            completedItems.forEach((item) => {
-              addToPantry(item.name, item.measure);
-              removeItem(item.id);
-            });
+            // Note: This is a bit inefficient as it does sequential deletes, 
+            // but fine for small lists. Ideally we'd have a batch delete mutation.
+            for (const item of completedItems) {
+               addToPantry(item.name, item.measure);
+               await removeItem(item._id);
+            }
             haptics.success();
           },
         },
-      ],
+      ]
     );
   };
 
@@ -252,17 +230,36 @@ export default function ShoppingListScreen() {
     <SafeAreaView
       className="flex-1"
       style={{ backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      edges={['top', 'left', 'right']}
     >
+      {!isAuthenticated && (
+        <Pressable
+          onPress={() => router.push('/auth/login')}
+          style={{
+            backgroundColor: colors.tint,
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <FontAwesome5 name="info-circle" size={14} color="white" style={{ marginRight: 8 }} />
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+            Sign in to sync your list across devices
+          </Text>
+          <FontAwesome5 name="chevron-right" size={12} color="white" style={{ marginLeft: 8, opacity: 0.8 }} />
+        </Pressable>
+      )}
       {/* Header */}
       <View
         style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
       >
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
           <View style={{ flex: 1 }}>
@@ -270,7 +267,7 @@ export default function ShoppingListScreen() {
               style={{
                 color: colors.text,
                 fontSize: 32,
-                fontWeight: "700",
+                fontWeight: '700',
                 letterSpacing: -0.5,
                 marginBottom: 4,
               }}
@@ -278,13 +275,13 @@ export default function ShoppingListScreen() {
               Shopping List
             </Text>
             <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-              {items.length} {items.length === 1 ? "item" : "items"} •{" "}
-              {getCheckedItemCount()} completed
+              {items?.length || 0} {(items?.length || 0) === 1 ? 'item' : 'items'} •{' '}
+              {checkedCount} completed
             </Text>
           </View>
 
           {/* Conversion Toggle & Clear Buttons */}
-          {items.length > 0 && (
+          {(items?.length || 0) > 0 && (
             <View style={{ gap: 8 }}>
               {/* Conversion Toggle */}
               <Pressable
@@ -299,21 +296,21 @@ export default function ShoppingListScreen() {
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <FontAwesome5
                   name="exchange-alt"
                   size={12}
-                  color={showConversions ? "white" : colors.tint}
+                  color={showConversions ? 'white' : colors.tint}
                 />
                 <Text
                   style={{
-                    color: showConversions ? "white" : colors.tint,
+                    color: showConversions ? 'white' : colors.tint,
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     marginLeft: 6,
                   }}
                 >
@@ -324,21 +321,21 @@ export default function ShoppingListScreen() {
               <Pressable
                 onPress={handleMoveAllCompletedToPantry}
                 style={({ pressed }) => ({
-                  backgroundColor: "#f59e0b15",
+                  backgroundColor: '#f59e0b15',
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <FontAwesome5 name="box" size={12} color="#f59e0b" />
                 <Text
                   style={{
-                    color: "#f59e0b",
+                    color: '#f59e0b',
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     marginLeft: 6,
                   }}
                 >
@@ -353,8 +350,8 @@ export default function ShoppingListScreen() {
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
@@ -367,7 +364,7 @@ export default function ShoppingListScreen() {
                   style={{
                     color: colors.tint,
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     marginLeft: 6,
                   }}
                 >
@@ -378,21 +375,21 @@ export default function ShoppingListScreen() {
               <Pressable
                 onPress={handleClearAll}
                 style={({ pressed }) => ({
-                  backgroundColor: "#ef444415",
+                  backgroundColor: '#ef444415',
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <FontAwesome5 name="trash-alt" size={12} color="#ef4444" />
                 <Text
                   style={{
-                    color: "#ef4444",
+                    color: '#ef4444',
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     marginLeft: 6,
 
                     zIndex: 1000,
@@ -418,17 +415,17 @@ export default function ShoppingListScreen() {
               backgroundColor: colors.tint,
               paddingVertical: 14,
               borderRadius: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
               opacity: pressed ? 0.8 : 1,
             })}
           >
             <FontAwesome5 name="plus" size={16} color="white" />
             <Text
               style={{
-                color: "white",
-                fontWeight: "700",
+                color: 'white',
+                fontWeight: '700',
                 fontSize: 15,
                 marginLeft: 8,
               }}
@@ -442,7 +439,7 @@ export default function ShoppingListScreen() {
               backgroundColor: colors.card,
               borderRadius: 16,
               padding: 16,
-              shadowColor: "#000",
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 8,
@@ -485,20 +482,20 @@ export default function ShoppingListScreen() {
               }}
               onSubmitEditing={handleAddCustomItem}
             />
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               <Pressable
                 onPress={() => {
                   haptics.light();
                   setShowAddInput(false);
-                  setNewItemName("");
-                  setNewItemMeasure("");
+                  setNewItemName('');
+                  setNewItemMeasure('');
                 }}
                 style={({ pressed }) => ({
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 12,
                   backgroundColor: `${colors.text}10`,
-                  alignItems: "center",
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
@@ -506,7 +503,7 @@ export default function ShoppingListScreen() {
                   style={{
                     color: colors.text,
                     fontSize: 14,
-                    fontWeight: "600",
+                    fontWeight: '600',
                   }}
                 >
                   Cancel
@@ -519,15 +516,15 @@ export default function ShoppingListScreen() {
                   paddingVertical: 10,
                   borderRadius: 12,
                   backgroundColor: colors.tint,
-                  alignItems: "center",
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <Text
                   style={{
-                    color: "white",
+                    color: 'white',
                     fontSize: 14,
-                    fontWeight: "600",
+                    fontWeight: '600',
                   }}
                 >
                   Add
@@ -539,16 +536,16 @@ export default function ShoppingListScreen() {
       </View>
 
       {/* Filter Tabs */}
-      {items.length > 0 && (
+      {(items?.length || 0) > 0 && (
         <View
           style={{
-            flexDirection: "row",
+            flexDirection: 'row',
             paddingHorizontal: 16,
             marginBottom: 12,
             gap: 8,
           }}
         >
-          {["all", "active", "completed"].map((filterType) => (
+          {['all', 'unchecked', 'checked'].map((filterType) => (
             <Pressable
               key={filterType}
               onPress={() => {
@@ -561,18 +558,18 @@ export default function ShoppingListScreen() {
                 borderRadius: 12,
                 backgroundColor:
                   filter === filterType ? colors.tint : `${colors.tint}15`,
-                alignItems: "center",
+                alignItems: 'center',
               }}
             >
               <Text
                 style={{
-                  color: filter === filterType ? "white" : colors.tint,
+                  color: filter === filterType ? 'white' : colors.tint,
                   fontSize: 14,
-                  fontWeight: "600",
-                  textTransform: "capitalize",
+                  fontWeight: '600',
+                  textTransform: 'capitalize',
                 }}
               >
-                {filterType}
+                {filterType === 'unchecked' ? 'Active' : filterType === 'checked' ? 'Completed' : 'All'}
               </Text>
             </Pressable>
           ))}
@@ -580,13 +577,17 @@ export default function ShoppingListScreen() {
       )}
 
       {/* Shopping List */}
-      {items.length === 0 ? (
+      {!items ? (
+         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: colors.text }}>Loading...</Text>
+         </View>
+      ) : items.length === 0 ? (
         // Empty State
         <View
           style={{
             flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
+            alignItems: 'center',
+            justifyContent: 'center',
             paddingHorizontal: 40,
           }}
         >
@@ -596,12 +597,12 @@ export default function ShoppingListScreen() {
               height: 100,
               borderRadius: 50,
               backgroundColor: `${colors.tint}15`,
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: 'center',
+              justifyContent: 'center',
               marginBottom: 20,
-              position: "absolute",
-              top: "10%",
-              left: "50%",
+              position: 'absolute',
+              top: '10%',
+              left: '50%',
               transform: [
                 // half the icon's width
                 { translateY: 200 }, // half the icon's height
@@ -619,9 +620,9 @@ export default function ShoppingListScreen() {
             style={{
               color: colors.text,
               fontSize: 20,
-              fontWeight: "700",
+              fontWeight: '700',
               marginBottom: 8,
-              textAlign: "center",
+              textAlign: 'center',
             }}
           >
             Your Shopping List is Empty
@@ -631,7 +632,7 @@ export default function ShoppingListScreen() {
               color: colors.text,
               fontSize: 15,
               opacity: 0.6,
-              textAlign: "center",
+              textAlign: 'center',
               lineHeight: 22,
             }}
           >
@@ -642,26 +643,25 @@ export default function ShoppingListScreen() {
       ) : (
         <FlatList
           data={filteredItems}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: bottomPadding,
           }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
-            <ShoppingListItemCard
+            <ShoppingListItem
               item={item}
               index={index}
               showConversion={showConversions}
-              onToggle={() => {
+              onToggle={async () => {
                 haptics.light();
-                toggleItemChecked(item.id);
+                await onToggleItem(item._id);
               }}
               onDelete={() => handleDeleteItem(item)}
-              onEditQuantity={() => handleEditQuantity(item)}
               onMoveToPantry={() => handleMoveToPantry(item)}
               onNavigateToRecipe={() => {
-                if (item.recipeId && item.recipeId !== "custom") {
+                if (item.recipeId && item.recipeId !== 'custom') {
                   haptics.light();
                   router.push(`/recipe/${item.recipeId}` as any);
                 }
@@ -670,7 +670,7 @@ export default function ShoppingListScreen() {
             />
           )}
           ListEmptyComponent={
-            <View style={{ alignItems: "center", paddingTop: 40 }}>
+            <View style={{ alignItems: 'center', paddingTop: 40 }}>
               <FontAwesome5
                 name="filter"
                 size={48}
@@ -694,222 +694,3 @@ export default function ShoppingListScreen() {
     </SafeAreaView>
   );
 }
-
-/**
- * Shopping List Item Card Component
- */
-const ShoppingListItemCard = ({
-  item,
-  index,
-  showConversion,
-  onToggle,
-  onDelete,
-  onEditQuantity,
-  onMoveToPantry,
-  onNavigateToRecipe,
-  colors,
-}: {
-  item: ShoppingListItem;
-  index: number;
-  showConversion: boolean;
-  onToggle: () => void;
-  onDelete: () => void;
-  onEditQuantity: () => void;
-  onMoveToPantry: () => void;
-  onNavigateToRecipe: () => void;
-  colors: typeof Colors.light;
-}) => {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.97, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
-
-  return (
-    <Animated.View
-      entering={FadeInUp.delay(index * 30).springify()}
-      style={[
-        {
-          marginBottom: 12,
-        },
-        animatedStyle,
-      ]}
-    >
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-          opacity: item.checked ? 0.6 : 1,
-        }}
-      >
-        {/* Checkbox */}
-        <Pressable
-          onPress={onToggle}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            borderWidth: 2,
-            borderColor: item.checked ? colors.tint : colors.border,
-            backgroundColor: item.checked ? colors.tint : "transparent",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-          }}
-        >
-          {item.checked && (
-            <FontAwesome5 name="check" size={14} color="white" solid />
-          )}
-        </Pressable>
-
-        {/* Item Info */}
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: "600",
-              textDecorationLine: item.checked ? "line-through" : "none",
-              marginBottom: 4,
-            }}
-          >
-            {item.name}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 13,
-                opacity: 0.6,
-                fontWeight: "500",
-              }}
-            >
-              {item.measure}
-              {showConversion && canConvert(item.measure) && (
-                <Text style={{ color: colors.tint, fontWeight: "600" }}>
-                  {" "}
-                  {getConvertedDisplay(item.measure)}
-                </Text>
-              )}
-            </Text>
-            <Text style={{ color: colors.text, opacity: 0.3 }}>•</Text>
-            <Pressable
-              onPress={onNavigateToRecipe}
-              disabled={item.recipeId === "custom"}
-              style={({ pressed }) => ({
-                opacity: item.recipeId === "custom" ? 0.5 : pressed ? 0.7 : 1,
-              })}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-              >
-                <Text
-                  style={{
-                    color: colors.tint,
-                    fontSize: 12,
-                    fontWeight: "600",
-                    textDecorationLine:
-                      item.recipeId === "custom" ? "none" : "underline",
-                  }}
-                >
-                  {item.recipeName}
-                </Text>
-                {item.recipeId !== "custom" && (
-                  <FontAwesome5
-                    name="external-link-alt"
-                    size={9}
-                    color={colors.tint}
-                  />
-                )}
-              </View>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {/* Edit Quantity Button */}
-          <Pressable
-            onPress={onEditQuantity}
-            style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: `${colors.tint}15`,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <FontAwesome5 name="edit" size={14} color={colors.tint} />
-          </Pressable>
-
-          {/* Pantry Button */}
-          <Pressable
-            onPress={onMoveToPantry}
-            style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: "#f59e0b15",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <FontAwesome5 name="box" size={14} color="#f59e0b" />
-          </Pressable>
-
-          {/* Delete Button */}
-          <Pressable
-            onPress={onDelete}
-            style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: "#ef444415",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <FontAwesome5 name="trash-alt" size={14} color="#ef4444" />
-          </Pressable>
-        </View>
-      </View>
-    </Animated.View>
-  );
-};

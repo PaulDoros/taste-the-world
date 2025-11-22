@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { View, Pressable, Text, useWindowDimensions } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { useRouter, usePathname, useSegments } from "expo-router";
+import React, { useEffect, useState } from 'react';
+import { View, Pressable, Text, useWindowDimensions } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { useRouter, usePathname, useSegments } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,55 +9,63 @@ import Animated, {
   withTiming,
   withRepeat,
   withSequence,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { haptics } from "@/utils/haptics";
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { haptics } from '@/utils/haptics';
 
 /**
  * Tab Configuration
  */
 const TAB_CONFIG = [
   {
-    name: "index",
-    path: "/(tabs)/",
-    title: "Explore",
-    icon: "globe-americas",
-    color: "#0ea5e9",
-    backgroundColor: "rgba(14, 165, 233, 0.15)",
+    name: 'index',
+    path: '/(tabs)/',
+    title: 'Home',
+    icon: 'home',
+    color: '#0ea5e9',
+    backgroundColor: 'rgba(14, 165, 233, 0.15)',
   },
   {
-    name: "shopping-list",
-    path: "/(tabs)/shopping-list",
-    title: "Shopping",
-    icon: "shopping-basket",
-    color: "#10b981",
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    name: 'explore',
+    path: '/(tabs)/explore',
+    title: 'Explore',
+    icon: 'globe-americas',
+    color: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   {
-    name: "pantry",
-    path: "/(tabs)/pantry",
-    title: "Pantry",
-    icon: "box",
-    color: "#f59e0b",
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    name: 'shopping-list',
+    path: '/(tabs)/shopping-list',
+    title: 'Shopping',
+    icon: 'shopping-basket',
+    color: '#f59e0b',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
   },
   {
-    name: "history",
-    path: "/(tabs)/history",
-    title: "History",
-    icon: "history",
-    color: "#ec4899",
-    backgroundColor: "rgba(236, 72, 153, 0.15)",
+    name: 'pantry',
+    path: '/(tabs)/pantry',
+    title: 'Pantry',
+    icon: 'box',
+    color: '#ec4899',
+    backgroundColor: 'rgba(236, 72, 153, 0.15)',
   },
   {
-    name: "settings",
-    path: "/(tabs)/settings",
-    title: "Settings",
-    icon: "user-circle",
-    color: "#8b5cf6",
-    backgroundColor: "rgba(139, 92, 246, 0.15)",
+    name: 'history',
+    path: '/(tabs)/history',
+    title: 'History',
+    icon: 'history',
+    color: '#ec4899',
+    backgroundColor: 'rgba(236, 72, 153, 0.15)',
+  },
+  {
+    name: 'settings',
+    path: '/(tabs)/settings',
+    title: 'Settings',
+    icon: 'user-circle',
+    color: '#8b5cf6',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
 ];
 
@@ -70,7 +78,7 @@ export const PersistentTabBar = () => {
   const pathname = usePathname();
   const segments = useSegments();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
   const { width: SCREEN_WIDTH } = useWindowDimensions(); // Dynamic width that updates on resize/rotation
 
   const tabWidth = SCREEN_WIDTH / TAB_CONFIG.length;
@@ -78,13 +86,13 @@ export const PersistentTabBar = () => {
   // Find active tab based on current path
   const getActiveTabIndex = () => {
     // Check if we're on a tab screen
-    if (pathname?.startsWith("/(tabs)/")) {
+    if (pathname?.startsWith('/(tabs)/')) {
       // Handle index route - could be "/(tabs)/" or "/(tabs)/index"
-      const pathParts = pathname.split("/").filter(Boolean);
-      const tabName = pathParts[pathParts.length - 1] || "index";
+      const pathParts = pathname.split('/').filter(Boolean);
+      const tabName = pathParts[pathParts.length - 1] || 'index';
 
       // Special case: if pathname is exactly "/(tabs)" or "/(tabs)/", it's the index tab
-      if (tabName === "" || tabName === "(tabs)" || tabName === "index") {
+      if (tabName === '' || tabName === '(tabs)' || tabName === 'index') {
         return 0; // index tab
       }
 
@@ -114,7 +122,7 @@ export const PersistentTabBar = () => {
   // Get current tab color
   const [activeColor, setActiveColor] = useState(TAB_CONFIG[0].color);
   const [activeBgColor, setActiveBgColor] = useState(
-    TAB_CONFIG[0].backgroundColor,
+    TAB_CONFIG[0].backgroundColor
   );
 
   // Initialize pulse animations once on mount
@@ -122,20 +130,20 @@ export const PersistentTabBar = () => {
     // 💫 Continuous pulse while active (only initialize once)
     pulseScale.value = withRepeat(
       withSequence(
-        withTiming(1.2, { duration: 1000 }),
-        withTiming(1, { duration: 1000 }),
+        withTiming(1.2, { duration: 500 }),
+        withTiming(1, { duration: 500 })
       ),
       -1,
-      true,
+      true
     );
 
     pulseOpacity.value = withRepeat(
       withSequence(
         withTiming(0.6, { duration: 1000 }),
-        withTiming(0.3, { duration: 1000 }),
+        withTiming(0.3, { duration: 1000 })
       ),
       -1,
-      true,
+      true
     );
 
     // Set initial bubble position on mount
@@ -164,15 +172,16 @@ export const PersistentTabBar = () => {
 
     // 🎯 SLIDE bubble to tab position with bounce!
     bubbleX.value = withSpring(currentDisplayIndex * tabWidth, {
-      damping: 12,
-      stiffness: 150,
+      damping: 15,
+      stiffness: 200,
+      mass: 0.5,
     });
 
     // 💥 Bounce effect on tap (only on tab screens)
     if (currentActiveTabIndex >= 0) {
       bubbleScale.value = withSequence(
         withSpring(1.2, { damping: 8, stiffness: 400 }),
-        withSpring(1, { damping: 10, stiffness: 200 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
       );
     }
   }, [pathname, lastActiveTabIndex, tabWidth]); // Use pathname instead of activeTabIndex
@@ -200,8 +209,9 @@ export const PersistentTabBar = () => {
     if (tabIndex >= 0) {
       // 🎯 PREDICTIVE animation - move bubble immediately before navigation!
       bubbleX.value = withSpring(tabIndex * tabWidth, {
-        damping: 12,
-        stiffness: 150,
+        damping: 8,
+        stiffness: 200,
+        mass: 0.5,
       });
 
       // Update colors immediately
@@ -211,7 +221,7 @@ export const PersistentTabBar = () => {
       // Bounce effect
       bubbleScale.value = withSequence(
         withSpring(1.2, { damping: 8, stiffness: 400 }),
-        withSpring(1, { damping: 10, stiffness: 200 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
       );
 
       // Update last visited tab
@@ -222,14 +232,20 @@ export const PersistentTabBar = () => {
     router.push(tab.path as any);
   };
 
+  // Hide on auth screens (check after all hooks are called)
+  const isAuthScreen = pathname?.startsWith('/auth/');
+  if (isAuthScreen) {
+    return null;
+  }
+
   return (
     <View
       style={{
-        position: "absolute",
+        position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        flexDirection: "row",
+        flexDirection: 'row',
         backgroundColor: colors.background,
         borderTopWidth: 1,
         borderTopColor: colors.border,
@@ -243,7 +259,7 @@ export const PersistentTabBar = () => {
       <Animated.View
         style={[
           {
-            position: "absolute",
+            position: 'absolute',
             top: 8,
             left: 0,
             width: 80,
@@ -260,7 +276,7 @@ export const PersistentTabBar = () => {
       <Animated.View
         style={[
           {
-            position: "absolute",
+            position: 'absolute',
             top: 11,
             left: 0,
             width: 72,
@@ -288,13 +304,13 @@ export const PersistentTabBar = () => {
             onPress={() => handleTabPress(tab)}
             style={{
               flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: 'center',
+              justifyContent: 'center',
               paddingTop: 4,
               zIndex: 10,
             }}
           >
-            <View style={{ alignItems: "center", gap: 6, zIndex: 10 }}>
+            <View style={{ alignItems: 'center', gap: 6, zIndex: 10 }}>
               {/* Icon */}
               <FontAwesome5
                 name={tab.icon}
@@ -310,7 +326,7 @@ export const PersistentTabBar = () => {
               <Text
                 style={{
                   fontSize: 11,
-                  fontWeight: isActive ? "700" : "600",
+                  fontWeight: isActive ? '700' : '600',
                   color: isActive ? tab.color : colors.tabIconDefault,
                   opacity: isActive ? 1 : 0.6,
                 }}

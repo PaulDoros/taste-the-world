@@ -29,13 +29,17 @@ import { Recipe, Ingredient } from "@/types";
 import { getRecipeById, extractIngredients } from "@/services/recipesApi";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
-import { useShoppingListStore } from "@/store/shoppingListStore";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAuth } from "@/hooks/useAuth";
+import { useShoppingList } from "@/hooks/useShoppingList";
 import { usePantryStore } from "@/store/pantryStore";
 import { useRecipeHistoryStore } from "@/store/recipeHistoryStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { haptics } from "@/utils/haptics";
 import { canConvert, getConvertedDisplay } from "@/utils/measurementConverter";
 import { IngredientSelectorModal } from "@/components/IngredientSelectorModal";
+import { Id } from "@/convex/_generated/dataModel";
 
 const RecipeDetailsScreen = () => {
   const { id } = useLocalSearchParams();
@@ -55,10 +59,9 @@ const RecipeDetailsScreen = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
-  // Shopping list store
-  const addMultipleItems = useShoppingListStore(
-    (state) => state.addMultipleItems,
-  );
+  // Convex hooks
+  const { user, isAuthenticated } = useAuth();
+  const { addMultipleItems } = useShoppingList();
 
   // Pantry store
   const hasIngredient = usePantryStore((state) => state.hasIngredient);
@@ -125,7 +128,7 @@ const RecipeDetailsScreen = () => {
     setShowShoppingModal(true);
   };
 
-  const handleConfirmAddToShopping = (selectedIngredients: Ingredient[]) => {
+  const handleConfirmAddToShopping = async (selectedIngredients: Ingredient[]) => {
     if (!recipe || selectedIngredients.length === 0) {
       return;
     }
@@ -137,13 +140,18 @@ const RecipeDetailsScreen = () => {
       recipeName: recipe.strMeal,
     }));
 
-    addMultipleItems(itemsToAdd);
-    haptics.success();
+    try {
+      await addMultipleItems(itemsToAdd);
+      haptics.success();
 
-    Alert.alert(
-      "Added to Shopping List! 🛒",
-      `${itemsToAdd.length} ${itemsToAdd.length === 1 ? "ingredient" : "ingredients"} added to your shopping list.`,
-    );
+      Alert.alert(
+        "Added to Shopping List! 🛒",
+        `${itemsToAdd.length} ${itemsToAdd.length === 1 ? "ingredient" : "ingredients"} added to your shopping list.`
+      );
+    } catch (error) {
+      console.error("Error adding items:", error);
+      Alert.alert("Error", "Failed to add items to shopping list.");
+    }
   };
 
   const handleWatchVideo = () => {

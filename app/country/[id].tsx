@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Pressable,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -387,7 +388,29 @@ const CountryDetailsScreen = () => {
                 <Pressable
                   onPress={() => {
                     haptics.light();
-                    // TODO: Navigate to all recipes
+                    if (!country) {
+                      console.log("No country data available");
+                      return;
+                    }
+
+                    const area = COUNTRY_TO_AREA_MAP[country.name.common];
+                    if (!area) {
+                      console.log(
+                        `No area mapping found for country: ${country.name.common}`,
+                      );
+                      Alert.alert(
+                        "No Recipes Available",
+                        `Sorry, we don't have recipes for ${country.name.common} yet.`,
+                      );
+                      return;
+                    }
+
+                    console.log(
+                      `Navigating to recipes for ${country.name.common} (${area})`,
+                    );
+                    // Build query string manually
+                    const params = `countryName=${encodeURIComponent(country.name.common)}&area=${encodeURIComponent(area)}&countryCode=${encodeURIComponent(country.cca2)}`;
+                    router.push(`/country-recipes?${params}` as any);
                   }}
                   style={({ pressed }) => ({
                     flexDirection: "row",
