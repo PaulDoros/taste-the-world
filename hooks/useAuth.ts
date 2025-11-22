@@ -14,6 +14,31 @@ if (Platform.OS === "web") {
 }
 
 /**
+ * Parse Convex error to extract user-friendly message
+ * Strips away technical details like stack traces and request IDs
+ */
+function parseConvexError(error: any): string {
+  if (!error) return "An error occurred";
+  
+  // Get the error message
+  let message = error.message || error.toString();
+  
+  // Remove Convex-specific prefixes like "[CONVEX M(auth:signIn)] [Request ID: ...] Server Error"
+  message = message.replace(/\[CONVEX [^\]]+\]\s*/g, '');
+  message = message.replace(/\[Request ID: [^\]]+\]\s*/g, '');
+  message = message.replace(/^Server Error\s*/i, '');
+  message = message.replace(/^Uncaught Error:\s*/i, '');
+  
+  // Remove stack trace (everything after "at handler" or similar)
+  const stackStart = message.indexOf('\n    at ');
+  if (stackStart !== -1) {
+    message = message.substring(0, stackStart);
+  }
+  
+  return message.trim();
+}
+
+/**
  * Custom hook for authentication
  * Provides sign up, sign in, sign out, and session management
  */
@@ -107,7 +132,8 @@ export function useAuth() {
         await clearGuestData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to sign up");
+      const errorMessage = parseConvexError(err) || "Failed to sign up. Please try again.";
+      setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
@@ -127,7 +153,8 @@ export function useAuth() {
         user: result.user,
       });
     } catch (err: any) {
-      setError(err.message || "Failed to sign in");
+      const errorMessage = parseConvexError(err) || "Failed to sign in. Please try again.";
+      setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
@@ -186,7 +213,8 @@ export function useAuth() {
         await clearGuestData();
       }
     } catch (err: any) {
-      setError(err.message || `Failed to sign in with ${provider}`);
+      const errorMessage = parseConvexError(err) || `Failed to sign in with ${provider}. Please try again.`;
+      setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);

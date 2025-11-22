@@ -375,7 +375,7 @@ export default function LoginScreen() {
               {/* Primary button - iOS style */}
               <Button
                 onPress={handleLogin}
-                disabled={isLoading}
+                disabled={!!isLoading}
                 size="$4"
                 backgroundColor={colors.tint}
                 color="white"

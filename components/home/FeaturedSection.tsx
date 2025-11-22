@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions } from 'react-native';
+import { Dimensions } from 'react-native';
+import { YStack, XStack, Heading, Paragraph, ScrollView, Button } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { Country, Recipe } from '@/types';
@@ -12,6 +13,7 @@ import { CARD_DIMENSIONS } from '@/constants/HomeConfig';
 import { haptics } from '@/utils/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const AnimatedYStack = Animated.createAnimatedComponent(YStack);
 
 interface FeaturedSectionProps {
   title: string;
@@ -25,8 +27,8 @@ interface FeaturedSectionProps {
 }
 
 /**
- * Reusable Featured Section Component
- * Handles both countries and recipes with consistent styling
+ * Featured Section Component
+ * Modern Tamagui-powered horizontal scroll section
  */
 export const FeaturedSection = React.memo<FeaturedSectionProps>(
   ({
@@ -51,64 +53,72 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
     if (!hasContent) return null;
 
     return (
-      <Animated.View entering={FadeInUp.delay(delay)} className="mt-8">
-        <View className="flex-row items-center justify-between px-6 mb-6">
-          <View className="flex-1">
-            <View className="flex-row items-center gap-3 mb-2">
-              <View
-                className="w-1 h-6 rounded-full"
-                style={{ backgroundColor: colors.tint }}
-                accessibilityHidden
+      <AnimatedYStack entering={FadeInUp.delay(delay)} marginTop="$8">
+        {/* Section Header */}
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          paddingHorizontal="$6"
+          marginBottom="$6"
+        >
+          <YStack flex={1}>
+            <XStack alignItems="center" space="$3" marginBottom="$2">
+              {/* Accent bar */}
+              <YStack
+                width={4}
+                height={24}
+                borderRadius="$10"
+                backgroundColor={colors.tint}
               />
-              <Text
-                className="text-3xl font-extrabold"
-                style={{ color: colors.text }}
-                accessibilityRole="header"
-              >
+              <Heading size="$8" fontWeight="900" color="$color">
                 {title}
-              </Text>
-            </View>
+              </Heading>
+            </XStack>
             {subtitle && (
-              <Text
-                className="text-sm ml-4"
-                style={{ color: colors.tabIconDefault }}
+              <Paragraph
+                size="$3"
+                marginLeft="$4"
+                color="$color11"
+                opacity={0.8}
               >
                 {subtitle}
-              </Text>
+              </Paragraph>
             )}
-          </View>
-          {onSeeAll && (
-            <Pressable
-              onPress={handleSeeAll}
-              className="w-12 h-12 rounded-2xl items-center justify-center"
-              style={{
-                backgroundColor:
-                  colorScheme === 'dark'
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : colors.tint + '15',
-                borderWidth: 1,
-                borderColor: colors.tint + '30',
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`View all ${title.toLowerCase()}`}
-            >
-              <FontAwesome5 name="arrow-right" size={16} color={colors.tint} />
-            </Pressable>
-          )}
-        </View>
+          </YStack>
 
+          {/* See All Button */}
+          {onSeeAll && (
+            <Button
+              onPress={handleSeeAll}
+              size="$3"
+              circular
+              chromeless
+              width={48}
+              height={48}
+              backgroundColor={
+                colorScheme === 'dark'
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : colors.tint + '15'
+              }
+              borderWidth={1}
+              borderColor={colors.tint + '30'}
+              pressStyle={{ scale: 0.95, opacity: 0.8 }}
+              icon={<FontAwesome5 name="arrow-right" size={16} color={colors.tint} />}
+            />
+          )}
+        </XStack>
+
+        {/* Horizontal Scroll */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 16, paddingRight: 24 }}
-          accessibilityRole="list"
         >
           {countries?.map((country, index) => (
             <Animated.View
               key={country.cca2}
               entering={FadeInDown.delay(delay + 100 + index * 50)}
               style={{ width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_COUNTRY_WIDTH }}
-              accessibilityRole="listitem"
             >
               <CountryCard
                 country={country}
@@ -123,7 +133,6 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
               key={recipe.idMeal}
               entering={FadeInDown.delay(delay + 100 + index * 50)}
               style={{ width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_RECIPE_WIDTH }}
-              accessibilityRole="listitem"
             >
               <RecipeCard
                 recipe={recipe}
@@ -132,7 +141,7 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
             </Animated.View>
           ))}
         </ScrollView>
-      </Animated.View>
+      </AnimatedYStack>
     );
   }
 );

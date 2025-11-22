@@ -242,13 +242,13 @@ export const signIn = mutation({
       .first();
 
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new Error('No account found with this email address. Please check your email or sign up.');
     }
 
     // Verify password
     const passwordHash = await hashPassword(args.password);
     if (user.passwordHash !== passwordHash) {
-      throw new Error('Invalid email or password');
+      throw new Error('Incorrect password. Please try again or reset your password.');
     }
 
     // Update last login

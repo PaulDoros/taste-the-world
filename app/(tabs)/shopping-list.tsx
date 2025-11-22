@@ -120,6 +120,14 @@ export default function ShoppingListScreen() {
           style: 'destructive',
           onPress: async () => {
             await clearAllItems();
+            // Also clear AsyncStorage to remove old corrupt data
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              await AsyncStorage.removeItem('shopping-list-storage');
+              console.log('Cleared AsyncStorage');
+            } catch (e) {
+              console.error('Error clearing storage:', e);
+            }
             haptics.success();
           },
         },

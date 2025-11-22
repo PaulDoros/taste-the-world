@@ -1,17 +1,10 @@
 import { useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { YStack, ScrollView, Spinner, Heading, Paragraph, Button, Card } from 'tamagui';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -24,15 +17,11 @@ import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { RegionGrid } from '@/components/home/RegionGrid';
 import { AuthCTA } from '@/components/home/AuthCTA';
 
+const AnimatedYStack = Animated.createAnimatedComponent(YStack);
+
 /**
  * Home Screen
- * Main landing page with featured content, quick actions, and personalized experience
- *
- * Architecture:
- * - Separates data fetching logic into custom hooks (useFeaturedContent)
- * - UI components are pure and memoized (HomeHero, FeaturedSection, etc.)
- * - Business logic extracted to hooks and utilities
- * - Performance optimized with memoization and efficient algorithms
+ * Modern Tamagui-powered landing page with featured content
  */
 export default function HomeScreen() {
   const { countries, loading, error, refetch } = useCountries();
@@ -51,7 +40,6 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
 
-  // Memoized handlers to prevent unnecessary re-renders
   const handleCountryPress = useCallback(
     (country: Country) => {
       haptics.light();
@@ -79,110 +67,151 @@ export default function HomeScreen() {
     haptics.success();
   }, [refetch, refetchRecipes]);
 
-  // Enhanced loading state with skeleton-style placeholders
+  // Modern loading state with Tamagui
   if (loading && countries.length === 0) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
-        edges={['top']}
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        paddingTop={insets.top}
+        paddingBottom={insets.bottom}
       >
-        <View className="flex-1 px-5 pt-6 pb-10 justify-between">
+        <YStack flex={1} padding="$5" paddingTop="$6" justifyContent="space-between">
           {/* Skeleton content */}
-          <View className="gap-6">
+          <YStack space="$6">
             {/* Hero skeleton */}
-            <View className="h-40 rounded-3xl bg-slate-200 dark:bg-slate-700 mb-2" />
+            <Card
+              height={160}
+              borderRadius="$6"
+              backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+              animation="quick"
+              opacity={0.6}
+            />
 
-            {/* Featured skeleton row */}
-            <View className="gap-3">
-              <View className="h-4 w-32 rounded-full bg-slate-200 dark:bg-slate-700" />
-              <View className="flex-row gap-3">
-                <View className="flex-1 h-32 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-                <View className="flex-1 h-32 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-              </View>
-            </View>
+            {/* Featured skeleton */}
+            <YStack space="$3">
+              <Card
+                height={16}
+                width={128}
+                borderRadius="$10"
+                backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+                opacity={0.6}
+              />
+              <YStack flexDirection="row" space="$3">
+                <Card
+                  flex={1}
+                  height={128}
+                  borderRadius="$5"
+                  backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+                  opacity={0.6}
+                />
+                <Card
+                  flex={1}
+                  height={128}
+                  borderRadius="$5"
+                  backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+                  opacity={0.6}
+                />
+              </YStack>
+            </YStack>
 
             {/* Region skeleton */}
-            <View className="gap-3">
-              <View className="h-4 w-40 rounded-full bg-slate-200 dark:bg-slate-700" />
-              <View className="flex-row flex-wrap gap-3">
-                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-                <View className="w-[30%] h-16 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-              </View>
-            </View>
-          </View>
+            <YStack space="$3">
+              <Card
+                height={16}
+                width={160}
+                borderRadius="$10"
+                backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+                opacity={0.6}
+              />
+              <YStack flexDirection="row" flexWrap="wrap" space="$3">
+                {[1, 2, 3].map((i) => (
+                  <Card
+                    key={i}
+                    width="30%"
+                    height={64}
+                    borderRadius="$5"
+                    backgroundColor={colorScheme === 'dark' ? '$gray7' : '$gray3'}
+                    opacity={0.6}
+                  />
+                ))}
+              </YStack>
+            </YStack>
+          </YStack>
 
-          {/* Loader + label */}
-          <View className="items-center">
-            <ActivityIndicator color={colors.tint} />
-            <Text
-              className="mt-3 text-sm"
-              style={{ color: colors.text }}
-              accessibilityLabel="Loading content"
-            >
+          {/* Loader */}
+          <YStack alignItems="center" space="$3">
+            <Spinner size="large" color={colors.tint} />
+            <Paragraph size="$3" color="$color" opacity={0.7}>
               Getting things ready for you...
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
+            </Paragraph>
+          </YStack>
+        </YStack>
+      </YStack>
     );
   }
 
-  // Enhanced error state with card-style message
+  // Modern error state with Tamagui
   if (error && countries.length === 0) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
-        edges={['top']}
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        paddingTop={insets.top}
+        paddingBottom={insets.bottom}
+        alignItems="center"
+        justifyContent="center"
+        padding="$6"
       >
-        <View className="flex-1 items-center justify-center px-6">
-          <View className="w-full rounded-3xl border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/50 px-5 py-6">
-            <Text
-              className="text-lg font-bold mb-1"
-              style={{ color: colors.error }}
-              accessibilityRole="alert"
-            >
-              Oops, something went wrong
-            </Text>
-            <Text className="text-xs mb-3" style={{ color: colors.text }}>
-              We couldn&apos;t load your content. Check your connection and try
-              again.
-            </Text>
+        <AnimatedYStack entering={FadeIn} width="100%" maxWidth={400}>
+          <Card
+            elevate
+            bordered
+            padding="$5"
+            borderRadius="$6"
+            backgroundColor={colorScheme === 'dark' ? '$red9' : '$red2'}
+            borderColor={colorScheme === 'dark' ? '$red7' : '$red6'}
+          >
+            <YStack space="$2" marginBottom="$4">
+              <YStack flexDirection="row" alignItems="center" space="$2">
+                <FontAwesome5 name="exclamation-triangle" size={20} color={colors.error} />
+                <Heading size="$6" color={colors.error}>
+                  Oops, something went wrong
+                </Heading>
+              </YStack>
+              <Paragraph size="$3" color="$color" opacity={0.8}>
+                We couldn't load your content. Check your connection and try again.
+              </Paragraph>
+              {!!error && (
+                <Paragraph size="$2" color="$color" opacity={0.6} numberOfLines={2}>
+                  {String(error)}
+                </Paragraph>
+              )}
+            </YStack>
 
-            {!!error && (
-              <Text
-                className="text-xs mb-4"
-                style={{ color: colors.text }}
-                numberOfLines={2}
-              >
-                {String(error)}
-              </Text>
-            )}
-
-            <Pressable
+            <Button
               onPress={onRefresh}
-              className="self-start px-6 py-3 rounded-xl mt-1 shadow-sm"
-              style={{ backgroundColor: colors.tint }}
-              accessibilityRole="button"
-              accessibilityLabel="Retry loading"
+              size="$4"
+              backgroundColor={colors.tint}
+              color="white"
+              fontWeight="700"
+              borderRadius="$4"
+              pressStyle={{ scale: 0.97, opacity: 0.9 }}
+              icon={<FontAwesome5 name="redo" size={14} color="white" />}
             >
-              <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                Try again
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </SafeAreaView>
+              Try Again
+            </Button>
+          </Card>
+        </AnimatedYStack>
+      </YStack>
     );
   }
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-      edges={['top']}
+    <YStack
+      flex={1}
+      backgroundColor="$background"
+      paddingTop={insets.top}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -197,9 +226,8 @@ export default function HomeScreen() {
         contentContainerStyle={{
           paddingBottom: 100 + insets.bottom + 32,
         }}
-        accessibilityLabel="Home screen content"
       >
-        {/* Hero Section - No extra wrapper needed */}
+        {/* Hero Section */}
         <HomeHero
           isAuthenticated={isAuthenticated}
           userName={user?.name}
@@ -238,6 +266,6 @@ export default function HomeScreen() {
         {/* Authentication CTA */}
         {!isAuthenticated && <AuthCTA delay={800} />}
       </ScrollView>
-    </SafeAreaView>
+    </YStack>
   );
 }

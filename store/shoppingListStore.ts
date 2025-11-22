@@ -48,7 +48,7 @@ export const useShoppingListStore = create<ShoppingListStore>()(
       addItem: (item) => {
         const newItem: ShoppingListItem = {
           ...item,
-          id: `${item.recipeId}-${item.name}-${Date.now()}`, // Unique ID
+          id: crypto.randomUUID(), // Unique ID using UUID
           checked: false,
           addedAt: Date.now(),
         };
@@ -63,7 +63,7 @@ export const useShoppingListStore = create<ShoppingListStore>()(
         const baseTimestamp = Date.now();
         const newItems: ShoppingListItem[] = items.map((item, index) => ({
           ...item,
-          id: `${item.recipeId}-${item.name}-${baseTimestamp}-${index}`,
+          id: crypto.randomUUID(), // Unique ID using UUID for each item
           checked: false,
           addedAt: baseTimestamp,
         }));
@@ -119,6 +119,37 @@ export const useShoppingListStore = create<ShoppingListStore>()(
     {
       name: 'shopping-list-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // Migrate and deduplicate items when loading from storage
+      onRehydrateStorage: () => (state) => {
+        if (state?.items) {
+          // Track seen IDs to detect duplicates
+          const seenIds = new Set<string>();
+          const deduplicatedItems: ShoppingListItem[] = [];
+          
+          state.items.forEach((item) => {
+            // UUID format is 36 characters with specific pattern
+            // Old format was: recipeId-name-timestamp (variable length, usually longer)
+            const isUUID = item.id.length === 36 && item.id.split('-').length === 5;
+            
+            // If ID is duplicate or in old format, generate a new UUID
+            if (seenIds.has(item.id) || !isUUID) {
+              // Reassign with new UUID
+              deduplicatedItems.push({
+                ...item,
+                id: crypto.randomUUID(),
+              });
+            } else {
+              seenIds.add(item.id);
+              deduplicatedItems.push(item);
+            }
+          });
+          
+          // Update state with deduplicated items
+          state.items = deduplicatedItems;
+          
+          console.log(`Migration: Processed ${state.items.length} items, created ${deduplicatedItems.length} unique items`);
+        }
+      },
     }
   )
 );
