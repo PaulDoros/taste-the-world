@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Country, Recipe } from '@/types';
-import { getRecipesByArea } from '@/services/recipesApi';
+import { getRecipesByArea, getRandomRecipe } from '@/services/recipesApi';
 
 /**
  * Configuration for featured content
@@ -24,6 +25,7 @@ const FEATURED_RECIPE_AREAS = [
 
 const MAX_FEATURED_COUNTRIES = 6;
 const MAX_FEATURED_RECIPES = 4;
+const RECIPE_OF_THE_WEEK_KEY = 'recipe_of_the_week_data';
 
 /**
  * Custom hook for managing featured content on home screen
@@ -31,6 +33,7 @@ const MAX_FEATURED_RECIPES = 4;
  */
 export function useFeaturedContent(countries: Country[]) {
   const [featuredRecipes, setFeaturedRecipes] = useState<Recipe[]>([]);
+  const [recipeOfTheWeek, setRecipeOfTheWeek] = useState<Recipe | null>(null);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [recipesError, setRecipesError] = useState<string | null>(null);
 
@@ -79,6 +82,60 @@ export function useFeaturedContent(countries: Country[]) {
 
     return featured.slice(0, MAX_FEATURED_COUNTRIES);
   }, [countries]);
+
+  /**
+   * Get the current week number (1-52)
+   */
+  const getWeekNumber = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const diff = now.getTime() - start.getTime() + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+    const oneDay = 1000 * 60 * 60 * 24;
+    const day = Math.floor(diff / oneDay);
+    return Math.ceil(day / 7);
+  };
+
+  /**
+   * Fetch or retrieve Recipe of the Week
+   */
+  const fetchRecipeOfTheWeek = useCallback(async () => {
+    try {
+      const currentWeek = getWeekNumber();
+      const currentYear = new Date().getFullYear();
+      const storageKey = `${currentYear}-${currentWeek}`;
+
+      // Check local storage
+      const storedData = await AsyncStorage.getItem(RECIPE_OF_THE_WEEK_KEY);
+      
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        if (parsed.weekKey === storageKey && parsed.recipe) {
+          setRecipeOfTheWeek(parsed.recipe);
+          return;
+        }
+      }
+
+      // If no valid stored recipe, fetch a new random one
+      const newRecipe = await getRandomRecipe();
+      
+      // Store it
+      await AsyncStorage.setItem(RECIPE_OF_THE_WEEK_KEY, JSON.stringify({
+        weekKey: storageKey,
+        recipe: newRecipe
+      }));
+      
+      setRecipeOfTheWeek(newRecipe);
+    } catch (err) {
+      console.warn('Failed to fetch recipe of the week:', err);
+      // Fallback: try to fetch random without storing if storage fails
+      try {
+        const fallback = await getRandomRecipe();
+        setRecipeOfTheWeek(fallback);
+      } catch (e) {
+        console.error('Critical failure fetching recipe of the week');
+      }
+    }
+  }, []);
 
   /**
    * Fetch featured recipes with error handling and retry logic
@@ -147,15 +204,19 @@ export function useFeaturedContent(countries: Country[]) {
   // Fetch recipes on mount
   useEffect(() => {
     fetchFeaturedRecipes();
-  }, [fetchFeaturedRecipes]);
+    fetchRecipeOfTheWeek();
+  }, [fetchFeaturedRecipes, fetchRecipeOfTheWeek]);
 
   return {
     featuredCountries,
     featuredRecipes,
+    recipeOfTheWeek,
     loadingRecipes,
     recipesError,
     getRegionCount,
-    refetchRecipes: fetchFeaturedRecipes,
+    refetchRecipes: async () => {
+      await Promise.all([fetchFeaturedRecipes(), fetchRecipeOfTheWeek()]);
+    },
   };
 }
 

@@ -29,6 +29,7 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "transpilePackages": ["convex", "nativewind", "react-native-reanimated"],
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true

@@ -1,7 +1,18 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { YStack, XStack, Text, Heading, Paragraph, Button, Card } from 'tamagui';
+import Animated, { 
+  FadeInDown, 
+  FadeIn, 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withRepeat, 
+  withSequence, 
+  withTiming, 
+} from 'react-native-reanimated';
+import { YStack, XStack, Heading, Paragraph, Button, Card } from 'tamagui';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { StyleSheet } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { HOME_STATS } from '@/constants/HomeConfig';
@@ -14,8 +25,95 @@ interface HomeHeroProps {
   onBrowseAll: () => void;
 }
 
-const AnimatedYStack = Animated.createAnimatedComponent(YStack);
-const AnimatedXStack = Animated.createAnimatedComponent(XStack);
+const WavingHand = () => {
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    rotation.value = withRepeat(
+      withSequence(
+        withTiming(25, { duration: 150 }),
+        withTiming(-10, { duration: 150 }),
+        withTiming(35, { duration: 150 }),
+        withTiming(-5, { duration: 150 }),
+        withTiming(25, { duration: 150 }),
+        withTiming(0, { duration: 150 }),
+        withTiming(0, { duration: 5000 }) // 5 second delay between waves
+      ),
+      -1, // Infinite repeats
+      false // No reverse
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+    transformOrigin: 'bottom right', // Pivot from bottom right like a hand wave
+  }));
+
+  return (
+    <Animated.Text style={[{ fontSize: 18, lineHeight: 40 }, animatedStyle]}>
+      👋
+    </Animated.Text>
+  );
+};
+
+const CountingNumber = ({ value, color }: { value: string | number, color: string }) => {
+  const [displayValue, setDisplayValue] = useState('0');
+  
+  useEffect(() => {
+    let numericValue = 0;
+    let suffix = '';
+    
+    if (typeof value === 'number') {
+      numericValue = value;
+    } else {
+      const match = value.toString().match(/(\d+)(.*)/);
+      if (match) {
+        numericValue = parseInt(match[1], 10);
+        suffix = match[2];
+      }
+    }
+    
+    if (numericValue === 0) {
+        setDisplayValue(value.toString());
+        return;
+    }
+
+    // Dynamic duration based on value magnitude, capped at 2s
+    const duration = Math.min(2000, Math.max(800, numericValue * 50));
+    const startTime = Date.now();
+    const endTime = startTime + duration;
+
+    const updateCounter = () => {
+      const now = Date.now();
+      const progress = Math.min(1, (now - startTime) / duration);
+      
+      // Ease out quart
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      
+      const current = Math.floor(numericValue * easeProgress);
+      setDisplayValue(current + suffix);
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      }
+    };
+
+    requestAnimationFrame(updateCounter);
+  }, [value]);
+
+  return (
+    <Heading
+      size="$6" // Reduced from $8
+      fontWeight="900"
+      color={color}
+      letterSpacing={-0.5}
+      textAlign="center"
+      mb="$1"
+    >
+      {displayValue}
+    </Heading>
+  );
+};
 
 /**
  * Hero Section Component
@@ -28,21 +126,21 @@ export const HomeHero = React.memo<HomeHeroProps>(
 
     const welcomeText = useMemo(() => {
       if (isAuthenticated && userName) {
-        return `Welcome back, ${userName.split(' ')[0]}! 👋`;
+        return `Welcome back, ${userName.split(' ')[0]}!`;
       }
       return 'Taste the World';
     }, [isAuthenticated, userName]);
 
-  const subtitleText = useMemo(() => {
-    return isAuthenticated
-      ? 'Continue your culinary journey'
-      : 'Discover authentic cuisines from around the world';
-  }, [isAuthenticated]);
+    const subtitleText = useMemo(() => {
+      return isAuthenticated
+        ? 'Continue your culinary journey'
+        : 'Discover authentic cuisines from around the world';
+    }, [isAuthenticated]);
 
-  const handleBrowseAllPress = () => {
-    haptics.medium();
-    onBrowseAll();
-  };
+    const handleBrowseAllPress = () => {
+      haptics.medium();
+      onBrowseAll();
+    };
 
     const stats = useMemo(
       () => [
@@ -66,7 +164,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
     );
 
     return (
-      <AnimatedYStack entering={FadeInDown.delay(100)} width="100%" paddingHorizontal="$5">
+      <Animated.View entering={FadeInDown.delay(100)} style={{ width: '100%', marginBottom: 20, paddingHorizontal: 20 }}>
         <Card
           elevate
           bordered
@@ -87,26 +185,34 @@ export const HomeHero = React.memo<HomeHeroProps>(
           shadowOpacity={colorScheme === 'dark' ? 0.5 : 0.15}
           shadowRadius={32}
           elevation={12}
-          // Glassmorphism effect
-          style={{
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-          }}
+          justifyContent="center"
+          overflow="hidden" // Required for BlurView borderRadius
         >
+          {/* Native Blur View */}
+          <BlurView
+            intensity={30}
+            tint={colorScheme === 'dark' ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
+          
           {/* Header Section */}
-          <YStack mb="$5">
+          <YStack alignItems="center" justifyContent="center" mb="$5">
             {/* Title and Subtitle */}
-            <YStack mb="$5">
+            <YStack alignItems="center" justifyContent="center" mb="$5">
               <Animated.View entering={FadeIn.delay(150)}>
-                <Heading
-                  size="$10"
-                  fontWeight="900"
-                  letterSpacing={-1}
-                  mb="$2"
-                  color="$color"
-                >
-                  {welcomeText}
-                </Heading>
+                <XStack alignItems="center" flexWrap="wrap">
+                  <Heading
+                    size="$8"
+                    fontWeight="900"
+                    letterSpacing={-1}
+                    mb="$2"
+                    color="$color"
+                    marginRight="$2"
+                  >
+                    {welcomeText}
+                  </Heading>
+                  {isAuthenticated && userName && <WavingHand />}
+                </XStack>
                 <Paragraph size="$4" color="$color11" opacity={0.8} lineHeight="$2">
                   {subtitleText}
                 </Paragraph>
@@ -116,34 +222,29 @@ export const HomeHero = React.memo<HomeHeroProps>(
             {/* Enhanced Stats Row with Glassmorphism */}
             <XStack space="$3" mb="$5">
               {stats.map((stat, index) => (
-                <AnimatedXStack
+                <Animated.View
                   key={stat.label}
                   entering={FadeIn.delay(200 + index * 60)}
-                  flex={1}
+                  style={{ flex: 1 }}
                 >
                   <Card
                     elevate
                     bordered
-                    padding="$4"
+                    padding="$2"
                     borderRadius="$5"
-                    backgroundColor={
-                      colorScheme === 'dark'
-                        ? 'rgba(255, 255, 255, 0.08)'
-                        : 'rgba(255, 255, 255, 0.6)'
-                    }
-                    borderColor={
-                      colorScheme === 'dark'
-                        ? 'rgba(255, 255, 255, 0.12)'
-                        : 'rgba(255, 255, 255, 0.8)'
-                    }
+                    alignItems="center" // Center content horizontally
+                    justifyContent="center" // Center content vertically
                     animation="quick"
                     pressStyle={{ scale: 0.97 }}
-                    // Glassmorphism
-                    style={{
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)',
-                    }}
+                    overflow="hidden"
                   >
+                    {/* Native Blur View */}
+                    <BlurView
+                      intensity={20}
+                      tint={colorScheme === 'dark' ? 'dark' : 'light'}
+                      style={StyleSheet.absoluteFill}
+                    />
+
                     {/* Icon */}
                     <YStack
                       width={36}
@@ -152,7 +253,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
                       ai="center"
                       jc="center"
                       backgroundColor={colors.tint + '15'}
-                      mb="$3"
+                      mb="$2" // Reduced margin
                     >
                       <FontAwesome5
                         name={stat.icon}
@@ -162,15 +263,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
                     </YStack>
 
                     {/* Value */}
-                    <Heading
-                      size="$8"
-                      fontWeight="900"
-                      color={colors.tint}
-                      letterSpacing={-0.8}
-                      mb="$1"
-                    >
-                      {stat.value}
-                    </Heading>
+                    <CountingNumber value={stat.value} color={colors.tint} />
 
                     {/* Label */}
                     <Paragraph
@@ -180,25 +273,26 @@ export const HomeHero = React.memo<HomeHeroProps>(
                       letterSpacing={0.5}
                       color="$color11"
                       opacity={0.6}
+                      textAlign="center" // Ensure text is centered
                     >
                       {stat.label}
                     </Paragraph>
                   </Card>
-                </AnimatedXStack>
+                </Animated.View>
               ))}
             </XStack>
           </YStack>
 
-          {/* Premium CTA Button */}
-          <AnimatedYStack entering={FadeIn.delay(380)}>
+          {/* Premium CTA Button with Gradient */}
+          <Animated.View entering={FadeIn.delay(380)}>
             <Button
               onPress={handleBrowseAllPress}
               size="$5"
               borderRadius="$5"
-              backgroundColor={colors.tint}
+              padding={0} // Remove padding to let gradient fill
+              overflow="hidden"
               borderWidth={0}
-              pressStyle={{ scale: 0.98, opacity: 0.85 }}
-              hoverStyle={{ backgroundColor: colors.tint, opacity: 0.9 }}
+              pressStyle={{ scale: 0.98, opacity: 0.9 }}
               animation="quick"
               shadowColor={colors.tint}
               shadowOffset={{ width: 0, height: 12 }}
@@ -206,13 +300,27 @@ export const HomeHero = React.memo<HomeHeroProps>(
               shadowRadius={20}
               elevation={10}
             >
-              <XStack ai="center" jc="space-between" width="100%" paddingHorizontal="$3">
+              <LinearGradient
+                colors={[colors.tint, '#FB923C']} // Gradient from tint to lighter orange
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <XStack ai="center" flex={1} space="$3">
                   {/* Icon Container */}
                   <YStack
-                    width={52}
-                    height={52}
+                    width={42}
+                    height={42}
                     borderRadius="$4"
+                    padding="$2"
                     ai="center"
                     jc="center"
                     backgroundColor="rgba(255,255,255,0.2)"
@@ -255,11 +363,11 @@ export const HomeHero = React.memo<HomeHeroProps>(
                     color="white"
                   />
                 </YStack>
-              </XStack>
+              </LinearGradient>
             </Button>
-          </AnimatedYStack>
+          </Animated.View>
         </Card>
-      </AnimatedYStack>
+      </Animated.View>
     );
   }
 );

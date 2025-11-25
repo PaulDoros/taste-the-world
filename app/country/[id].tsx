@@ -32,6 +32,7 @@ import { COUNTRY_TO_AREA_MAP } from "@/constants/Config";
 import { useColorScheme } from "@/components/useColorScheme";
 import { RecipeCard } from "@/components/RecipeCard";
 import { haptics } from "@/utils/haptics";
+import { DetailSkeleton } from "@/components/SkeletonLoader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -114,21 +115,7 @@ const CountryDetailsScreen = () => {
 
   // Loading state
   if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.tint} />
-        <Text style={{ color: colors.text, marginTop: 16, fontSize: 16 }}>
-          Loading country...
-        </Text>
-      </View>
-    );
+    return <DetailSkeleton />;
   }
 
   // Error state

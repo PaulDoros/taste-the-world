@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  FadeInUp,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Card, XStack, YStack, Paragraph, Text } from 'tamagui';
 import { Colors } from '@/constants/Colors';
 import { UnifiedShoppingListItem } from '@/hooks/useShoppingList';
 import { canConvert, getConvertedDisplay } from '@/utils/measurementConverter';
@@ -19,6 +18,8 @@ interface ShoppingListItemProps {
   colors: typeof Colors.light;
 }
 
+const AnimatedCard = Animated.createAnimatedComponent(Card);
+
 export const ShoppingListItem = ({
   item,
   index,
@@ -30,27 +31,29 @@ export const ShoppingListItem = ({
   colors,
 }: ShoppingListItemProps) => {
   return (
-    <Animated.View
+    <AnimatedCard
       entering={FadeInUp.delay(index * 30).springify()}
-      style={{
-        marginBottom: 12,
-      }}
+      marginBottom="$3"
+      padding="$4"
+      borderRadius="$5"
+      bordered
+      backgroundColor={
+        item.checked
+          ? 'rgba(200, 200, 200, 0.1)'
+          : colors.card // Should be white or dark card color
+      }
+      borderColor={item.checked ? 'transparent' : '$borderColor'}
+      opacity={item.checked ? 0.6 : 1}
+      elevation={item.checked ? 0 : 2}
+      // Glassmorphism
+      style={
+        {
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        } as any
+      }
     >
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-          opacity: item.checked ? 0.6 : 1,
-        }}
-      >
+      <XStack alignItems="center">
         {/* Checkbox */}
         <Pressable
           onPress={onToggle}
@@ -72,60 +75,50 @@ export const ShoppingListItem = ({
         </Pressable>
 
         {/* Content */}
-        <View style={{ flex: 1, marginRight: 12 }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: '600',
-              textDecorationLine: item.checked ? 'line-through' : 'none',
-              opacity: item.checked ? 0.6 : 1,
-              marginBottom: 4,
-            }}
+        <YStack flex={1} marginRight="$3">
+          <Paragraph
+            size="$4"
+            fontWeight="600"
+            color="$color"
+            textDecorationLine={item.checked ? 'line-through' : 'none'}
+            opacity={item.checked ? 0.6 : 1}
+            marginBottom="$1"
           >
             {item.name}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 14,
-                opacity: 0.6,
-              }}
-            >
+          </Paragraph>
+          
+          <XStack alignItems="center" flexWrap="wrap">
+            <Paragraph size="$3" color="$color" opacity={0.6}>
               {showConversion && canConvert(item.measure)
                 ? getConvertedDisplay(item.measure)
                 : item.measure}
-            </Text>
+            </Paragraph>
             
             {item.recipeName && item.recipeName !== 'Custom Item' && (
               <>
-                <Text style={{ color: colors.text, opacity: 0.4, marginHorizontal: 6 }}>•</Text>
+                <Paragraph size="$3" color="$color" opacity={0.4} marginHorizontal="$2">•</Paragraph>
                 <Pressable onPress={onNavigateToRecipe}>
-                  <Text 
-                    style={{ 
-                      color: colors.tint, 
-                      fontSize: 13, 
-                      fontWeight: '500' 
-                    }}
+                  <Paragraph 
+                    size="$3" 
+                    color={colors.tint} 
+                    fontWeight="500"
                     numberOfLines={1}
                   >
                     {item.recipeName}
-                  </Text>
+                  </Paragraph>
                 </Pressable>
               </>
             )}
-          </View>
-        </View>
+          </XStack>
+        </YStack>
 
         {/* Actions */}
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <XStack alignItems="center" space="$2">
           <Pressable
             onPress={onMoveToPantry}
             style={({ pressed }) => ({
               padding: 8,
               opacity: pressed ? 0.6 : 1,
-              marginRight: 4,
             })}
           >
             <FontAwesome5 name="box" size={16} color={colors.text} style={{ opacity: 0.4 }} />
@@ -140,8 +133,8 @@ export const ShoppingListItem = ({
           >
             <FontAwesome5 name="trash-alt" size={16} color={colors.error} style={{ opacity: 0.6 }} />
           </Pressable>
-        </View>
-      </View>
-    </Animated.View>
+        </XStack>
+      </XStack>
+    </AnimatedCard>
   );
 };

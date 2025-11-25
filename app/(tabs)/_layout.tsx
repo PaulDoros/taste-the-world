@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { PersistentTabBar } from '@/components/PersistentTabBar';
 
 /**
  * Tab Layout Configuration
@@ -7,9 +8,9 @@ import { Tabs } from 'expo-router';
 export default function TabLayout() {
   return (
     <Tabs
+      tabBar={() => <PersistentTabBar />}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // Hide default tab bar, using PersistentTabBar instead
         // Tab transition animations
         animation: 'shift',
         transitionSpec: {

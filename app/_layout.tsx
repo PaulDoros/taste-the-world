@@ -41,7 +41,6 @@ if (__DEV__) {
 }
 
 import { useColorScheme } from "@/components/useColorScheme";
-import { PersistentTabBar } from "@/components/PersistentTabBar";
 import { ConvexProvider } from "convex/react";
 import { convex } from "@/lib/convex";
 import { TamaguiProvider } from "tamagui";
@@ -94,6 +93,8 @@ function RootLayoutNav() {
           <Stack
             screenOptions={{
               headerShown: false,
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
             }}
           >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -140,9 +141,6 @@ function RootLayoutNav() {
             }}
           />
         </Stack>
-        {/* Persistent Tab Bar - Shows on all screens */}
-        {/* <PersistentTabBar /> */}
-        <PersistentTabBar />
       </ThemeProvider>
     </ConvexProvider>
     </TamaguiProvider>

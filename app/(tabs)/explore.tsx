@@ -11,7 +11,8 @@ import { CountryCard } from "@/components/CountryCard";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterBar } from "@/components/FilterBar";
 import { StaggeredListItem } from "@/components/StaggeredList";
-import { SkeletonGrid } from "@/components/SkeletonLoader";
+import { SkeletonGrid, ExploreHeaderSkeleton } from "@/components/SkeletonLoader";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { Country } from "@/types";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -136,27 +137,9 @@ export default function ExploreScreen() {
         </View>
 
         {/* Skeleton Loader */}
+        {/* <ExploreHeaderSkeleton /> */}
         <SkeletonGrid count={6} />
       </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <View
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: colors.background }}
-      >
-        <Text
-          className="text-lg font-bold mb-2"
-          style={{ color: colors.error }}
-        >
-          Oops!
-        </Text>
-        <Text className="text-center" style={{ color: colors.text }}>
-          {error}
-        </Text>
-      </View>
     );
   }
 
@@ -167,7 +150,8 @@ export default function ExploreScreen() {
       edges={["top", "left", "right"]}
     >
       {/* Header */}
-      <View
+      <Animated.View
+        entering={FadeInDown.delay(100).springify()}
         style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
       >
         <Text
@@ -184,25 +168,27 @@ export default function ExploreScreen() {
         <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
           Discover authentic cuisines from around the world
         </Text>
-      </View>
+      </Animated.View>
 
-      {/* Modern Search Bar Component */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search countries, capitals, regions..."
-        colors={colors}
-      />
+      <Animated.View entering={FadeInDown.delay(200).springify()}>
+        {/* Modern Search Bar Component */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search countries, capitals, regions..."
+          colors={colors}
+        />
 
-      {/* Modern Filter Bar Component */}
-      <FilterBar
-        selectedRegion={selectedRegion}
-        selectedPremium={selectedPremium}
-        onRegionChange={setSelectedRegion}
-        onPremiumChange={setSelectedPremium}
-        onClearAll={handleClearAllFilters}
-        colors={colors}
-      />
+        {/* Modern Filter Bar Component */}
+        <FilterBar
+          selectedRegion={selectedRegion}
+          selectedPremium={selectedPremium}
+          onRegionChange={setSelectedRegion}
+          onPremiumChange={setSelectedPremium}
+          onClearAll={handleClearAllFilters}
+          colors={colors}
+        />
+      </Animated.View>
 
       {/* Results Count */}
       {(searchQuery.length > 0 ||
@@ -229,7 +215,7 @@ export default function ExploreScreen() {
           gap: 12,
         }}
         renderItem={({ item, index }) => (
-          <StaggeredListItem index={index}>
+          <StaggeredListItem index={index} staggerDelay={50}>
             <CountryCard
               country={item}
               isPremium={isPremiumCountry(item.name.common)}

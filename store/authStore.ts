@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -111,9 +112,11 @@ export function useAuth() {
   );
 
   // Update user when query result changes
-  if (currentUser && currentUser !== user) {
-    updateUser(currentUser);
-  }
+  useEffect(() => {
+    if (currentUser && JSON.stringify(currentUser) !== JSON.stringify(user)) {
+      updateUser(currentUser);
+    }
+  }, [currentUser, user, updateUser]);
 
   const isAuthenticated = !!token && !!user;
   const isPremium = user?.subscriptionType !== "free";

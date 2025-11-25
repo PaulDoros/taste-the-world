@@ -96,14 +96,17 @@ export function useShoppingList() {
     }
   };
 
+  const isLoading = isAuthenticated && convexItems === undefined;
+
   return {
-    items,
+    items: isLoading ? undefined : items, // Return undefined while loading to trigger skeleton
     addItem,
     addMultipleItems,
     removeItem,
     toggleItemChecked,
     clearCheckedItems,
     clearAllItems,
-    isAuthenticated
+    isAuthenticated,
+    isLoading
   };
 }

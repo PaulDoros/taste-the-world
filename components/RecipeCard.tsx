@@ -148,7 +148,7 @@ export const RecipeCard = ({ recipe, onPress }: RecipeCardProps) => {
         {/* Bottom Info */}
         <View
           style={{
-            padding: 12,
+            padding: 0,
             backgroundColor: colors.card,
           }}
         >

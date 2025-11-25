@@ -39,6 +39,7 @@ import { useFavoritesStore } from "@/store/favoritesStore";
 import { haptics } from "@/utils/haptics";
 import { canConvert, getConvertedDisplay } from "@/utils/measurementConverter";
 import { IngredientSelectorModal } from "@/components/IngredientSelectorModal";
+import { DetailSkeleton } from "@/components/SkeletonLoader";
 import { Id } from "@/convex/_generated/dataModel";
 
 const RecipeDetailsScreen = () => {
@@ -211,21 +212,7 @@ const RecipeDetailsScreen = () => {
 
   // Loading state
   if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.tint} />
-        <Text style={{ color: colors.text, marginTop: 12 }}>
-          Loading recipe...
-        </Text>
-      </View>
-    );
+    return <DetailSkeleton />;
   }
 
   // Error state

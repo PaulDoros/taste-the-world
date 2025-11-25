@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
+  View,
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -17,22 +19,24 @@ import Animated, {
   FadeInUp,
   FadeInLeft,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { YStack, XStack, Text, Paragraph, Button, Card, Separator } from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Input } from '@/components/forms/Input';
+
 import { OAuthButton } from '@/components/auth/OAuthButton';
 import { useAuth } from '@/hooks/useAuth';
 import { haptics } from '@/utils/haptics';
 
-export default function SignUpScreen() {
+export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signUp, signInWithOAuth, isLoading, error, clearError } = useAuth();
+  const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
 
   // Google OAuth
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -42,37 +46,20 @@ export default function SignUpScreen() {
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{
-    name?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-  }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
 
-  const validateEmail = (email: string): boolean => {
+  const validateEmail = (value: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(value);
   };
 
   const validateForm = (): boolean => {
-    const newErrors: {
-      name?: string;
-      email?: string;
-      password?: string;
-      confirmPassword?: string;
-    } = {};
-
-    if (!name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    }
+    const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
       newErrors.email = 'Email is required';
@@ -84,22 +71,13 @@ export default function SignUpScreen() {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(password)) {
-      newErrors.password =
-        'Password must contain at least one uppercase and one lowercase letter';
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = async () => {
+  const handleLogin = async () => {
     haptics.medium();
     clearError();
 
@@ -109,11 +87,12 @@ export default function SignUpScreen() {
     }
 
     try {
-      await signUp(email.trim().toLowerCase(), password, name.trim());
+      await signIn(email.trim().toLowerCase(), password);
       haptics.success();
       router.replace('/(tabs)');
     } catch {
       haptics.error();
+      // Error handled by useAuth
     }
   };
 
@@ -178,6 +157,7 @@ export default function SignUpScreen() {
     alert('Facebook Sign In coming soon!');
   };
 
+
   return (
     <SafeAreaView
       className="flex-1"
@@ -190,7 +170,7 @@ export default function SignUpScreen() {
         top={0}
         left={0}
         right={0}
-        bottom={0}
+        minHeight="100%"
         backgroundColor={colors.background}
       />
       <KeyboardAvoidingView
@@ -200,51 +180,41 @@ export default function SignUpScreen() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
+            minHeight: Dimensions.get('window').height,
             paddingBottom: insets.bottom + 20,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Modern Back Button */}
+          {/* Compact Back Button */}
           <Animated.View
             entering={FadeInLeft.delay(50)}
-            style={{ paddingHorizontal: 16, marginBottom: 12 }}
+            style={{  paddingHorizontal: 16, marginBottom: 8 }}
           >
             <Pressable
               onPress={handleGoBack}
               style={({ pressed }) => ({
-                flexDirection: 'row',
+                width: 36,
+                height: 36,
+                borderRadius: 18,
                 alignItems: 'center',
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 12,
-                backgroundColor: pressed 
-                  ? (colorScheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')
-                  : (colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)'),
-                borderWidth: 1,
-                borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                alignSelf: 'flex-start',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-                elevation: 2,
+                justifyContent: 'center',
+                backgroundColor: pressed ? colors.border : 'transparent',
+                opacity: pressed ? 0.7 : 1,
               })}
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
               <FontAwesome5
                 name="chevron-left"
-                size={16}
+                size={20}
                 color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
-                style={{ marginRight: 6 }}
               />
               <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: '600',
-                  color: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
-                }}
+                fontSize="$2"
+                fontWeight="600"
+                color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
+                ml="$2"
               >
                 Back
               </Text>
@@ -253,55 +223,12 @@ export default function SignUpScreen() {
 
           {/* Header + Card */}
           <YStack flex={1} px="$4" mt="$1">
-            {/* iOS-style Header */}
-            <Animated.View entering={FadeInUp.delay(90)} style={{ marginBottom: 20 }}>
-              <YStack ai="center" mb="$4">
-                {/* App Icon */}
-                <Animated.View
-                  entering={FadeInDown.delay(120)}
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 16,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: colors.tint,
-                    shadowColor: colors.tint,
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 12,
-                    elevation: 6,
-                    marginBottom: 16,
-                  }}
-                >
-                  <FontAwesome5 name="user-plus" size={26} color="#FFFFFF" />
-                </Animated.View>
-              </YStack>
-              <Text
-                fontSize="$10"
-                fontWeight="700"
-                mb="$2"
-                color="$color"
-                textAlign="center"
-              >
-                Create Account
-              </Text>
-              <Paragraph
-                size="$4"
-                lineHeight="$2"
-                color="$color11"
-                textAlign="center"
-                maxWidth={280}
-              >
-                Join us and explore cuisines from around the world
-              </Paragraph>
-            </Animated.View>
+       
 
-            {/* iOS-style signup card */}
+            {/* iOS-style login card */}
             <Card
               elevate
               bordered
-              entering={FadeInDown.delay(140)}
               borderRadius="$5"
               padding="$5"
               backgroundColor={
@@ -320,26 +247,9 @@ export default function SignUpScreen() {
               shadowRadius={20}
               elevation={6}
             >
+
               {/* Form fields */}
               <YStack space="$4" mb="$4">
-                <Input
-                  label="Full Name"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChangeText={(text) => {
-                    setName(text);
-                    if (errors.name) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        name: undefined,
-                      }));
-                    }
-                  }}
-                  autoCapitalize="words"
-                  leftIcon="user"
-                  error={errors.name}
-                />
-
                 <Input
                   label="Email"
                   placeholder="you@example.com"
@@ -362,7 +272,7 @@ export default function SignUpScreen() {
 
                 <Input
                   label="Password"
-                  placeholder="Create a password"
+                  placeholder="Enter your password"
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -382,88 +292,7 @@ export default function SignUpScreen() {
                   }}
                   error={errors.password}
                 />
-
-                <Input
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    if (errors.confirmPassword) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        confirmPassword: undefined,
-                      }));
-                    }
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                  leftIcon="lock"
-                  rightIcon={showConfirmPassword ? 'eye-slash' : 'eye'}
-                  onRightIconPress={() => {
-                    setShowConfirmPassword((prev) => !prev);
-                    haptics.selection();
-                  }}
-                  error={errors.confirmPassword}
-                />
               </YStack>
-
-              {/* Password Requirements */}
-              {password && (
-                <Animated.View
-                  entering={FadeIn}
-                  style={{
-                    padding: 12,
-                    borderRadius: 12,
-                    marginBottom: 16,
-                    backgroundColor:
-                      colorScheme === 'dark'
-                        ? 'rgba(255,255,255,0.05)'
-                        : 'rgba(0,0,0,0.02)',
-                    borderWidth: 1,
-                    borderColor:
-                      colorScheme === 'dark'
-                        ? 'rgba(255,255,255,0.1)'
-                        : 'rgba(0,0,0,0.05)',
-                  }}
-                >
-                  <Text
-                    fontSize="$2"
-                    fontWeight="600"
-                    mb="$2"
-                    color="$color11"
-                  >
-                    Password Requirements:
-                  </Text>
-                  <YStack space="$2">
-                    {[
-                      { check: password.length >= 6, text: 'At least 6 characters' },
-                      {
-                        check: /(?=.*[a-z])/.test(password),
-                        text: 'One lowercase letter',
-                      },
-                      {
-                        check: /(?=.*[A-Z])/.test(password),
-                        text: 'One uppercase letter',
-                      },
-                    ].map((req, index) => (
-                      <XStack key={index} ai="center" space="$2">
-                        <FontAwesome5
-                          name={req.check ? 'check-circle' : 'circle'}
-                          size={12}
-                          color={req.check ? colors.success : colors.tabIconDefault}
-                        />
-                        <Text
-                          fontSize="$2"
-                          fontWeight="500"
-                          color={req.check ? colors.success : '$color11'}
-                        >
-                          {req.text}
-                        </Text>
-                      </XStack>
-                    ))}
-                  </YStack>
-                </Animated.View>
-              )}
 
               {/* Error Message */}
               {error && (
@@ -492,10 +321,31 @@ export default function SignUpScreen() {
                 </Animated.View>
               )}
 
+              {/* Forgot Password - iOS style */}
+              <Button
+                onPress={() => {
+                  haptics.light();
+                  // TODO: Implement forgot password flow
+                }}
+                size="$3"
+                alignSelf="flex-end"
+                mb="$4"
+                chromeless
+                pressStyle={{ opacity: 0.6 }}
+              >
+                <Text
+                  fontSize="$3"
+                  fontWeight="600"
+                  color={colors.tint}
+                >
+                  Forgot Password?
+                </Text>
+              </Button>
+
               {/* Primary button - iOS style */}
               <Button
-                onPress={handleSignUp}
-                disabled={isLoading}
+                onPress={handleLogin}
+                disabled={!!isLoading}
                 size="$4"
                 backgroundColor={colors.tint}
                 color="white"
@@ -506,7 +356,7 @@ export default function SignUpScreen() {
                 pressStyle={{ scale: 0.98, opacity: 0.9 }}
                 opacity={isLoading ? 0.6 : 1}
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
 
               {/* Divider - iOS style */}
@@ -529,8 +379,9 @@ export default function SignUpScreen() {
                   provider="google"
                   onPress={handleGoogleSignIn}
                   loading={!!isLoading}
-                  disabled={!request}
+                 
                   delay={220}
+                  
                 />
                 {Platform.OS === 'ios' && (
                   <OAuthButton
@@ -549,7 +400,7 @@ export default function SignUpScreen() {
               </YStack>
             </Card>
 
-            {/* Sign in footer - iOS style */}
+            {/* Sign up footer - iOS style */}
             <Animated.View
               entering={FadeInUp.delay(260)}
               style={{ alignItems: 'center', marginTop: 32 }}
@@ -559,12 +410,12 @@ export default function SignUpScreen() {
                   fontSize="$3"
                   color="$color11"
                 >
-                  Already have an account?
+                  Don&apos;t have an account?
                 </Text>
                 <Button
                   onPress={() => {
                     haptics.light();
-                    router.push('/auth/login');
+                    router.push('/auth/signup');
                   }}
                   size="$3"
                   chromeless
@@ -575,7 +426,7 @@ export default function SignUpScreen() {
                     fontWeight="600"
                     color={colors.tint}
                   >
-                    Sign In
+                    Sign Up
                   </Text>
                 </Button>
               </XStack>

@@ -18,7 +18,7 @@ const PROVIDER_CONFIG = {
     name: 'Google',
     icon: 'google' as const,
     color: '#4285F4',
-    bgColor: '#FFFFFF',
+    bgColor: '#4285F4',
     textColor: '#3C4043',
     borderColor: '#DADCE0',
   },

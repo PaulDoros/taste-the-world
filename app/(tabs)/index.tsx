@@ -1,21 +1,22 @@
+import { AuthCTA } from '@/components/home/AuthCTA';
+import { FeaturedSection } from '@/components/home/FeaturedSection';
+import { HomeHero } from '@/components/home/HomeHero';
+import { RecipeOfTheWeek } from '@/components/home/RecipeOfTheWeek';
+import { RegionGrid } from '@/components/home/RegionGrid';
+import { useCountries } from '@/hooks/useCountries';
+import { useFeaturedContent } from '@/hooks/useFeaturedContent';
+import { useAuth } from '@/store/authStore';
+import { ScrollView, RefreshControl } from 'react-native';
 import { useCallback } from 'react';
-import { RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { YStack, ScrollView, Spinner, Heading, Paragraph, Button, Card } from 'tamagui';
+import { YStack, Spinner, Heading, Paragraph, Button, Card } from 'tamagui';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useCountries } from '@/hooks/useCountries';
-import { useAuth } from '@/hooks/useAuth';
-import { useFeaturedContent } from '@/hooks/useFeaturedContent';
 import { haptics } from '@/utils/haptics';
-import { HomeHero } from '@/components/home/HomeHero';
-import { FeaturedSection } from '@/components/home/FeaturedSection';
-import { RegionGrid } from '@/components/home/RegionGrid';
-import { AuthCTA } from '@/components/home/AuthCTA';
 
 const AnimatedYStack = Animated.createAnimatedComponent(YStack);
 
@@ -29,6 +30,7 @@ export default function HomeScreen() {
   const {
     featuredCountries,
     featuredRecipes,
+    recipeOfTheWeek,
     loadingRecipes,
     recipesError,
     getRegionCount,
@@ -225,6 +227,7 @@ export default function HomeScreen() {
         }
         contentContainerStyle={{
           paddingBottom: 100 + insets.bottom + 32,
+          paddingTop: 16,
         }}
       >
         {/* Hero Section */}
@@ -235,6 +238,15 @@ export default function HomeScreen() {
           onBrowseAll={handleBrowseAll}
         />
 
+        {/* Recipe of the Week */}
+        {recipeOfTheWeek && (
+          <RecipeOfTheWeek
+            recipe={recipeOfTheWeek}
+            onPress={handleRecipePress}
+            delay={200}
+          />
+        )}
+
         {/* Featured Countries */}
         {featuredCountries.length > 0 && (
           <FeaturedSection
@@ -244,12 +256,13 @@ export default function HomeScreen() {
             onSeeAll={handleBrowseAll}
             onCountryPress={handleCountryPress}
             onRecipePress={handleRecipePress}
-            delay={200}
+            delay={300}
           />
         )}
 
         {/* Featured Recipes */}
         {featuredRecipes.length > 0 && (
+          
           <FeaturedSection
             title="Popular Recipes"
             subtitle="Trending dishes from around the world"

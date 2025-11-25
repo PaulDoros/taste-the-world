@@ -112,7 +112,7 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 16, paddingRight: 24 }}
+          contentContainerStyle={{paddingVertical: 20, paddingHorizontal: 20, gap: 16, paddingRight: 80 }}
         >
           {countries?.map((country, index) => (
             <Animated.View

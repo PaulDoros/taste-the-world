@@ -5,6 +5,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -169,7 +170,7 @@ export default function LoginScreen() {
         top={0}
         left={0}
         right={0}
-        bottom={0}
+        minHeight="100%"
         backgroundColor={colors.background}
       />
       <KeyboardAvoidingView
@@ -179,86 +180,109 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
+            minHeight: Dimensions.get('window').height,
             paddingBottom: insets.bottom + 20,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* iOS-style Back Button */}
+          {/* Modern Back Button */}
           <Animated.View
             entering={FadeInLeft.delay(50)}
-            style={{ paddingTop: insets.top + 8, paddingHorizontal: 20 }}
+            style={{ paddingHorizontal: 16, marginBottom: 12 }}
           >
-            <Button
+            <Pressable
               onPress={handleGoBack}
-              size="$3"
-              circular
-              chromeless
-              pressStyle={{ scale: 0.95, opacity: 0.7 }}
-              backgroundColor="transparent"
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                borderRadius: 12,
+                backgroundColor: pressed 
+                  ? (colorScheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')
+                  : (colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)'),
+                borderWidth: 1,
+                borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                alignSelf: 'flex-start',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              })}
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
               <FontAwesome5
-                name="angle-left"
-                size={22}
+                name="chevron-left"
+                size={16}
                 color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
-                solid
+                style={{ marginRight: 6 }}
               />
-            </Button>
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: '600',
+                  color: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
+                }}
+              >
+                Back
+              </Text>
+            </Pressable>
           </Animated.View>
 
           {/* Header + Card */}
-          <YStack flex={1} px="$5" mt="$2">
-            {/* iOS-style Header */}
-            <Animated.View entering={FadeInUp.delay(90)} style={{ marginBottom: 32 }}>
-              <YStack ai="center" mb="$4">
+          <YStack flex={1} px="$4" mt="$1">
+            {/* Header with Icon */}
+            <Animated.View entering={FadeInUp.delay(90)} style={{ marginBottom: 24, alignItems: 'center' }}>
+              <YStack ai="center" mb="$3">
                 {/* App Icon */}
                 <Animated.View
                   entering={FadeInDown.delay(120)}
                   style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 22,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: colors.tint,
                     shadowColor: colors.tint,
-                    shadowOffset: { width: 0, height: 8 },
+                    shadowOffset: { width: 0, height: 6 },
                     shadowOpacity: 0.3,
-                    shadowRadius: 16,
-                    elevation: 8,
-                    marginBottom: 24,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  
                   }}
                 >
-                  <FontAwesome5 name="utensils" size={36} color="#FFFFFF" />
+                  <FontAwesome5 name="utensils" size={18} color="#FFFFFF" />
                 </Animated.View>
               </YStack>
               <Text
-                fontSize="$10"
+                fontSize="$9"
                 fontWeight="700"
-                mb="$2"
                 color="$color"
                 textAlign="center"
               >
-                Welcome Back
+                Log In
               </Text>
               <Paragraph
-                size="$4"
+                size="$3"
                 lineHeight="$2"
                 color="$color11"
                 textAlign="center"
                 maxWidth={280}
+                mt="$2"
               >
-                Sign in to continue exploring
+                Welcome back to Taste the World
               </Paragraph>
             </Animated.View>
+       
 
             {/* iOS-style login card */}
             <Card
               elevate
               bordered
-              entering={FadeInDown.delay(140)}
               borderRadius="$5"
               padding="$5"
               backgroundColor={
@@ -409,8 +433,9 @@ export default function LoginScreen() {
                   provider="google"
                   onPress={handleGoogleSignIn}
                   loading={!!isLoading}
-                  disabled={!request}
+                 
                   delay={220}
+                  
                 />
                 {Platform.OS === 'ios' && (
                   <OAuthButton
