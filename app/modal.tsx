@@ -3,15 +3,16 @@ import { Platform, StyleSheet, ScrollView, Alert } from 'react-native';
 import { View } from '@/components/Themed';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { PricingSection } from '@/components/settings/PricingSection';
+import { BenefitsGrid } from '@/components/BenefitsGrid';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
-import { YStack, Text, XStack, Card, useTheme, Button } from 'tamagui';
+import { YStack, Text, Card, Button, useTheme } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { haptics } from '@/utils/haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '@/theme/gradients';
 import { brandColors } from '@/theme/colors';
+import { benefits } from '@/constants/Benefits';
 
 export default function ModalScreen() {
   const { feature } = useLocalSearchParams<{ feature: string }>();
@@ -39,34 +40,6 @@ export default function ModalScreen() {
       ]
     );
   };
-
-  const benefits = [
-    {
-      icon: 'robot',
-      title: 'AI Chef Assistant',
-      description: 'Personalized AI suggestions',
-    },
-    {
-      icon: 'globe-americas',
-      title: 'All 195+ Countries',
-      description: 'Unlock the entire world',
-    },
-    {
-      icon: 'download',
-      title: 'Offline Mode',
-      description: 'Download maps & recipes',
-    },
-    {
-      icon: 'camera',
-      title: 'Pantry Scanner',
-      description: 'Scan ingredients instantly',
-    },
-    {
-      icon: 'ban',
-      title: 'No Ads',
-      description: 'Seamless experience',
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -123,56 +96,12 @@ export default function ModalScreen() {
             onUpgrade={handleUpgrade}
           />
 
-          {/* Detailed Benefits - More Subtle */}
-          <YStack gap="$3">
-            <Text
-              fontSize="$4"
-              fontWeight="700"
-              marginLeft="$2"
-              opacity={0.7}
-              textTransform="uppercase"
-              letterSpacing={1}
-            >
-              What's Included
-            </Text>
-            <XStack flexWrap="wrap" gap="$2">
-              {benefits.map((benefit, index) => (
-                <Animated.View
-                  key={index}
-                  entering={FadeInDown.delay(100 + index * 50).springify()}
-                  style={{ width: '48%' }}
-                >
-                  <Card
-                    bordered
-                    padding="$3"
-                    backgroundColor="$card"
-                    pressStyle={{ scale: 0.98 }}
-                  >
-                    <YStack gap="$2" alignItems="center">
-                      <FontAwesome5
-                        name={benefit.icon}
-                        size={20}
-                        color={brandColors.primary}
-                      />
-                      <YStack alignItems="center">
-                        <Text fontSize="$3" fontWeight="700" textAlign="center">
-                          {benefit.title}
-                        </Text>
-                        <Text
-                          fontSize="$2"
-                          opacity={0.6}
-                          textAlign="center"
-                          numberOfLines={1}
-                        >
-                          {benefit.description}
-                        </Text>
-                      </YStack>
-                    </YStack>
-                  </Card>
-                </Animated.View>
-              ))}
-            </XStack>
-          </YStack>
+          {/* Detailed Benefits - Using Reusable Component */}
+          <BenefitsGrid
+            layout="list"
+            benefits={benefits}
+            accentColor={brandColors.primary}
+          />
 
           {/* Close Button */}
           <Button

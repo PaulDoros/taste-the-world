@@ -35,6 +35,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { PricingSection } from '@/components/settings/PricingSection';
 import { shareApp } from '@/utils/shareApp';
 import { requestRating } from '@/utils/rateApp';
+import { BenefitsGrid } from '@/components/BenefitsGrid';
+import { benefits } from '@/constants/Benefits';
+import { brandColors } from '@/theme/colors';
 
 interface SettingsItemProps {
   icon: string;
@@ -361,6 +364,11 @@ export default function SettingsScreen() {
               onSelectSubscription={setSelectedSubscription}
               onUpgrade={handleUpgrade}
             />
+            <BenefitsGrid
+              layout="grid"
+              benefits={benefits}
+              accentColor={brandColors.primary}
+            />
           </Animated.View>
         )}
 
@@ -404,7 +412,10 @@ export default function SettingsScreen() {
         )}
 
         {/* Account Section */}
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
+        <Animated.View
+          entering={FadeInDown.delay(200).springify()}
+          style={{ marginTop: 24 }}
+        >
           <Text
             fontSize="$5"
             fontWeight="700"
@@ -446,7 +457,7 @@ export default function SettingsScreen() {
         </Animated.View>
 
         {/* Premium Features Section */}
-        <Animated.View entering={FadeInDown.delay(400).springify()}>
+        {/* <Animated.View entering={FadeInDown.delay(400).springify()}>
           <Text
             fontSize="$5"
             fontWeight="700"
@@ -567,7 +578,7 @@ export default function SettingsScreen() {
               ) : undefined
             }
           />
-        </Animated.View>
+        </Animated.View> */}
 
         {/* App Section */}
         <Animated.View entering={FadeInDown.delay(600).springify()}>

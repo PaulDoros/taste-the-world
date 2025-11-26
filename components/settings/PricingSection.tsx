@@ -13,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { SUBSCRIPTION_PRICES, PREMIUM_BENEFITS } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
+import { gradients } from '@/theme/gradients';
+import { brandColors } from '@/theme/colors';
 
 interface PricingSectionProps {
   selectedSubscription: 'monthly' | 'yearly';
@@ -40,7 +42,7 @@ export const PricingSection = ({
         padding={0}
       >
         <LinearGradient
-          colors={['#0F172A', '#1E293B', '#0EA5E9']}
+          colors={gradients.primaryDark}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -55,10 +57,10 @@ export const PricingSection = ({
           <XStack alignItems="center" gap="$3">
             <View
               style={{
-                backgroundColor: '#3c1a8dff',
+                backgroundColor: brandColors.primary,
                 padding: 10,
                 borderRadius: 20,
-                shadowColor: '#8B5CF6',
+                shadowColor: brandColors.primary,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
@@ -86,7 +88,7 @@ export const PricingSection = ({
                 <FontAwesome5
                   name="check-circle"
                   size={14}
-                  color="#8B5CF6"
+                  color={brandColors.primary}
                   solid
                 />
                 <Text fontSize="$3" color="$color" opacity={0.9}>
@@ -109,10 +111,14 @@ export const PricingSection = ({
                 onSelectSubscription('monthly');
               }}
               backgroundColor={
-                selectedSubscription === 'monthly' ? '#8B5CF6' : '$background'
+                selectedSubscription === 'monthly'
+                  ? brandColors.primary
+                  : '$background'
               }
               borderColor={
-                selectedSubscription === 'monthly' ? '#8B5CF6' : '$borderColor'
+                selectedSubscription === 'monthly'
+                  ? brandColors.primary
+                  : '$borderColor'
               }
               padding="$3"
             >
@@ -149,10 +155,14 @@ export const PricingSection = ({
                 onSelectSubscription('yearly');
               }}
               backgroundColor={
-                selectedSubscription === 'yearly' ? '#8B5CF6' : '$background'
+                selectedSubscription === 'yearly'
+                  ? brandColors.primary
+                  : '$background'
               }
               borderColor={
-                selectedSubscription === 'yearly' ? '#8B5CF6' : '$borderColor'
+                selectedSubscription === 'yearly'
+                  ? brandColors.primary
+                  : '$borderColor'
               }
               padding="$3"
               position="relative"
@@ -163,7 +173,7 @@ export const PricingSection = ({
                   position: 'absolute',
                   top: -10,
                   right: -10,
-                  backgroundColor: '#10B981', // Keep green for savings
+                  backgroundColor: brandColors.success,
                   paddingHorizontal: 8,
                   paddingVertical: 2,
                   borderRadius: 10,
@@ -197,8 +207,8 @@ export const PricingSection = ({
           {/* Upgrade Button */}
           <Button
             size="$5"
-            backgroundColor="#8B5CF6"
-            hoverStyle={{ backgroundColor: '#7C3AED' }}
+            backgroundColor={brandColors.primary}
+            hoverStyle={{ backgroundColor: brandColors.primaryDeep }}
             pressStyle={{ opacity: 0.9, scale: 0.98 }}
             onPress={onUpgrade}
             icon={<FontAwesome5 name="star" size={14} color="white" />}
