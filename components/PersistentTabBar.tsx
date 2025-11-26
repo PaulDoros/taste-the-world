@@ -36,6 +36,14 @@ const TAB_CONFIG = [
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   {
+    name: 'map',
+    path: '/(tabs)/map',
+    title: 'Map',
+    icon: 'map-marked-alt',
+    color: '#3b82f6',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+  },
+  {
     name: 'shopping-list',
     path: '/(tabs)/shopping-list',
     title: 'Shopping',

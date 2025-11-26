@@ -1,5 +1,13 @@
 import { Tabs } from 'expo-router';
 import { PersistentTabBar } from '@/components/PersistentTabBar';
+import { FontAwesome5 } from '@expo/vector-icons';
+
+function TabBarIcon(props: {
+  name: React.ComponentProps<typeof FontAwesome5>['name'];
+  color: string;
+}) {
+  return <FontAwesome5 size={20} style={{ marginBottom: -3 }} {...props} />;
+}
 
 /**
  * Tab Layout Configuration
@@ -37,11 +45,25 @@ export default function TabLayout() {
         }}
       />
 
+      {/* Map Tab */}
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="map-marked-alt" color={color} />
+          ),
+        }}
+      />
+
       {/* Shopping List Tab */}
       <Tabs.Screen
         name="shopping-list"
         options={{
-          title: 'Shopping',
+          title: 'Pantry',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="shopping-basket" color={color} />
+          ),
         }}
       />
 

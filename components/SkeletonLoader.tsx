@@ -95,13 +95,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_GAP = 12;
 const CONTAINER_PADDING = 16;
 // Calculate exact card width: (Screen Width - Padding*2 - Gap) / 2
-const CARD_WIDTH = (SCREEN_WIDTH - (CONTAINER_PADDING * 2) - CARD_GAP) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - CONTAINER_PADDING * 2 - CARD_GAP) / 2;
 
 export const CountryCardSkeleton = () => {
   return (
     <View
       style={{
-        width: CARD_WIDTH,
+        flex: 1,
         borderRadius: 20,
         overflow: 'hidden',
         backgroundColor: 'white',
@@ -116,29 +116,31 @@ export const CountryCardSkeleton = () => {
       {/* Flag skeleton */}
       <View style={{ height: 200, position: 'relative' }}>
         <Skeleton width="100%" height={200} borderRadius={0} />
-        
+
         {/* Overlay Content Skeletons (Name & Region) */}
         <View style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
           {/* Country Name */}
-          <Skeleton 
-            width="70%" 
-            height={24} 
-            borderRadius={4} 
-            style={{ marginBottom: 8 }} 
+          <Skeleton
+            width="70%"
+            height={24}
+            borderRadius={4}
+            style={{ marginBottom: 8 }}
           />
           {/* Region Tag */}
-          <Skeleton 
-            width={60} 
-            height={20} 
-            borderRadius={12} 
-          />
+          <Skeleton width={60} height={20} borderRadius={12} />
         </View>
       </View>
 
       {/* Info Section */}
       <View style={{ padding: 12 }}>
         {/* Capital Row */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
           {/* Icon Circle */}
           <Skeleton
             width={28}
@@ -183,22 +185,33 @@ export const CountryCardSkeleton = () => {
 
 /**
  * Grid of skeleton cards
+ * Must match FlatList columnWrapperStyle exactly to prevent layout shift
  */
 export const SkeletonGrid = ({ count = 6 }: { count?: number }) => {
   return (
     <View
       style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
         paddingHorizontal: CONTAINER_PADDING,
-        paddingTop: CONTAINER_PADDING,
-        // We don't use gap here to avoid double spacing with marginBottom
-        // Instead we rely on justifyContent: 'space-between' and calculated widths
-        justifyContent: 'space-between',
       }}
     >
-      {Array.from({ length: count }).map((_, index) => (
-        <CountryCardSkeleton key={index} />
+      {Array.from({ length: Math.ceil(count / 2) }).map((_, rowIndex) => (
+        <View
+          key={rowIndex}
+          style={{
+            flexDirection: 'row',
+            gap: CARD_GAP,
+            marginBottom: rowIndex < Math.ceil(count / 2) - 1 ? 0 : 0, // No extra bottom margin
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <CountryCardSkeleton />
+          </View>
+          {rowIndex * 2 + 1 < count && (
+            <View style={{ flex: 1 }}>
+              <CountryCardSkeleton />
+            </View>
+          )}
+        </View>
       ))}
     </View>
   );
@@ -269,7 +282,7 @@ export const DetailSkeleton = () => {
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       {/* Hero Image */}
       <Skeleton width="100%" height={300} borderRadius={0} />
-      
+
       <View style={{ paddingHorizontal: 20, marginTop: -20 }}>
         {/* Title Card */}
         <View

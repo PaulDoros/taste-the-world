@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,14 @@ import {
   Pressable,
   Dimensions,
   Alert,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,19 +25,21 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-import { Country, Recipe } from "@/types";
-import { getAllCountries } from "@/services/countriesApi";
-import { getRecipesByArea } from "@/services/recipesApi";
-import { Colors } from "@/constants/Colors";
-import { COUNTRY_TO_AREA_MAP } from "@/constants/Config";
-import { useColorScheme } from "@/components/useColorScheme";
-import { RecipeCard } from "@/components/RecipeCard";
-import { haptics } from "@/utils/haptics";
-import { DetailSkeleton } from "@/components/SkeletonLoader";
+import { Country, Recipe } from '@/types';
+import { getAllCountries } from '@/services/countriesApi';
+import { getRecipesByArea } from '@/services/recipesApi';
+import { useUserStore } from '@/store/useUserStore';
+import { Colors } from '@/constants/Colors';
+import { COUNTRY_TO_AREA_MAP } from '@/constants/Config';
+import { useColorScheme } from '@/components/useColorScheme';
+import { RecipeCard } from '@/components/RecipeCard';
+import { haptics } from '@/utils/haptics';
+import { DetailSkeleton } from '@/components/SkeletonLoader';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_KEY;
 
 const CountryDetailsScreen = () => {
   // Get country code from URL
@@ -48,14 +53,37 @@ const CountryDetailsScreen = () => {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Weather state
+  const [weather, setWeather] = useState<{
+    temp: number;
+    condition: string;
+    icon: string;
+    description: string;
+    humidity: number;
+    windSpeed: number;
+  } | null>(null);
+
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
+
+  // Store hooks (Must be at top level, before early returns)
+  const bucketList = useUserStore((state) => state.bucketList);
+  const visitedCountries = useUserStore((state) => state.visitedCountries);
+  const toggleBucketList = useUserStore((state) => state.toggleBucketList);
+  const toggleVisited = useUserStore((state) => state.toggleVisited);
 
   // Fetch country data when screen loads
   useEffect(() => {
     fetchCountryDetails();
   }, [id]);
+
+  // Fetch weather when country loads
+  useEffect(() => {
+    if (country?.capital?.[0]) {
+      fetchWeather(country.capital[0]);
+    }
+  }, [country]);
 
   const fetchCountryDetails = async () => {
     try {
@@ -69,7 +97,7 @@ const CountryDetailsScreen = () => {
       );
 
       if (!foundCountry) {
-        throw new Error("Country not found");
+        throw new Error('Country not found');
       }
 
       setCountry(foundCountry);
@@ -77,8 +105,8 @@ const CountryDetailsScreen = () => {
       // Fetch recipes for this country
       await fetchRecipes(foundCountry.name.common);
     } catch (err) {
-      console.error("Error fetching country details:", err);
-      setError("Failed to load country details");
+      console.error('Error fetching country details:', err);
+      setError('Failed to load country details');
     } finally {
       setLoading(false);
     }
@@ -88,23 +116,30 @@ const CountryDetailsScreen = () => {
     try {
       setLoadingRecipes(true);
 
-      // Map country name to MealDB area
-      const area = COUNTRY_TO_AREA_MAP[countryName];
-
-      if (!area) {
-        console.log(`No recipes available for ${countryName}`);
-        setRecipes([]);
-        return;
-      }
+      // Map country name to MealDB area, or use country name as fallback (for API-Ninjas)
+      const area = COUNTRY_TO_AREA_MAP[countryName] || countryName;
 
       console.log(`Fetching recipes for area: ${area}`);
       const fetchedRecipes = await getRecipesByArea(area);
       setRecipes(fetchedRecipes);
     } catch (err) {
-      console.error("Error fetching recipes:", err);
+      console.error('Error fetching recipes:', err);
       setRecipes([]);
     } finally {
       setLoadingRecipes(false);
+    }
+  };
+
+  const fetchWeather = async (city: string) => {
+    try {
+      // Import dynamically to avoid circular dependencies if any
+      const { getWeatherByCity } = require('@/services/weatherApi');
+      const data = await getWeatherByCity(city);
+      if (data) {
+        setWeather(data);
+      }
+    } catch (err) {
+      console.error('Error fetching weather:', err);
     }
   };
 
@@ -124,17 +159,21 @@ const CountryDetailsScreen = () => {
       <View
         style={{
           flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
+          alignItems: 'center',
+          justifyContent: 'center',
           paddingHorizontal: 24,
           backgroundColor: colors.background,
         }}
       >
-        <FontAwesome5 name="exclamation-circle" size={64} color={colors.error} />
+        <FontAwesome5
+          name="exclamation-circle"
+          size={64}
+          color={colors.error}
+        />
         <Text
           style={{
             fontSize: 24,
-            fontWeight: "700",
+            fontWeight: '700',
             marginTop: 16,
             color: colors.error,
           }}
@@ -143,14 +182,14 @@ const CountryDetailsScreen = () => {
         </Text>
         <Text
           style={{
-            textAlign: "center",
+            textAlign: 'center',
             marginTop: 8,
             marginBottom: 24,
             color: colors.text,
             fontSize: 16,
           }}
         >
-          {error || "Country not found"}
+          {error || 'Country not found'}
         </Text>
         <Pressable
           onPress={handleBack}
@@ -161,7 +200,7 @@ const CountryDetailsScreen = () => {
             borderRadius: 12,
           }}
         >
-          <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
             Go Back
           </Text>
         </Pressable>
@@ -182,15 +221,15 @@ const CountryDetailsScreen = () => {
   };
 
   const getCurrencyInfo = () => {
-    if (!country.currencies) return "N/A";
+    if (!country.currencies) return 'N/A';
     const currencyCode = Object.keys(country.currencies)[0];
     const currency = country.currencies[currencyCode];
     return `${currency.name} (${currency.symbol})`;
   };
 
   const getLanguages = () => {
-    if (!country.languages) return "N/A";
-    return Object.values(country.languages).join(", ");
+    if (!country.languages) return 'N/A';
+    return Object.values(country.languages).join(', ');
   };
 
   // Main UI
@@ -203,7 +242,7 @@ const CountryDetailsScreen = () => {
         }}
       >
         {/* Hero Section - Flag with Gradient */}
-        <View style={{ position: "relative" }}>
+        <View style={{ position: 'relative' }}>
           {/* Flag Image */}
           <Animated.Image
             source={{ uri: country.flags.png }}
@@ -214,9 +253,9 @@ const CountryDetailsScreen = () => {
 
           {/* Gradient Overlay */}
           <LinearGradient
-            colors={["transparent", colors.background]}
+            colors={['transparent', colors.background]}
             style={{
-              position: "absolute",
+              position: 'absolute',
               bottom: 0,
               left: 0,
               right: 0,
@@ -226,6 +265,80 @@ const CountryDetailsScreen = () => {
 
           {/* Back Button - Animated */}
           <AnimatedBackButton onPress={handleBack} colors={colors} />
+
+          {/* Travel Status Buttons */}
+          <Animated.View
+            entering={FadeIn.delay(300)}
+            style={{
+              position: 'absolute',
+              top: 48,
+              right: 20,
+              flexDirection: 'row',
+              gap: 12,
+            }}
+          >
+            {/* Bucket List Button */}
+            <Pressable
+              onPress={() => {
+                haptics.selection();
+                toggleBucketList(country.cca2);
+              }}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 16,
+                width: 48,
+                height: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
+            >
+              <FontAwesome5
+                name="heart"
+                size={20}
+                color={
+                  bucketList.includes(country.cca2) ? '#ef4444' : '#9ca3af'
+                }
+                solid={bucketList.includes(country.cca2)}
+              />
+            </Pressable>
+
+            {/* Visited Button */}
+            <Pressable
+              onPress={() => {
+                haptics.success();
+                toggleVisited(country.cca2);
+              }}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 16,
+                width: 48,
+                height: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
+            >
+              <FontAwesome5
+                name="check-circle"
+                size={20}
+                color={
+                  visitedCountries.includes(country.cca2)
+                    ? '#10b981'
+                    : '#9ca3af'
+                }
+                solid={visitedCountries.includes(country.cca2)}
+              />
+            </Pressable>
+          </Animated.View>
         </View>
 
         {/* Country Info */}
@@ -238,20 +351,31 @@ const CountryDetailsScreen = () => {
               borderRadius: 24,
               padding: 24,
               marginBottom: 20,
-              shadowColor: "#000",
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 12,
               elevation: 5,
             }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-              <FontAwesome5 name="globe" size={32} color={colors.tint} style={{ marginRight: 16 }} />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 8,
+              }}
+            >
+              <FontAwesome5
+                name="globe"
+                size={32}
+                color={colors.tint}
+                style={{ marginRight: 16 }}
+              />
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
                     fontSize: 28,
-                    fontWeight: "700",
+                    fontWeight: '700',
                     color: colors.text,
                     letterSpacing: -0.5,
                   }}
@@ -284,7 +408,7 @@ const CountryDetailsScreen = () => {
             <AnimatedInfoCard
               icon="globe-americas"
               label="Region"
-              value={`${country.region}${country.subregion ? ` • ${country.subregion}` : ""}`}
+              value={`${country.region}${country.subregion ? ` • ${country.subregion}` : ''}`}
               colors={colors}
               delay={200}
               color="#10b981"
@@ -328,21 +452,21 @@ const CountryDetailsScreen = () => {
               <Animated.View
                 entering={FadeInUp.delay(400).springify()}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   marginBottom: 16,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View
                     style={{
                       width: 40,
                       height: 40,
                       borderRadius: 12,
                       backgroundColor: `${colors.tint}20`,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       marginRight: 12,
                     }}
                   >
@@ -352,7 +476,7 @@ const CountryDetailsScreen = () => {
                     <Text
                       style={{
                         fontSize: 20,
-                        fontWeight: "700",
+                        fontWeight: '700',
                         color: colors.text,
                       }}
                     >
@@ -376,32 +500,25 @@ const CountryDetailsScreen = () => {
                   onPress={() => {
                     haptics.light();
                     if (!country) {
-                      console.log("No country data available");
+                      console.log('No country data available');
                       return;
                     }
 
-                    const area = COUNTRY_TO_AREA_MAP[country.name.common];
-                    if (!area) {
-                      console.log(
-                        `No area mapping found for country: ${country.name.common}`,
-                      );
-                      Alert.alert(
-                        "No Recipes Available",
-                        `Sorry, we don't have recipes for ${country.name.common} yet.`,
-                      );
-                      return;
-                    }
+                    // Use country name as fallback for area
+                    const area =
+                      COUNTRY_TO_AREA_MAP[country.name.common] ||
+                      country.name.common;
 
                     console.log(
-                      `Navigating to recipes for ${country.name.common} (${area})`,
+                      `Navigating to recipes for ${country.name.common} (${area})`
                     );
                     // Build query string manually
                     const params = `countryName=${encodeURIComponent(country.name.common)}&area=${encodeURIComponent(area)}&countryCode=${encodeURIComponent(country.cca2)}`;
                     router.push(`/country-recipes?${params}` as any);
                   }}
                   style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     backgroundColor: `${colors.tint}15`,
                     paddingHorizontal: 12,
                     paddingVertical: 8,
@@ -413,13 +530,17 @@ const CountryDetailsScreen = () => {
                     style={{
                       color: colors.tint,
                       fontSize: 13,
-                      fontWeight: "600",
+                      fontWeight: '600',
                       marginRight: 6,
                     }}
                   >
                     View All
                   </Text>
-                  <FontAwesome5 name="arrow-right" size={12} color={colors.tint} />
+                  <FontAwesome5
+                    name="arrow-right"
+                    size={12}
+                    color={colors.tint}
+                  />
                 </Pressable>
               </Animated.View>
 
@@ -462,7 +583,7 @@ const CountryDetailsScreen = () => {
                 padding: 20,
                 borderRadius: 20,
                 backgroundColor: colors.card,
-                alignItems: "center",
+                alignItems: 'center',
               }}
             >
               <ActivityIndicator size="large" color={colors.tint} />
@@ -492,15 +613,21 @@ const CountryDetailsScreen = () => {
                 borderColor: `${colors.tint}30`,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
                 <View
                   style={{
                     width: 48,
                     height: 48,
                     borderRadius: 24,
                     backgroundColor: `${colors.tint}25`,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     marginRight: 16,
                   }}
                 >
@@ -509,7 +636,7 @@ const CountryDetailsScreen = () => {
                 <Text
                   style={{
                     fontSize: 20,
-                    fontWeight: "700",
+                    fontWeight: '700',
                     color: colors.text,
                     flex: 1,
                   }}
@@ -517,54 +644,190 @@ const CountryDetailsScreen = () => {
                   No Recipes Yet
                 </Text>
               </View>
-              <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22, opacity: 0.8 }}>
-                We're still gathering authentic recipes for {country.name.common}. Check back
-                soon! 🎉
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: 15,
+                  lineHeight: 22,
+                  opacity: 0.8,
+                }}
+              >
+                We're still gathering authentic recipes for{' '}
+                {country.name.common}. Check back soon! 🎉
               </Text>
             </Animated.View>
           )}
 
-          {/* Weather Coming Soon Section */}
-          <Animated.View
-            entering={FadeInUp.delay(600).springify()}
-            style={{
-              marginTop: 24,
-              padding: 24,
-              borderRadius: 20,
-              backgroundColor: `${colors.tint}15`,
-              borderWidth: 2,
-              borderColor: `${colors.tint}30`,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          {/* Weather Section */}
+          {weather ? (
+            <Animated.View
+              entering={FadeInUp.delay(600).springify()}
+              style={{
+                marginTop: 24,
+                padding: 24,
+                borderRadius: 20,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 5,
+              }}
+            >
               <View
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: `${colors.tint}25`,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 16,
                 }}
               >
-                <Text style={{ fontSize: 24 }}>🌤️</Text>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: '#3b82f620',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 16,
+                  }}
+                >
+                  <Image
+                    source={{
+                      uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
+                    }}
+                    style={{ width: 40, height: 40 }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: '700',
+                      color: colors.text,
+                    }}
+                  >
+                    Current Weather
+                  </Text>
+                  <Text
+                    style={{ color: colors.text, opacity: 0.6, fontSize: 13 }}
+                  >
+                    In {country.capital?.[0]}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontSize: 32,
+                    fontWeight: '700',
+                    color: colors.text,
+                  }}
+                >
+                  {weather.temp}°
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 16,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {weather.description}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <FontAwesome5
+                      name="tint"
+                      size={14}
+                      color="#3b82f6"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={{ color: colors.text, opacity: 0.8 }}>
+                      {weather.humidity}%
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <FontAwesome5
+                      name="wind"
+                      size={14}
+                      color="#9ca3af"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={{ color: colors.text, opacity: 0.8 }}>
+                      {weather.windSpeed}m/s
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Animated.View>
+          ) : (
+            /* Weather Coming Soon / Loading */
+            <Animated.View
+              entering={FadeInUp.delay(600).springify()}
+              style={{
+                marginTop: 24,
+                padding: 24,
+                borderRadius: 20,
+                backgroundColor: `${colors.tint}15`,
+                borderWidth: 2,
+                borderColor: `${colors.tint}30`,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: `${colors.tint}25`,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 16,
+                  }}
+                >
+                  <Text style={{ fontSize: 24 }}>🌤️</Text>
+                </View>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: colors.text,
+                    flex: 1,
+                  }}
+                >
+                  Live Weather
+                </Text>
               </View>
               <Text
                 style={{
-                  fontSize: 20,
-                  fontWeight: "700",
                   color: colors.text,
-                  flex: 1,
+                  fontSize: 15,
+                  lineHeight: 22,
+                  opacity: 0.8,
                 }}
               >
-                Live Weather Coming Soon!
+                {API_KEY
+                  ? 'Loading weather data...'
+                  : 'Add OpenWeatherMap API key to see live weather!'}
               </Text>
-            </View>
-            <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22, opacity: 0.8 }}>
-              Real-time weather updates for {country.name.common}. Stay tuned! 🎉
-            </Text>
-          </Animated.View>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -606,7 +869,7 @@ const AnimatedBackButton = ({
       entering={FadeIn.delay(200)}
       style={[
         {
-          position: "absolute",
+          position: 'absolute',
           top: 48,
           left: 20,
         },
@@ -618,13 +881,13 @@ const AnimatedBackButton = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           borderRadius: 16,
           width: 48,
           height: 48,
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: "#000",
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#000',
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.2,
           shadowRadius: 8,
@@ -659,12 +922,12 @@ const AnimatedInfoCard = ({
     <Animated.View
       entering={FadeInUp.delay(delay).springify()}
       style={{
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: 20,
         borderRadius: 20,
         backgroundColor: colors.card,
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
@@ -678,8 +941,8 @@ const AnimatedInfoCard = ({
           height: 48,
           borderRadius: 24,
           backgroundColor: `${color}20`,
-          alignItems: "center",
-          justifyContent: "center",
+          alignItems: 'center',
+          justifyContent: 'center',
           marginRight: 16,
         }}
       >
@@ -693,7 +956,7 @@ const AnimatedInfoCard = ({
             fontSize: 13,
             color: colors.text,
             opacity: 0.6,
-            fontWeight: "600",
+            fontWeight: '600',
             marginBottom: 4,
           }}
         >
@@ -702,7 +965,7 @@ const AnimatedInfoCard = ({
         <Text
           style={{
             fontSize: 16,
-            fontWeight: "600",
+            fontWeight: '600',
             color: colors.text,
           }}
           numberOfLines={2}
@@ -712,7 +975,12 @@ const AnimatedInfoCard = ({
       </View>
 
       {/* Arrow */}
-      <FontAwesome5 name="chevron-right" size={16} color={colors.text} style={{ opacity: 0.3 }} />
+      <FontAwesome5
+        name="chevron-right"
+        size={16}
+        color={colors.text}
+        style={{ opacity: 0.3 }}
+      />
     </Animated.View>
   );
 };

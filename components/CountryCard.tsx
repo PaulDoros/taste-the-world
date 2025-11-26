@@ -1,30 +1,32 @@
-import { Text, Image, Pressable, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { Text, Image, Pressable, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-import { Country } from "@/types";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "./useColorScheme";
+import { Country } from '@/types';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from './useColorScheme';
 
 interface CountryCardProps {
   country: Country;
   isPremium: boolean;
+  isLocked?: boolean;
   onPress: () => void;
 }
 
 export const CountryCard = ({
   country,
   isPremium,
+  isLocked = false,
   onPress,
 }: CountryCardProps) => {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
 
   // Animation values
   const scale = useSharedValue(1);
@@ -65,9 +67,9 @@ export const CountryCard = ({
         onPressOut={handlePressOut}
         style={{
           borderRadius: 20,
-          overflow: "hidden",
+          overflow: 'hidden',
           backgroundColor: colors.card,
-          shadowColor: "#000",
+          shadowColor: '#000',
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.12,
           shadowRadius: 16,
@@ -76,18 +78,22 @@ export const CountryCard = ({
         }}
       >
         {/* Flag Section */}
-        <View style={{ height: 200, position: "relative" }}>
+        <View style={{ height: 200, position: 'relative' }}>
           <Image
             source={{ uri: country.flags.png }}
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: '100%',
+              height: '100%',
+              opacity: isLocked ? 0.6 : 1,
+            }}
             resizeMode="cover"
           />
 
           {/* Stronger Gradient Overlay */}
           <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.85)"]}
+            colors={['transparent', 'rgba(0,0,0,0.85)']}
             style={{
-              position: "absolute",
+              position: 'absolute',
               bottom: 0,
               left: 0,
               right: 0,
@@ -95,20 +101,48 @@ export const CountryCard = ({
             }}
           />
 
-          {/* Premium Badge - Top Right */}
-          {isPremium && (
+          {/* Locked Overlay */}
+          {isLocked && (
             <View
               style={{
-                position: "absolute",
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  padding: 16,
+                  borderRadius: 40,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.2)',
+                }}
+              >
+                <FontAwesome5 name="lock" size={24} color="white" />
+              </View>
+            </View>
+          )}
+
+          {/* Premium Badge - Top Right */}
+          {isPremium && !isLocked && (
+            <View
+              style={{
+                position: 'absolute',
                 top: 12,
                 right: 12,
-                backgroundColor: "#9333ea",
+                backgroundColor: '#9333ea',
                 borderRadius: 20,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
-                flexDirection: "row",
-                alignItems: "center",
-                shadowColor: "#9333ea",
+                flexDirection: 'row',
+                alignItems: 'center',
+                shadowColor: '#9333ea',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.4,
                 shadowRadius: 8,
@@ -118,9 +152,9 @@ export const CountryCard = ({
               <FontAwesome5 name="crown" size={12} color="#fbbf24" />
               <Text
                 style={{
-                  color: "white",
+                  color: 'white',
                   fontSize: 11,
-                  fontWeight: "700",
+                  fontWeight: '700',
                   marginLeft: 4,
                   letterSpacing: 0.5,
                 }}
@@ -133,7 +167,7 @@ export const CountryCard = ({
           {/* Country Name - Bottom */}
           <View
             style={{
-              position: "absolute",
+              position: 'absolute',
               bottom: 0,
               left: 0,
               right: 0,
@@ -143,13 +177,14 @@ export const CountryCard = ({
             <Text
               numberOfLines={2}
               style={{
-                color: "white",
+                color: 'white',
                 fontSize: 18,
-                fontWeight: "700",
+                fontWeight: '700',
                 letterSpacing: 0.3,
-                textShadowColor: "rgba(0, 0, 0, 0.9)",
+                textShadowColor: 'rgba(0, 0, 0, 0.9)',
                 textShadowOffset: { width: 0, height: 2 },
                 textShadowRadius: 8,
+                opacity: isLocked ? 0.8 : 1,
               }}
             >
               {country.name.common}
@@ -158,26 +193,26 @@ export const CountryCard = ({
             {/* Region Tag */}
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                flexDirection: 'row',
+                alignItems: 'center',
                 marginTop: 6,
               }}
             >
               <View
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.25)",
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 12,
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
                 }}
               >
                 <Text
                   style={{
-                    color: "white",
+                    color: 'white',
                     fontSize: 11,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     letterSpacing: 0.5,
                   }}
                 >
@@ -193,20 +228,21 @@ export const CountryCard = ({
           style={{
             padding: 12,
             backgroundColor: colors.card,
+            opacity: isLocked ? 0.6 : 1,
           }}
         >
           {/* Capital & Population Row */}
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
             {/* Capital */}
             {country.capital && (
               <View
-                style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
               >
                 <View
                   style={{
@@ -214,8 +250,8 @@ export const CountryCard = ({
                     height: 28,
                     borderRadius: 14,
                     backgroundColor: `${colors.tint}15`,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <FontAwesome5
@@ -230,7 +266,7 @@ export const CountryCard = ({
                       color: colors.text,
                       fontSize: 11,
                       opacity: 0.6,
-                      fontWeight: "500",
+                      fontWeight: '500',
                     }}
                   >
                     Capital
@@ -240,7 +276,7 @@ export const CountryCard = ({
                     style={{
                       color: colors.text,
                       fontSize: 13,
-                      fontWeight: "600",
+                      fontWeight: '600',
                       marginTop: 1,
                     }}
                   >
@@ -254,8 +290,8 @@ export const CountryCard = ({
           {/* Population */}
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
+              flexDirection: 'row',
+              alignItems: 'center',
               marginTop: 10,
               paddingTop: 10,
               borderTopWidth: 1,
@@ -269,7 +305,7 @@ export const CountryCard = ({
                 fontSize: 12,
                 marginLeft: 6,
                 opacity: 0.7,
-                fontWeight: "500",
+                fontWeight: '500',
               }}
             >
               {formatPopulation(country.population)}

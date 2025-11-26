@@ -1,15 +1,15 @@
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useAuthStore } from "@/store/authStore";
-import { useState, useEffect } from "react";
-import { getGuestUser, clearGuestData } from "@/utils/guestUser";
-import { useShoppingListStore } from "@/store/shoppingListStore";
-import { Id } from "@/convex/_generated/dataModel";
-import * as WebBrowser from "expo-web-browser";
-import { Platform } from "react-native";
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useAuthStore } from '@/store/authStore';
+import { useState, useEffect } from 'react';
+import { getGuestUser, clearGuestData } from '@/utils/guestUser';
+import { useShoppingListStore } from '@/store/shoppingListStore';
+import { Id } from '@/convex/_generated/dataModel';
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
 
 // Complete OAuth session for web
-if (Platform.OS === "web") {
+if (Platform.OS === 'web') {
   WebBrowser.maybeCompleteAuthSession();
 }
 
@@ -18,23 +18,23 @@ if (Platform.OS === "web") {
  * Strips away technical details like stack traces and request IDs
  */
 function parseConvexError(error: any): string {
-  if (!error) return "An error occurred";
-  
+  if (!error) return 'An error occurred';
+
   // Get the error message
   let message = error.message || error.toString();
-  
+
   // Remove Convex-specific prefixes like "[CONVEX M(auth:signIn)] [Request ID: ...] Server Error"
   message = message.replace(/\[CONVEX [^\]]+\]\s*/g, '');
   message = message.replace(/\[Request ID: [^\]]+\]\s*/g, '');
   message = message.replace(/^Server Error\s*/i, '');
   message = message.replace(/^Uncaught Error:\s*/i, '');
-  
+
   // Remove stack trace (everything after "at handler" or similar)
   const stackStart = message.indexOf('\n    at ');
   if (stackStart !== -1) {
     message = message.substring(0, stackStart);
   }
-  
+
   return message.trim();
 }
 
@@ -48,7 +48,7 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!token && !!user;
-  const isPremium = user?.subscriptionType !== "free";
+  const isPremium = !!user && user.subscriptionType !== 'free';
 
   // Mutations
   const signUpMutation = useMutation(api.auth.signUp);
@@ -59,7 +59,7 @@ export function useAuth() {
   // Query current user
   const currentUser = useQuery(
     api.auth.getCurrentUser,
-    token ? { token } : "skip"
+    token ? { token } : 'skip'
   );
 
   // Update user when query result changes
@@ -70,34 +70,36 @@ export function useAuth() {
   }, [currentUser, user, updateUser]);
 
   // Merge guest shopping list on auth
-  const addMultipleShoppingListItems = useMutation(api.shoppingList.addMultipleShoppingListItems);
-  
+  const addMultipleShoppingListItems = useMutation(
+    api.shoppingList.addMultipleShoppingListItems
+  );
+
   useEffect(() => {
     const mergeShoppingList = async () => {
       if (isAuthenticated && user) {
         const localItems = useShoppingListStore.getState().items;
         if (localItems.length > 0) {
           try {
-            const itemsToMerge = localItems.map(item => ({
+            const itemsToMerge = localItems.map((item) => ({
               name: item.name,
               measure: item.measure,
-              recipeId: item.recipeId || "custom",
-              recipeName: item.recipeName || "Custom Item",
+              recipeId: item.recipeId || 'custom',
+              recipeName: item.recipeName || 'Custom Item',
             }));
-            
+
             await addMultipleShoppingListItems({
-              userId: user._id as Id<"users">,
-              items: itemsToMerge
+              userId: user._id as Id<'users'>,
+              items: itemsToMerge,
             });
-            
+
             useShoppingListStore.getState().clearAllItems();
           } catch (e) {
-            console.error("Failed to merge shopping list", e);
+            console.error('Failed to merge shopping list', e);
           }
         }
       }
     };
-    
+
     mergeShoppingList();
   }, [isAuthenticated, user]);
 
@@ -119,7 +121,8 @@ export function useAuth() {
         password,
         name,
         guestPurchases: guestPurchases.length > 0 ? guestPurchases : undefined,
-        guestData: Object.keys(guestDataToLink).length > 0 ? guestDataToLink : undefined,
+        guestData:
+          Object.keys(guestDataToLink).length > 0 ? guestDataToLink : undefined,
       });
 
       useAuthStore.setState({
@@ -132,7 +135,8 @@ export function useAuth() {
         await clearGuestData();
       }
     } catch (err: any) {
-      const errorMessage = parseConvexError(err) || "Failed to sign up. Please try again.";
+      const errorMessage =
+        parseConvexError(err) || 'Failed to sign up. Please try again.';
       setError(errorMessage);
       throw err;
     } finally {
@@ -153,7 +157,8 @@ export function useAuth() {
         user: result.user,
       });
     } catch (err: any) {
-      const errorMessage = parseConvexError(err) || "Failed to sign in. Please try again.";
+      const errorMessage =
+        parseConvexError(err) || 'Failed to sign in. Please try again.';
       setError(errorMessage);
       throw err;
     } finally {
@@ -169,7 +174,7 @@ export function useAuth() {
       try {
         await signOutMutation({ token });
       } catch (err) {
-        console.error("Error signing out:", err);
+        console.error('Error signing out:', err);
       }
     }
     useAuthStore.setState({ token: null, user: null });
@@ -179,7 +184,7 @@ export function useAuth() {
    * Sign in/up with OAuth provider
    */
   const signInWithOAuth = async (
-    provider: "google" | "apple" | "facebook",
+    provider: 'google' | 'apple' | 'facebook',
     oauthId: string,
     email: string,
     name?: string,
@@ -200,7 +205,8 @@ export function useAuth() {
         name,
         image,
         guestPurchases: guestPurchases.length > 0 ? guestPurchases : undefined,
-        guestData: Object.keys(guestDataToLink).length > 0 ? guestDataToLink : undefined,
+        guestData:
+          Object.keys(guestDataToLink).length > 0 ? guestDataToLink : undefined,
       });
 
       useAuthStore.setState({
@@ -213,15 +219,15 @@ export function useAuth() {
         await clearGuestData();
       }
     } catch (err: any) {
-      const errorMessage = parseConvexError(err) || `Failed to sign in with ${provider}. Please try again.`;
+      const errorMessage =
+        parseConvexError(err) ||
+        `Failed to sign in with ${provider}. Please try again.`;
       setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
-
-
 
   return {
     token,
@@ -237,4 +243,3 @@ export function useAuth() {
     clearError: () => setError(null),
   };
 }
-

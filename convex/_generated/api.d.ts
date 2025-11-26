@@ -15,6 +15,7 @@ import type * as oauth from "../oauth.js";
 import type * as pantry from "../pantry.js";
 import type * as purchases from "../purchases.js";
 import type * as recipeHistory from "../recipeHistory.js";
+import type * as recipes from "../recipes.js";
 import type * as shoppingList from "../shoppingList.js";
 
 import type {
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   pantry: typeof pantry;
   purchases: typeof purchases;
   recipeHistory: typeof recipeHistory;
+  recipes: typeof recipes;
   shoppingList: typeof shoppingList;
 }>;
 

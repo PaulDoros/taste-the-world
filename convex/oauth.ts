@@ -7,7 +7,11 @@ import { v } from 'convex/values';
  */
 export const signUpWithOAuth = mutation({
   args: {
-    provider: v.union(v.literal('google'), v.literal('apple'), v.literal('facebook')),
+    provider: v.union(
+      v.literal('google'),
+      v.literal('apple'),
+      v.literal('facebook')
+    ),
     oauthId: v.string(), // Provider's user ID
     email: v.string(),
     name: v.optional(v.string()),
@@ -45,6 +49,7 @@ export const signUpWithOAuth = mutation({
         passwordHash: '', // OAuth users don't have passwords
         name: args.name,
         image: args.image,
+        tier: 'free', // Default tier for new OAuth users
         subscriptionType: 'free',
         oauthProvider: args.provider,
         oauthId: args.oauthId,
@@ -115,7 +120,10 @@ export const signUpWithOAuth = mutation({
         }
 
         // Link shopping list
-        if (args.guestData.shoppingList && args.guestData.shoppingList.length > 0) {
+        if (
+          args.guestData.shoppingList &&
+          args.guestData.shoppingList.length > 0
+        ) {
           for (const item of args.guestData.shoppingList) {
             await ctx.db.insert('shoppingList', {
               userId: user._id,
@@ -135,7 +143,8 @@ export const signUpWithOAuth = mutation({
             await ctx.db.insert('pantry', {
               userId: user._id,
               name: item.name || item.ingredient || 'Item',
-              displayName: item.displayName || item.name || item.ingredient || 'Item',
+              displayName:
+                item.displayName || item.name || item.ingredient || 'Item',
               measure: item.unit || item.measure || '',
               addedAt: Date.now(),
             });
@@ -143,11 +152,15 @@ export const signUpWithOAuth = mutation({
         }
 
         // Link recipe history
-        if (args.guestData.recipeHistory && args.guestData.recipeHistory.length > 0) {
+        if (
+          args.guestData.recipeHistory &&
+          args.guestData.recipeHistory.length > 0
+        ) {
           for (const recipeId of args.guestData.recipeHistory) {
             await ctx.db.insert('recipeHistory', {
               userId: user._id,
-              recipeId: typeof recipeId === 'string' ? recipeId : String(recipeId),
+              recipeId:
+                typeof recipeId === 'string' ? recipeId : String(recipeId),
               recipeName: String(recipeId),
               viewedAt: Date.now(),
             });
@@ -182,6 +195,7 @@ export const signUpWithOAuth = mutation({
         email: user.email,
         name: user.name,
         image: user.image,
+        tier: user.tier,
         subscriptionType: user.subscriptionType,
         subscriptionStartDate: user.subscriptionStartDate,
         subscriptionEndDate: user.subscriptionEndDate,
@@ -194,6 +208,7 @@ export const signUpWithOAuth = mutation({
 function generateToken(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join(
+    ''
+  );
 }
-

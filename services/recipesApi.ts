@@ -6,6 +6,16 @@
 
 import { API_URLS } from '@/constants/Config';
 import { Recipe, Ingredient } from '@/types';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '@/convex/_generated/api';
+
+// Initialize Convex client
+const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL || '';
+let convexClient: ConvexHttpClient | null = null;
+
+if (CONVEX_URL) {
+  convexClient = new ConvexHttpClient(CONVEX_URL);
+}
 
 /**
  * Helper function to extract ingredients from recipe
@@ -37,8 +47,70 @@ export const extractIngredients = (recipe: Recipe): Ingredient[] => {
 
 /**
  * Get recipes by country/area (e.g., "Italian", "Japanese")
+ * Uses Convex cache first, then falls back to external APIs
  */
 export const getRecipesByArea = async (area: string): Promise<Recipe[]> => {
+  // 1. Try Convex cache first
+  if (convexClient) {
+    try {
+      const cachedRecipes = await convexClient.query(
+        api.recipes.getRecipesByArea,
+        { area }
+      );
+      if (cachedRecipes && cachedRecipes.length >= 5) {
+        console.log(
+          `✅ Found ${cachedRecipes.length} recipes in Convex for ${area}`
+        );
+        return cachedRecipes;
+      }
+    } catch (error) {
+      console.warn(
+        '⚠️ Convex query failed, falling back to external APIs:',
+        error
+      );
+    }
+  }
+
+  // 2. Fallback to external APIs
+  console.log(`🔄 Fetching from external APIs for ${area}`);
+  const externalRecipes = await fetchFromExternalAPIs(area);
+
+  // 3. Save to Convex for future use
+  if (convexClient && externalRecipes.length > 0) {
+    try {
+      // Sanitize recipes before saving to match Convex schema
+      const sanitizedRecipes = externalRecipes.map((recipe) => ({
+        idMeal: recipe.idMeal,
+        strMeal: recipe.strMeal,
+        strCategory: recipe.strCategory,
+        strArea: recipe.strArea,
+        strInstructions: recipe.strInstructions,
+        strMealThumb: recipe.strMealThumb,
+        strTags: recipe.strTags || undefined,
+        strYoutube: recipe.strYoutube || undefined,
+        strSource: recipe.strSource || undefined,
+        // @ts-ignore - ingredients is added during fetchFromExternalAPIs
+        ingredients: recipe.ingredients || [],
+      }));
+
+      await convexClient.mutation(api.recipes.saveRecipes, {
+        recipes: sanitizedRecipes,
+      });
+      console.log(
+        `💾 Saved ${externalRecipes.length} recipes to Convex for ${area}`
+      );
+    } catch (error) {
+      console.error('❌ Failed to save recipes to Convex:', error);
+    }
+  }
+
+  return externalRecipes;
+};
+
+/**
+ * Fetch from external APIs (TheMealDB + API-Ninjas fallback)
+ */
+async function fetchFromExternalAPIs(area: string): Promise<Recipe[]> {
   try {
     const response = await fetch(
       `${API_URLS.mealDB}/filter.php?a=${encodeURIComponent(area)}`
@@ -49,12 +121,31 @@ export const getRecipesByArea = async (area: string): Promise<Recipe[]> => {
     }
 
     const data = await response.json();
-    return data.meals || [];
+    const meals = data.meals || [];
+
+    // Transform TheMealDB recipes to include ingredients array
+    const recipesWithIngredients = await Promise.all(
+      meals.map(async (meal: Recipe) => {
+        try {
+          // Fetch full details to get ingredients
+          const fullRecipe = await getRecipeById(meal.idMeal);
+          return {
+            ...fullRecipe,
+            ingredients: extractIngredients(fullRecipe),
+          };
+        } catch (error) {
+          console.error(`Failed to fetch details for ${meal.idMeal}:`, error);
+          return null;
+        }
+      })
+    );
+
+    return recipesWithIngredients.filter((r): r is Recipe => r !== null);
   } catch (error) {
     console.error(`Error fetching recipes for area ${area}:`, error);
     return [];
   }
-};
+}
 
 /**
  * Get full recipe details by ID

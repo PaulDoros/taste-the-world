@@ -358,7 +358,8 @@ export default function ShoppingListScreen() {
               padding="$4"
               backgroundColor="$card"
               elevation={2}
-              bordered
+              borderWidth={1}
+              borderColor="$borderColor"
             >
               <Input
                 value={newItemName}
@@ -411,36 +412,38 @@ export default function ShoppingListScreen() {
 
         {/* Filter Tabs */}
         {(items?.length || 0) > 0 && (
-          <XStack paddingHorizontal="$4" marginBottom="$3" gap="$2">
-            {['all', 'unchecked', 'checked'].map((filterType) => (
-              <Button
-                key={filterType}
-                flex={1}
-                size="$3"
-                backgroundColor={
-                  filter === filterType ? colors.tint : `${colors.tint}15`
-                }
-                onPress={() => {
-                  haptics.light();
-                  setFilter(filterType as typeof filter);
-                }}
-                pressStyle={{ opacity: 0.8 }}
-              >
-                <Paragraph
-                  color={filter === filterType ? 'white' : colors.tint}
-                  fontWeight="600"
-                  textTransform="capitalize"
+          <Animated.View entering={FadeInDown.delay(200).springify()}>
+            <XStack paddingHorizontal="$4" marginBottom="$3" gap="$2">
+              {['all', 'unchecked', 'checked'].map((filterType) => (
+                <Button
+                  key={filterType}
+                  flex={1}
                   size="$3"
+                  backgroundColor={
+                    filter === filterType ? colors.tint : `${colors.tint}15`
+                  }
+                  onPress={() => {
+                    haptics.light();
+                    setFilter(filterType as typeof filter);
+                  }}
+                  pressStyle={{ opacity: 0.8 }}
                 >
-                  {filterType === 'unchecked'
-                    ? 'Active'
-                    : filterType === 'checked'
-                      ? 'Completed'
-                      : 'All'}
-                </Paragraph>
-              </Button>
-            ))}
-          </XStack>
+                  <Paragraph
+                    color={filter === filterType ? 'white' : colors.tint}
+                    fontWeight="600"
+                    textTransform="capitalize"
+                    size="$3"
+                  >
+                    {filterType === 'unchecked'
+                      ? 'Active'
+                      : filterType === 'checked'
+                        ? 'Completed'
+                        : 'All'}
+                  </Paragraph>
+                </Button>
+              ))}
+            </XStack>
+          </Animated.View>
         )}
 
         {/* Shopping List */}

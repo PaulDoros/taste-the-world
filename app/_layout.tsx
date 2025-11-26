@@ -1,21 +1,21 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-} from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import "react-native-reanimated";
-import "../global.css";
+} from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import 'react-native-reanimated';
+import '../global.css';
 
 // Configure Reanimated logger to disable strict mode warnings
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -40,20 +40,24 @@ if (__DEV__) {
   };
 }
 
-import { useColorScheme } from "@/components/useColorScheme";
-import { ConvexProvider } from "convex/react";
-import { convex } from "@/lib/convex";
-import { TamaguiProvider } from "tamagui";
-import config from "../tamagui.config";
+import { useColorScheme } from '@/components/useColorScheme';
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { useUserStore } from '@/store/useUserStore';
+import { TamaguiProvider } from 'tamagui';
+import config from '../tamagui.config';
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+  unsavedChangesWarning: false,
+});
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
-} from "expo-router";
+} from 'expo-router';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "(tabs)",
+  initialRouteName: '(tabs)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -61,7 +65,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -80,69 +84,95 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <ConvexProvider client={convex}>
+      <RootLayoutNav />
+    </ConvexProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { user, isGuest } = useUserStore();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    const inAuthGroup = segments[0] === 'auth';
+    const isAuthed = user !== null || isGuest;
+
+    if (!isAuthed && !inAuthGroup) {
+      // Redirect to welcome screen if not logged in
+      router.replace('/auth/welcome');
+    } else if (user !== null && !isGuest && inAuthGroup) {
+      // Redirect to home if already logged in as a real user
+      // Guests are allowed to visit auth screens to upgrade/login
+      router.replace('/(tabs)');
+    }
+  }, [user, isGuest, segments]);
 
   return (
-    <TamaguiProvider config={config} defaultTheme={colorScheme ?? "light"}>
-      <ConvexProvider client={convex}>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              gestureEnabled: true,
-              gestureDirection: 'horizontal',
-            }}
-          >
+    <TamaguiProvider config={config} defaultTheme={colorScheme ?? 'light'}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
+          }}
+        >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{
-              presentation: "modal",
-              animation: "slide_from_bottom",
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
             }}
           />
           <Stack.Screen
             name="country/[id]"
             options={{
-              animation: "slide_from_right",
+              animation: 'slide_from_right',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="recipe/[id]"
             options={{
-              animation: "slide_from_right",
+              animation: 'slide_from_right',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="country-recipes"
             options={{
-              animation: "slide_from_right",
+              animation: 'slide_from_right',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="auth/welcome"
+            options={{
+              animation: 'fade',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="auth/login"
             options={{
-              animation: "slide_from_right",
+              presentation: 'modal',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="auth/signup"
             options={{
-              animation: "slide_from_right",
+              presentation: 'modal',
               headerShown: false,
             }}
           />
         </Stack>
       </ThemeProvider>
-    </ConvexProvider>
     </TamaguiProvider>
   );
 }

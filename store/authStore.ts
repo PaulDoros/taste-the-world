@@ -1,16 +1,17 @@
-import { useEffect } from "react";
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useEffect } from 'react';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 export interface User {
   _id: string;
   email: string;
   name?: string;
   image?: string;
-  subscriptionType: "free" | "monthly" | "yearly";
+  tier: 'guest' | 'free' | 'premium';
+  subscriptionType: 'free' | 'monthly' | 'yearly';
   subscriptionStartDate?: number;
   subscriptionEndDate?: number;
   createdAt: number;
@@ -20,7 +21,7 @@ interface AuthState {
   token: string | null;
   user: User | null;
   isLoading: boolean;
-  
+
   // Actions
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -77,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user: null });
           return;
         }
-        
+
         set({ isLoading: true });
         try {
           // This will be called from component using useQuery
@@ -92,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ token: state.token }), // Only persist token, not user
     }
@@ -104,11 +105,11 @@ export const useAuthStore = create<AuthState>()(
  */
 export function useAuth() {
   const { token, user, isLoading, signOut, updateUser } = useAuthStore();
-  
+
   // Verify session on mount
   const currentUser = useQuery(
     api.auth.getCurrentUser,
-    token ? { token } : "skip"
+    token ? { token } : 'skip'
   );
 
   // Update user when query result changes
@@ -119,7 +120,7 @@ export function useAuth() {
   }, [currentUser, user, updateUser]);
 
   const isAuthenticated = !!token && !!user;
-  const isPremium = user?.subscriptionType !== "free";
+  const isPremium = !!user && user.subscriptionType !== 'free';
 
   return {
     token,
@@ -130,4 +131,3 @@ export function useAuth() {
     signOut,
   };
 }
-

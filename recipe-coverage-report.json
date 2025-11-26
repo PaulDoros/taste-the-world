@@ -1,0 +1,1758 @@
+{
+  "good": [
+    {
+      "country": "Italy",
+      "mealDBCount": 21,
+      "apiNinjasCount": 0,
+      "totalCount": 21,
+      "status": "good"
+    },
+    {
+      "country": "Australia",
+      "mealDBCount": 13,
+      "apiNinjasCount": 0,
+      "totalCount": 13,
+      "status": "good"
+    },
+    {
+      "country": "Turkey",
+      "mealDBCount": 26,
+      "apiNinjasCount": 0,
+      "totalCount": 26,
+      "status": "good"
+    },
+    {
+      "country": "China",
+      "mealDBCount": 12,
+      "apiNinjasCount": 0,
+      "totalCount": 12,
+      "status": "good"
+    },
+    {
+      "country": "Ireland",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Russia",
+      "mealDBCount": 7,
+      "apiNinjasCount": 0,
+      "totalCount": 7,
+      "status": "good"
+    },
+    {
+      "country": "Japan",
+      "mealDBCount": 9,
+      "apiNinjasCount": 0,
+      "totalCount": 9,
+      "status": "good"
+    },
+    {
+      "country": "Croatia",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Egypt",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Poland",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Kenya",
+      "mealDBCount": 5,
+      "apiNinjasCount": 0,
+      "totalCount": 5,
+      "status": "good"
+    },
+    {
+      "country": "Greece",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Vietnam",
+      "mealDBCount": 27,
+      "apiNinjasCount": 0,
+      "totalCount": 27,
+      "status": "good"
+    },
+    {
+      "country": "Portugal",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Morocco",
+      "mealDBCount": 6,
+      "apiNinjasCount": 0,
+      "totalCount": 6,
+      "status": "good"
+    },
+    {
+      "country": "United States",
+      "mealDBCount": 34,
+      "apiNinjasCount": 0,
+      "totalCount": 34,
+      "status": "good"
+    },
+    {
+      "country": "Tunisia",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "France",
+      "mealDBCount": 28,
+      "apiNinjasCount": 0,
+      "totalCount": 28,
+      "status": "good"
+    },
+    {
+      "country": "Spain",
+      "mealDBCount": 48,
+      "apiNinjasCount": 0,
+      "totalCount": 48,
+      "status": "good"
+    },
+    {
+      "country": "Thailand",
+      "mealDBCount": 27,
+      "apiNinjasCount": 0,
+      "totalCount": 27,
+      "status": "good"
+    },
+    {
+      "country": "India",
+      "mealDBCount": 12,
+      "apiNinjasCount": 0,
+      "totalCount": 12,
+      "status": "good"
+    },
+    {
+      "country": "United Kingdom",
+      "mealDBCount": 60,
+      "apiNinjasCount": 0,
+      "totalCount": 60,
+      "status": "good"
+    },
+    {
+      "country": "Canada",
+      "mealDBCount": 13,
+      "apiNinjasCount": 0,
+      "totalCount": 13,
+      "status": "good"
+    },
+    {
+      "country": "Jamaica",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Philippines",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    },
+    {
+      "country": "Mexico",
+      "mealDBCount": 6,
+      "apiNinjasCount": 0,
+      "totalCount": 6,
+      "status": "good"
+    },
+    {
+      "country": "Malaysia",
+      "mealDBCount": 8,
+      "apiNinjasCount": 0,
+      "totalCount": 8,
+      "status": "good"
+    }
+  ],
+  "warning": [
+    {
+      "country": "Netherlands",
+      "mealDBCount": 4,
+      "apiNinjasCount": 0,
+      "totalCount": 4,
+      "status": "warning"
+    },
+    {
+      "country": "Ukraine",
+      "mealDBCount": 1,
+      "apiNinjasCount": 0,
+      "totalCount": 1,
+      "status": "warning"
+    }
+  ],
+  "critical": [
+    {
+      "country": "Antigua and Barbuda",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bhutan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Tuvalu",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Anguilla",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Belize",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Vanuatu",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Belarus",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mauritius",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Laos",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Senegal",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bolivia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Sri Lanka",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Norfolk Island",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Caribbean Netherlands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guernsey",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Sudan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mayotte",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Barthélemy",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Vatican City",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Turks and Caicos Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Curaçao",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Botswana",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Benin",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Lithuania",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Montserrat",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "British Virgin Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Burundi",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "United States Minor Outlying Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Solomon Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bermuda",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Finland",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Peru",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bangladesh",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Denmark",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Vincent and the Grenadines",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Dominican Republic",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Moldova",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bulgaria",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Costa Rica",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Namibia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Svalbard and Jan Mayen",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Luxembourg",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "United Arab Emirates",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Sint Maarten",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bahamas",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Nigeria",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Ghana",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Sierra Leone",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Pierre and Miquelon",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Albania",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Tokelau",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Helena, Ascension and Tristan da Cunha",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Tonga",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Turkmenistan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Djibouti",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Central African Republic",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Lebanon",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Latvia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cocos (Keeling) Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Gambia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Honduras",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Niue",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mauritania",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Kosovo",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Wallis and Futuna",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "South Georgia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "French Polynesia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Togo",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Belgium",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Zambia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cayman Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Pitcairn Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cook Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Madagascar",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Montenegro",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "South Korea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Ethiopia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mongolia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Slovakia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cuba",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Antarctica",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guatemala",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "French Guiana",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Norway",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Grenada",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Réunion",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Chile",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Colombia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saudi Arabia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Israel",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Germany",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "New Zealand",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Greenland",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Kyrgyzstan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "El Salvador",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Faroe Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Palau",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Malta",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Syria",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Timor-Leste",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Papua New Guinea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Liberia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Somalia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Venezuela",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Haiti",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Algeria",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Northern Mariana Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Martin",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Heard Island and McDonald Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Aruba",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Malawi",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "United States Virgin Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Ecuador",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Uzbekistan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Gabon",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "South Sudan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Iran",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Kazakhstan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Nicaragua",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Iceland",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Slovenia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guadeloupe",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cameroon",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Argentina",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Azerbaijan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Uganda",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Niger",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Christmas Island",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Myanmar",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Jordan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Hong Kong",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "DR Congo",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Eritrea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Kiribati",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Marshall Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Burkina Faso",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Zimbabwe",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Comoros",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Gibraltar",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Brunei",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Sweden",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Lesotho",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Isle of Man",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Micronesia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Tanzania",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cape Verde",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Afghanistan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Andorra",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "French Southern and Antarctic Lands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Iraq",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Libya",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Pakistan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Maldives",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Samoa",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Palestine",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Oman",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bahrain",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Puerto Rico",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "British Indian Ocean Territory",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Jersey",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "North Macedonia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Trinidad and Tobago",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Estonia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Singapore",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Panama",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Switzerland",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Uruguay",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Tajikistan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Taiwan",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "South Africa",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Liechtenstein",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Brazil",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Armenia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Georgia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Åland Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Qatar",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Dominica",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guinea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Macau",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Western Sahara",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Czechia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Austria",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Kitts and Nevis",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Saint Lucia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Yemen",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Rwanda",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Monaco",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "São Tomé and Príncipe",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Republic of the Congo",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Paraguay",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Bouvet Island",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mozambique",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Eswatini",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Barbados",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guinea-Bissau",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Angola",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Martinique",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "New Caledonia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Seychelles",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Falkland Islands",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Fiji",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "San Marino",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Mali",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Nauru",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Indonesia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guam",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Ivory Coast",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Kuwait",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Guyana",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Hungary",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "North Korea",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Romania",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Suriname",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "American Samoa",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Nepal",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Chad",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Serbia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cambodia",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    },
+    {
+      "country": "Cyprus",
+      "mealDBCount": 0,
+      "apiNinjasCount": 0,
+      "totalCount": 0,
+      "status": "critical"
+    }
+  ]
+}

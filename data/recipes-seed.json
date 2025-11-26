@@ -1,0 +1,266 @@
+{
+  "Argentina": [
+    {
+      "idMeal": "ar_empanadas",
+      "strMeal": "Empanadas Argentinas",
+      "strCategory": "Appetizer",
+      "strArea": "Argentina",
+      "strInstructions": "To make the dough: In a large bowl, combine 3 cups flour and 1 tsp salt. Cut in 1/2 cup cold butter until mixture resembles coarse crumbs. Add 1 egg and gradually mix in 1/4 to 1/2 cup cold water until a smooth dough forms. Cover and refrigerate for at least 1 hour. Roll out dough and cut into 5-6 inch circles.\n\nFor the filling: Heat oil in a skillet and sauté finely diced onions until translucent. Add hand-cut beef (or ground beef) and cook until no longer pink, breaking into small pieces. Season with paprika, cumin, chili powder, and oregano. Remove from heat and let cool. Stir in chopped hard-boiled eggs, chopped green onions, and chopped green olives. Chill for at least 1 hour.\n\nAssembly: Place a generous spoonful of filling in the center of each dough disc. Fold over to create a half-moon shape and press edges firmly to seal. Crimp edges decoratively (repulgue). Brush with egg wash. Bake at 450°F (230°C) for 28-30 minutes until golden brown.",
+      "strMealThumb": "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f",
+      "strTags": "Empanadas,Beef,Pastry,Argentine",
+      "ingredients": [
+        { "name": "All-purpose flour", "measure": "3 cups" },
+        { "name": "Salt", "measure": "1 tsp" },
+        { "name": "Butter", "measure": "1/2 cup" },
+        { "name": "Egg", "measure": "1" },
+        { "name": "Cold water", "measure": "1/4-1/2 cup" },
+        { "name": "Ground beef", "measure": "1 lb" },
+        { "name": "Onion", "measure": "2 large" },
+        { "name": "Paprika", "measure": "1 tsp" },
+        { "name": "Cumin", "measure": "1 tsp" },
+        { "name": "Hard-boiled eggs", "measure": "2" },
+        { "name": "Green olives", "measure": "1/2 cup" },
+        { "name": "Green onions", "measure": "4" }
+      ]
+    },
+    {
+      "idMeal": "ar_asado",
+      "strMeal": "Asado (Argentine BBQ)",
+      "strCategory": "Main Course",
+      "strArea": "Argentina",
+      "strInstructions": "Traditional asado uses wood or natural wood charcoal for a unique smoky flavor. Build a fire and let it burn down to create abundant embers. Position the grill 25-30 cm above the embers.\n\nBegin by placing chorizos and blood sausages on the grill, furthest from direct heat, to cook slowly for 20-30 minutes. Place thicker cuts like tira de asado (short ribs), vacío (flank steak), and ojo de bife (rib eye) in the center where heat is more intense. Season generously with coarse salt.\n\nFlip the meat occasionally for even cooking. Thicker cuts require 1.5 to 3 hours depending on thickness and desired doneness. Serve the meat as it finishes cooking, accompanied by chimichurri or salsa criolla.\n\nFor chimichurri: Combine 1 cup olive oil, 1 tbsp white wine vinegar, 1/2 cup chopped fresh parsley, 1/4 cup chopped fresh oregano, 1/4 cup chopped onion, 1 tbsp minced garlic, salt, and cayenne pepper. Refrigerate for at least 2 hours before serving.",
+      "strMealThumb": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
+      "strTags": "BBQ,Beef,Grilled,Argentine,Traditional",
+      "ingredients": [
+        { "name": "Beef short ribs", "measure": "2 lbs" },
+        { "name": "Flank steak", "measure": "1.5 lbs" },
+        { "name": "Chorizo sausage", "measure": "4 links" },
+        { "name": "Coarse salt", "measure": "To taste" },
+        { "name": "Olive oil", "measure": "1 cup" },
+        { "name": "White wine vinegar", "measure": "1 tbsp" },
+        { "name": "Fresh parsley", "measure": "1/2 cup" },
+        { "name": "Fresh oregano", "measure": "1/4 cup" },
+        { "name": "Onion", "measure": "1/4 cup" },
+        { "name": "Garlic", "measure": "1 tbsp" }
+      ]
+    },
+    {
+      "idMeal": "ar_milanesa",
+      "strMeal": "Milanesa",
+      "strCategory": "Main Course",
+      "strArea": "Argentina",
+      "strInstructions": "Finely chop 1 bunch fresh parsley and crush 2 cloves garlic. Season 1 lb veal steaks (or beef) with half the parsley, crushed garlic, pepper, and salt, rubbing it in well. For enhanced flavor, refrigerate for 1 hour.\n\nBeat 2 eggs with remaining parsley, a pinch of salt, and optional 1 tsp mustard. Dip each steak into egg mixture, ensuring full coating. Dredge thoroughly in 3.5 oz breadcrumbs, pressing firmly for even coating.\n\nHeat 1½ cups canola oil in a skillet over medium-high heat until very hot (about 3 minutes). Fry milanesas for about 3 minutes per side until golden brown. Remove and place on paper towels to drain excess oil.\n\nServe hot with french fries or fresh green salad. For Milanesa a la Napolitana, top fried milanesa with tomato sauce, ham slice, and mozzarella cheese, then bake until cheese melts.",
+      "strMealThumb": "https://images.unsplash.com/photo-1588168333986-5078d3ae3976",
+      "strTags": "Veal,Breaded,Fried,Argentine",
+      "ingredients": [
+        { "name": "Veal steaks", "measure": "1 lb" },
+        { "name": "Eggs", "measure": "2 large" },
+        { "name": "Breadcrumbs", "measure": "3.5 oz" },
+        { "name": "Fresh parsley", "measure": "1 bunch" },
+        { "name": "Garlic", "measure": "2 cloves" },
+        { "name": "Canola oil", "measure": "1.5 cups" },
+        { "name": "Salt", "measure": "To taste" },
+        { "name": "Black pepper", "measure": "To taste" }
+      ]
+    },
+    {
+      "idMeal": "ar_choripan",
+      "strMeal": "Choripán",
+      "strCategory": "Street Food",
+      "strArea": "Argentina",
+      "strInstructions": "Preheat grill to medium-high heat. Place 1 lb Argentine chorizo sausages on the grill over direct heat, turning frequently to achieve even char. Once cooked through, remove from grill.\n\nButterfly each chorizo by making a lengthwise cut down the middle and opening it flat. Slice French baguettes into chorizo-length pieces and open like hot dog buns. Drizzle inside with olive oil.\n\nReturn butterflied chorizos and cut-side-down bread to grill briefly to char inside of sausage and lightly toast bread. Remove from grill and assemble sandwiches.\n\nTop generously with chimichurri sauce or salsa criolla. For salsa criolla: Combine 2 diced tomatoes, 1 diced red onion, 1/2 each diced red and green bell peppers, 2 sliced green onions, 1 tsp oregano, 1/4 cup olive oil, 2 tbsp red wine vinegar, salt and pepper. Let rest at least 3 hours. Serve immediately while hot.",
+      "strMealThumb": "https://images.unsplash.com/photo-1619740455993-9ae5d5f6c1f7",
+      "strTags": "Sausage,Sandwich,Street Food,Argentine",
+      "ingredients": [
+        { "name": "Argentine chorizo", "measure": "1 lb" },
+        { "name": "French baguette", "measure": "2" },
+        { "name": "Olive oil", "measure": "2 tbsp" },
+        { "name": "Tomatoes", "measure": "2" },
+        { "name": "Red onion", "measure": "1 small" },
+        { "name": "Red bell pepper", "measure": "1/2" },
+        { "name": "Green bell pepper", "measure": "1/2" },
+        { "name": "Oregano", "measure": "1 tsp" },
+        { "name": "Red wine vinegar", "measure": "2 tbsp" }
+      ]
+    },
+    {
+      "idMeal": "ar_alfajores",
+      "strMeal": "Alfajores",
+      "strCategory": "Dessert",
+      "strArea": "Argentina",
+      "strInstructions": "Preheat oven to 350°F (175°C). In a bowl, cream together butter, eggs, and sugar until light and fluffy. In a separate bowl, mix cornstarch, flour, and baking powder. Gradually fold dry ingredients into wet mixture until combined.\n\nRoll dough on a floured surface to 1/4 inch thickness. Cut into 2-inch circles using a cookie cutter. Place on parchment-lined baking sheets. Bake for 10-12 minutes until edges are lightly golden but cookies remain pale. Let cool completely.\n\nSpread a generous layer of dulce de leche on the flat side of one cookie. Top with another cookie, flat side down, pressing gently to create a sandwich. Roll edges in shredded coconut or dip in melted chocolate if desired.\n\nStore in an airtight container. These traditional Argentine cookies are perfect with coffee or tea.",
+      "strMealThumb": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35",
+      "strTags": "Cookies,Dessert,Sweet,Argentine,Dulce de Leche",
+      "ingredients": [
+        { "name": "Butter", "measure": "1 cup" },
+        { "name": "Eggs", "measure": "2" },
+        { "name": "Sugar", "measure": "3/4 cup" },
+        { "name": "Cornstarch", "measure": "2 cups" },
+        { "name": "All-purpose flour", "measure": "1 cup" },
+        { "name": "Baking powder", "measure": "1 tsp" },
+        { "name": "Dulce de leche", "measure": "1 cup" },
+        { "name": "Shredded coconut", "measure": "1 cup (optional)" }
+      ]
+    },
+    {
+      "idMeal": "ar_chimichurri",
+      "strMeal": "Chimichurri Sauce",
+      "strCategory": "Condiment",
+      "strArea": "Argentina",
+      "strInstructions": "Finely chop 1 cup fresh flat-leaf parsley and 1/4 cup fresh oregano. Mince 4-6 garlic cloves. If using a food processor, pulse parsley, oregano, and garlic together until finely chopped.\n\nTransfer to a bowl and add 1 cup extra-virgin olive oil, 1/4 cup red wine vinegar, 1 tsp sea salt, 1 tsp red pepper flakes, and optional 1 tsp smoked paprika. Stir well to combine.\n\nIf mixing by hand, slowly drizzle in olive oil while stirring continuously. Season with salt and red pepper flakes to taste.\n\nCover and refrigerate for at least 2 hours (preferably overnight) to allow flavors to meld. The sauce will keep refrigerated for up to 2 weeks.\n\nServe with grilled meats, especially steak, or use as a marinade. Can also be drizzled over grilled vegetables or used as a salad dressing.",
+      "strMealThumb": "https://images.unsplash.com/photo-1571337165915-8c8dcb7b8d37",
+      "strTags": "Sauce,Condiment,Herbs,Argentine,Vegan",
+      "ingredients": [
+        { "name": "Fresh parsley", "measure": "1 cup" },
+        { "name": "Fresh oregano", "measure": "1/4 cup" },
+        { "name": "Garlic", "measure": "4-6 cloves" },
+        { "name": "Extra-virgin olive oil", "measure": "1 cup" },
+        { "name": "Red wine vinegar", "measure": "1/4 cup" },
+        { "name": "Sea salt", "measure": "1 tsp" },
+        { "name": "Red pepper flakes", "measure": "1 tsp" },
+        { "name": "Smoked paprika", "measure": "1 tsp (optional)" }
+      ]
+    },
+    {
+      "idMeal": "ar_dulce_de_leche",
+      "strMeal": "Dulce de Leche",
+      "strCategory": "Dessert",
+      "strArea": "Argentina",
+      "strInstructions": "Traditional method: Pour 4 cups whole milk and 1½ cups sugar into a heavy-bottomed saucepan. Add 1 vanilla bean (split) or 1 tsp vanilla extract and a pinch of baking soda.\n\nBring to a gentle boil over medium heat, stirring constantly until sugar dissolves. Reduce heat to low and simmer, stirring frequently to prevent scorching.\n\nContinue cooking for 2-3 hours, stirring more frequently as mixture thickens and darkens to a rich caramel color. The dulce de leche is ready when it coats the back of a spoon and holds its shape.\n\nRemove vanilla bean if used. Let cool to room temperature, then transfer to sterilized jars. Store refrigerated for up to 2 weeks.\n\nUse as a topping for cakes, churros, cookies, waffles, flan, crepes, or spread on toast. Essential for making authentic alfajores.",
+      "strMealThumb": "https://images.unsplash.com/photo-1563805042-7684c019e1cb",
+      "strTags": "Sweet,Caramel,Spread,Argentine,Dessert",
+      "ingredients": [
+        { "name": "Whole milk", "measure": "4 cups" },
+        { "name": "Sugar", "measure": "1.5 cups" },
+        { "name": "Vanilla bean", "measure": "1 (or 1 tsp extract)" },
+        { "name": "Baking soda", "measure": "Pinch" }
+      ]
+    }
+  ],
+  "Brazil": [
+    {
+      "idMeal": "br_feijoada",
+      "strMeal": "Feijoada",
+      "strCategory": "Main Course",
+      "strArea": "Brazil",
+      "strInstructions": "1. Soak the black beans overnight in cold water. Drain before cooking. 2. In a large pot, sauté chopped onions and garlic in oil until fragrant. 3. Add pork shoulder, smoked sausage, and bacon; brown lightly. 4. Add the soaked beans and cover with water. Simmer for 2–3 hours until the beans are creamy and the meats are tender. 5. Adjust salt, add bay leaves, and cook 10 more minutes before serving with rice, farofa, and orange slices.",
+      "strMealThumb": "https://images.unsplash.com/photo-1514516345957-5560b4859a7f",
+      "strTags": "Stew,Beans,Pork,Brazilian,Traditional",
+      "ingredients": [
+        { "name": "Black beans", "measure": "2 cups" },
+        { "name": "Pork shoulder", "measure": "1 lb" },
+        { "name": "Smoked sausage (linguiça)", "measure": "12 oz" },
+        { "name": "Bacon", "measure": "6 oz" },
+        { "name": "Onion", "measure": "1 large, chopped" },
+        { "name": "Garlic", "measure": "4 cloves, minced" },
+        { "name": "Bay leaves", "measure": "2 leaves" },
+        { "name": "Vegetable oil", "measure": "2 tbsp" },
+        { "name": "Salt", "measure": "to taste" }
+      ]
+    },
+    {
+      "idMeal": "br_pao_de_queijo",
+      "strMeal": "Pão de Queijo",
+      "strCategory": "Appetizer",
+      "strArea": "Brazil",
+      "strInstructions": "1. Preheat oven to 200°C (392°F). 2. Heat milk, oil, and salt in a saucepan until it just begins to boil. 3. Pour the hot mixture over tapioca flour and mix until it forms a sticky dough. 4. Let it cool slightly, then add eggs and grated Minas cheese; knead until smooth. 5. Roll into small balls and bake 15–20 minutes until puffed and golden.",
+      "strMealThumb": "https://images.unsplash.com/photo-1536305030431-ec2d6d4f1c09",
+      "strTags": "Cheese,Baked,Snack,Gluten-Free",
+      "ingredients": [
+        { "name": "Tapioca flour", "measure": "2 cups" },
+        { "name": "Milk", "measure": "1 cup" },
+        { "name": "Vegetable oil", "measure": "1/3 cup" },
+        { "name": "Salt", "measure": "1 tsp" },
+        { "name": "Eggs", "measure": "2 large" },
+        { "name": "Minas cheese (or parmesan)", "measure": "1 1/2 cups grated" }
+      ]
+    },
+    {
+      "idMeal": "br_moqueca_baiana",
+      "strMeal": "Moqueca Baiana",
+      "strCategory": "Main Course",
+      "strArea": "Brazil",
+      "strInstructions": "1. Marinate fish fillets with lime juice, salt, and pepper for 20 minutes. 2. In a clay pot, layer sliced onions, tomatoes, and bell peppers. 3. Add the marinated fish, coconut milk, dendê oil, and cilantro. 4. Cook over medium-low heat without stirring too much for 20–25 minutes until fish is tender. 5. Serve hot with rice and farofa.",
+      "strMealThumb": "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb",
+      "strTags": "Seafood,Stew,Coconut,Bahia",
+      "ingredients": [
+        { "name": "White fish fillets", "measure": "1 lb" },
+        { "name": "Lime juice", "measure": "2 tbsp" },
+        { "name": "Salt", "measure": "1 tsp" },
+        { "name": "Black pepper", "measure": "1/2 tsp" },
+        { "name": "Onion", "measure": "1 large, sliced" },
+        { "name": "Tomatoes", "measure": "2 medium, sliced" },
+        { "name": "Bell peppers", "measure": "1 red + 1 green, sliced" },
+        { "name": "Coconut milk", "measure": "1 cup" },
+        { "name": "Dendê oil (palm oil)", "measure": "2 tbsp" },
+        { "name": "Fresh cilantro", "measure": "1/4 cup chopped" }
+      ]
+    },
+    {
+      "idMeal": "br_brigadeiro",
+      "strMeal": "Brigadeiro",
+      "strCategory": "Dessert",
+      "strArea": "Brazil",
+      "strInstructions": "1. In a saucepan, mix sweetened condensed milk, butter, and cocoa powder. 2. Cook over medium heat, stirring constantly, until the mixture thickens and pulls away from the bottom (about 10 minutes). 3. Transfer to a plate and let cool. 4. Grease your hands with butter, roll small balls, and coat them in chocolate sprinkles. 5. Refrigerate until firm.",
+      "strMealThumb": "https://images.unsplash.com/photo-1551024739-78e9d60c45ca",
+      "strTags": "Chocolate,Sweets,Party",
+      "ingredients": [
+        { "name": "Sweetened condensed milk", "measure": "1 can (395g)" },
+        { "name": "Unsalted butter", "measure": "2 tbsp" },
+        { "name": "Cocoa powder", "measure": "3 tbsp" },
+        { "name": "Chocolate sprinkles", "measure": "1/2 cup" }
+      ]
+    },
+    {
+      "idMeal": "br_acaraje",
+      "strMeal": "Acarajé",
+      "strCategory": "Street Food",
+      "strArea": "Brazil",
+      "strInstructions": "1. Soak black-eyed peas in water for 8 hours, then rub to remove skins and drain. 2. Blend peas with onion and salt until a thick batter forms. 3. Whip the batter with a wooden spoon for several minutes to aerate. 4. Heat dendê oil in a deep pan and fry spoonfuls of batter until golden. 5. Serve split open with vatapá, dried shrimp, and hot peppers.",
+      "strMealThumb": "https://images.unsplash.com/photo-1604908812745-142e5075b831",
+      "strTags": "Fried,Vegetarian,Bahia",
+      "ingredients": [
+        { "name": "Black-eyed peas", "measure": "2 cups" },
+        { "name": "Onion", "measure": "1 medium" },
+        { "name": "Salt", "measure": "1 tsp" },
+        { "name": "Dendê oil", "measure": "2 cups for frying" },
+        { "name": "Vatapá (optional filling)", "measure": "1 cup" },
+        { "name": "Dried shrimp", "measure": "1/2 cup" }
+      ]
+    },
+    {
+      "idMeal": "br_fraldinha_churrasco",
+      "strMeal": "Fraldinha Churrasco",
+      "strCategory": "Main Course",
+      "strArea": "Brazil",
+      "strInstructions": "1. Season the flank steak generously with coarse salt and let rest for 20 minutes. 2. Preheat your grill to high heat. 3. Grill the steak 5–7 minutes per side depending on thickness, creating a well-seared crust. 4. Let the meat rest for 10 minutes, then slice thinly against the grain. 5. Serve with chimichurri, farofa, and vinagrete.",
+      "strMealThumb": "https://images.unsplash.com/photo-1553163147-622ab57e7c9b",
+      "strTags": "Grilled,Beef,Churrasco",
+      "ingredients": [
+        { "name": "Flank steak (fraldinha)", "measure": "1.5 lbs" },
+        { "name": "Coarse salt", "measure": "1 tbsp" },
+        { "name": "Chimichurri (optional)", "measure": "1/2 cup" },
+        { "name": "Farofa", "measure": "1 cup" }
+      ]
+    },
+    {
+      "idMeal": "br_vinagrete",
+      "strMeal": "Vinagrete",
+      "strCategory": "Condiment",
+      "strArea": "Brazil",
+      "strInstructions": "1. Finely chop tomatoes, onions, and bell peppers. 2. Mix vegetables in a bowl with vinegar, olive oil, and salt. 3. Add parsley and black pepper. 4. Stir well and refrigerate for at least 30 minutes to develop flavor. 5. Serve with churrasco or grilled meats.",
+      "strMealThumb": "https://images.unsplash.com/photo-1525755662778-989d0524087e",
+      "strTags": "Salad,Condiment,Churrasco",
+      "ingredients": [
+        { "name": "Tomatoes", "measure": "2 medium, diced" },
+        { "name": "Onion", "measure": "1 medium, finely chopped" },
+        { "name": "Bell pepper", "measure": "1 small, diced" },
+        { "name": "White vinegar", "measure": "1/4 cup" },
+        { "name": "Olive oil", "measure": "3 tbsp" },
+        { "name": "Salt", "measure": "1/2 tsp" },
+        { "name": "Black pepper", "measure": "1/4 tsp" },
+        { "name": "Parsley", "measure": "2 tbsp chopped" }
+      ]
+    }
+  ]
+}

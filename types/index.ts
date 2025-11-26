@@ -13,6 +13,7 @@ export interface Country {
     png: string; // URL to flag image
     svg: string;
   };
+  flag?: string; // Emoji flag
   currencies?: {
     [key: string]: {
       name: string; // "United States dollar"

@@ -17,7 +17,15 @@ import Animated, {
   FadeInUp,
   FadeInLeft,
 } from 'react-native-reanimated';
-import { YStack, XStack, Text, Paragraph, Button, Card, Separator } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Text,
+  Paragraph,
+  Button,
+  Card,
+  Separator,
+} from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { Colors } from '@/constants/Colors';
@@ -218,11 +226,18 @@ export default function SignUpScreen() {
                 paddingVertical: 10,
                 paddingHorizontal: 14,
                 borderRadius: 12,
-                backgroundColor: pressed 
-                  ? (colorScheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')
-                  : (colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)'),
+                backgroundColor: pressed
+                  ? colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.15)'
+                    : 'rgba(0,0,0,0.08)'
+                  : colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.04)',
                 borderWidth: 1,
-                borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                borderColor:
+                  colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.06)',
                 alignSelf: 'flex-start',
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
@@ -254,7 +269,10 @@ export default function SignUpScreen() {
           {/* Header + Card */}
           <YStack flex={1} px="$4" mt="$1">
             {/* iOS-style Header */}
-            <Animated.View entering={FadeInUp.delay(90)} style={{ marginBottom: 20 }}>
+            <Animated.View
+              entering={FadeInUp.delay(90)}
+              style={{ marginBottom: 20 }}
+            >
               <YStack ai="center" mb="$4">
                 {/* App Icon */}
                 <Animated.View
@@ -298,256 +316,252 @@ export default function SignUpScreen() {
             </Animated.View>
 
             {/* iOS-style signup card */}
-            <Card
-              elevate
-              bordered
-              entering={FadeInDown.delay(140)}
-              borderRadius="$5"
-              padding="$5"
-              backgroundColor={
-                colorScheme === 'dark'
-                  ? 'rgba(28,28,30,0.95)'
-                  : 'rgba(255,255,255,1)'
-              }
-              borderColor={
-                colorScheme === 'dark'
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.06)'
-              }
-              shadowColor="#000"
-              shadowOffset={{ width: 0, height: 4 }}
-              shadowOpacity={0.08}
-              shadowRadius={20}
-              elevation={6}
-            >
-              {/* Form fields */}
-              <YStack space="$4" mb="$4">
-                <Input
-                  label="Full Name"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChangeText={(text) => {
-                    setName(text);
-                    if (errors.name) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        name: undefined,
-                      }));
-                    }
-                  }}
-                  autoCapitalize="words"
-                  leftIcon="user"
-                  error={errors.name}
-                />
-
-                <Input
-                  label="Email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    if (errors.email) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        email: undefined,
-                      }));
-                    }
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  leftIcon="envelope"
-                  error={errors.email}
-                />
-
-                <Input
-                  label="Password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (errors.password) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        password: undefined,
-                      }));
-                    }
-                  }}
-                  secureTextEntry={!showPassword}
-                  leftIcon="lock"
-                  rightIcon={showPassword ? 'eye-slash' : 'eye'}
-                  onRightIconPress={() => {
-                    setShowPassword((prev) => !prev);
-                    haptics.selection();
-                  }}
-                  error={errors.password}
-                />
-
-                <Input
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    if (errors.confirmPassword) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        confirmPassword: undefined,
-                      }));
-                    }
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                  leftIcon="lock"
-                  rightIcon={showConfirmPassword ? 'eye-slash' : 'eye'}
-                  onRightIconPress={() => {
-                    setShowConfirmPassword((prev) => !prev);
-                    haptics.selection();
-                  }}
-                  error={errors.confirmPassword}
-                />
-              </YStack>
-
-              {/* Password Requirements */}
-              {password && (
-                <Animated.View
-                  entering={FadeIn}
-                  style={{
-                    padding: 12,
-                    borderRadius: 12,
-                    marginBottom: 16,
-                    backgroundColor:
-                      colorScheme === 'dark'
-                        ? 'rgba(255,255,255,0.05)'
-                        : 'rgba(0,0,0,0.02)',
-                    borderWidth: 1,
-                    borderColor:
-                      colorScheme === 'dark'
-                        ? 'rgba(255,255,255,0.1)'
-                        : 'rgba(0,0,0,0.05)',
-                  }}
-                >
-                  <Text
-                    fontSize="$2"
-                    fontWeight="600"
-                    mb="$2"
-                    color="$color11"
-                  >
-                    Password Requirements:
-                  </Text>
-                  <YStack space="$2">
-                    {[
-                      { check: password.length >= 6, text: 'At least 6 characters' },
-                      {
-                        check: /(?=.*[a-z])/.test(password),
-                        text: 'One lowercase letter',
-                      },
-                      {
-                        check: /(?=.*[A-Z])/.test(password),
-                        text: 'One uppercase letter',
-                      },
-                    ].map((req, index) => (
-                      <XStack key={index} ai="center" space="$2">
-                        <FontAwesome5
-                          name={req.check ? 'check-circle' : 'circle'}
-                          size={12}
-                          color={req.check ? colors.success : colors.tabIconDefault}
-                        />
-                        <Text
-                          fontSize="$2"
-                          fontWeight="500"
-                          color={req.check ? colors.success : '$color11'}
-                        >
-                          {req.text}
-                        </Text>
-                      </XStack>
-                    ))}
-                  </YStack>
-                </Animated.View>
-              )}
-
-              {/* Error Message */}
-              {error && (
-                <Animated.View
-                  entering={FadeIn}
-                  className="p-3 rounded-2xl mb-4 flex-row items-center"
-                  style={{
-                    backgroundColor: colors.error + '10',
-                    borderWidth: 1,
-                    borderColor: colors.error + '40',
-                  }}
-                >
-                  <FontAwesome5
-                    name="exclamation-circle"
-                    size={18}
-                    color={colors.error}
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text
-                    flex={1}
-                    fontSize="$3"
-                    color={colors.error}
-                  >
-                    {error}
-                  </Text>
-                </Animated.View>
-              )}
-
-              {/* Primary button - iOS style */}
-              <Button
-                onPress={handleSignUp}
-                disabled={isLoading}
-                size="$4"
-                backgroundColor={colors.tint}
-                color="white"
-                fontWeight="700"
-                width="100%"
-                mb="$3"
-                borderRadius="$4"
-                pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                opacity={isLoading ? 0.6 : 1}
+            <Animated.View entering={FadeInDown.delay(140)}>
+              <Card
+                borderRadius="$5"
+                padding="$5"
+                backgroundColor={
+                  colorScheme === 'dark'
+                    ? 'rgba(28,28,30,0.95)'
+                    : 'rgba(255,255,255,1)'
+                }
+                borderColor={
+                  colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.06)'
+                }
+                borderWidth={1}
+                shadowColor="#000"
+                shadowOffset={{ width: 0, height: 4 }}
+                shadowOpacity={0.08}
+                shadowRadius={20}
+                elevation={6}
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </Button>
-
-              {/* Divider - iOS style */}
-              <XStack ai="center" my="$4" space="$2">
-                <Separator flex={1} borderColor="$color5" />
-                <Text
-                  fontSize="$2"
-                  px="$3"
-                  color="$color10"
-                  fontWeight="500"
-                >
-                  or
-                </Text>
-                <Separator flex={1} borderColor="$color5" />
-              </XStack>
-
-              {/* OAuth buttons */}
-              <YStack space="$3">
-                <OAuthButton
-                  provider="google"
-                  onPress={handleGoogleSignIn}
-                  loading={!!isLoading}
-                  disabled={!request}
-                  delay={220}
-                />
-                {Platform.OS === 'ios' && (
-                  <OAuthButton
-                    provider="apple"
-                    onPress={handleAppleSignIn}
-                    loading={!!isLoading}
-                    delay={260}
+                {/* Form fields */}
+                <YStack space="$4" mb="$4">
+                  <Input
+                    label="Full Name"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChangeText={(text) => {
+                      setName(text);
+                      if (errors.name) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          name: undefined,
+                        }));
+                      }
+                    }}
+                    autoCapitalize="words"
+                    leftIcon="user"
+                    error={errors.name}
                   />
+
+                  <Input
+                    label="Email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errors.email) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          email: undefined,
+                        }));
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    leftIcon="envelope"
+                    error={errors.email}
+                  />
+
+                  <Input
+                    label="Password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          password: undefined,
+                        }));
+                      }
+                    }}
+                    secureTextEntry={!showPassword}
+                    leftIcon="lock"
+                    rightIcon={showPassword ? 'eye-slash' : 'eye'}
+                    onRightIconPress={() => {
+                      setShowPassword((prev) => !prev);
+                      haptics.selection();
+                    }}
+                    error={errors.password}
+                  />
+
+                  <Input
+                    label="Confirm Password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          confirmPassword: undefined,
+                        }));
+                      }
+                    }}
+                    secureTextEntry={!showConfirmPassword}
+                    leftIcon="lock"
+                    rightIcon={showConfirmPassword ? 'eye-slash' : 'eye'}
+                    onRightIconPress={() => {
+                      setShowConfirmPassword((prev) => !prev);
+                      haptics.selection();
+                    }}
+                    error={errors.confirmPassword}
+                  />
+                </YStack>
+
+                {/* Password Requirements */}
+                {password && (
+                  <Animated.View
+                    entering={FadeIn}
+                    style={{
+                      padding: 12,
+                      borderRadius: 12,
+                      marginBottom: 16,
+                      backgroundColor:
+                        colorScheme === 'dark'
+                          ? 'rgba(255,255,255,0.05)'
+                          : 'rgba(0,0,0,0.02)',
+                      borderWidth: 1,
+                      borderColor:
+                        colorScheme === 'dark'
+                          ? 'rgba(255,255,255,0.1)'
+                          : 'rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <Text
+                      fontSize="$2"
+                      fontWeight="600"
+                      mb="$2"
+                      color="$color11"
+                    >
+                      Password Requirements:
+                    </Text>
+                    <YStack space="$2">
+                      {[
+                        {
+                          check: password.length >= 6,
+                          text: 'At least 6 characters',
+                        },
+                        {
+                          check: /(?=.*[a-z])/.test(password),
+                          text: 'One lowercase letter',
+                        },
+                        {
+                          check: /(?=.*[A-Z])/.test(password),
+                          text: 'One uppercase letter',
+                        },
+                      ].map((req, index) => (
+                        <XStack key={index} ai="center" space="$2">
+                          <FontAwesome5
+                            name={req.check ? 'check-circle' : 'circle'}
+                            size={12}
+                            color={
+                              req.check ? colors.success : colors.tabIconDefault
+                            }
+                          />
+                          <Text
+                            fontSize="$2"
+                            fontWeight="500"
+                            color={req.check ? colors.success : '$color11'}
+                          >
+                            {req.text}
+                          </Text>
+                        </XStack>
+                      ))}
+                    </YStack>
+                  </Animated.View>
                 )}
-                <OAuthButton
-                  provider="facebook"
-                  onPress={handleFacebookSignIn}
-                  loading={!!isLoading}
-                  delay={Platform.OS === 'ios' ? 300 : 260}
-                />
-              </YStack>
-            </Card>
+
+                {/* Error Message */}
+                {error && (
+                  <Animated.View
+                    entering={FadeIn}
+                    className="p-3 rounded-2xl mb-4 flex-row items-center"
+                    style={{
+                      backgroundColor: colors.error + '10',
+                      borderWidth: 1,
+                      borderColor: colors.error + '40',
+                    }}
+                  >
+                    <FontAwesome5
+                      name="exclamation-circle"
+                      size={18}
+                      color={colors.error}
+                      style={{ marginRight: 10 }}
+                    />
+                    <Text flex={1} fontSize="$3" color={colors.error}>
+                      {error}
+                    </Text>
+                  </Animated.View>
+                )}
+
+                {/* Primary button - iOS style */}
+                <Button
+                  onPress={handleSignUp}
+                  disabled={isLoading}
+                  size="$4"
+                  backgroundColor={colors.tint}
+                  color="white"
+                  fontWeight="700"
+                  width="100%"
+                  mb="$3"
+                  borderRadius="$4"
+                  pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                  opacity={isLoading ? 0.6 : 1}
+                >
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                </Button>
+
+                {/* Divider - iOS style */}
+                <XStack ai="center" my="$4" space="$2">
+                  <Separator flex={1} borderColor="$color5" />
+                  <Text fontSize="$2" px="$3" color="$color10" fontWeight="500">
+                    or
+                  </Text>
+                  <Separator flex={1} borderColor="$color5" />
+                </XStack>
+
+                {/* OAuth buttons */}
+                <YStack space="$3">
+                  <OAuthButton
+                    provider="google"
+                    onPress={handleGoogleSignIn}
+                    loading={!!isLoading}
+                    disabled={!request}
+                    delay={220}
+                  />
+                  {Platform.OS === 'ios' && (
+                    <OAuthButton
+                      provider="apple"
+                      onPress={handleAppleSignIn}
+                      loading={!!isLoading}
+                      delay={260}
+                    />
+                  )}
+                  <OAuthButton
+                    provider="facebook"
+                    onPress={handleFacebookSignIn}
+                    loading={!!isLoading}
+                    delay={Platform.OS === 'ios' ? 300 : 260}
+                  />
+                </YStack>
+              </Card>
+            </Animated.View>
 
             {/* Sign in footer - iOS style */}
             <Animated.View
@@ -555,10 +569,7 @@ export default function SignUpScreen() {
               style={{ alignItems: 'center', marginTop: 32 }}
             >
               <XStack ai="center" space="$2">
-                <Text
-                  fontSize="$3"
-                  color="$color11"
-                >
+                <Text fontSize="$3" color="$color11">
                   Already have an account?
                 </Text>
                 <Button
@@ -570,11 +581,7 @@ export default function SignUpScreen() {
                   chromeless
                   pressStyle={{ opacity: 0.6 }}
                 >
-                  <Text
-                    fontSize="$3"
-                    fontWeight="600"
-                    color={colors.tint}
-                  >
+                  <Text fontSize="$3" fontWeight="600" color={colors.tint}>
                     Sign In
                   </Text>
                 </Button>

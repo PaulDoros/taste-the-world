@@ -78,6 +78,7 @@ export const signUp = mutation({
       email: args.email.toLowerCase(),
       passwordHash,
       name: args.name,
+      tier: 'free', // Default tier for new users
       subscriptionType: 'free',
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -217,6 +218,7 @@ export const signUp = mutation({
         email: user.email,
         name: user.name,
         image: user.image,
+        tier: user.tier,
         subscriptionType: user.subscriptionType,
         subscriptionStartDate: user.subscriptionStartDate,
         subscriptionEndDate: user.subscriptionEndDate,
@@ -242,13 +244,17 @@ export const signIn = mutation({
       .first();
 
     if (!user) {
-      throw new Error('No account found with this email address. Please check your email or sign up.');
+      throw new Error(
+        'No account found with this email address. Please check your email or sign up.'
+      );
     }
 
     // Verify password
     const passwordHash = await hashPassword(args.password);
     if (user.passwordHash !== passwordHash) {
-      throw new Error('Incorrect password. Please try again or reset your password.');
+      throw new Error(
+        'Incorrect password. Please try again or reset your password.'
+      );
     }
 
     // Update last login
@@ -278,6 +284,7 @@ export const signIn = mutation({
         email: user.email,
         name: user.name,
         image: user.image,
+        tier: user.tier,
         subscriptionType: user.subscriptionType,
         subscriptionStartDate: user.subscriptionStartDate,
         subscriptionEndDate: user.subscriptionEndDate,
@@ -321,6 +328,7 @@ export const verifySession = query({
       email: user.email,
       name: user.name,
       image: user.image,
+      tier: user.tier,
       subscriptionType: user.subscriptionType,
       subscriptionStartDate: user.subscriptionStartDate,
       subscriptionEndDate: user.subscriptionEndDate,
@@ -372,6 +380,7 @@ export const getCurrentUser = query({
       email: user.email,
       name: user.name,
       image: user.image,
+      tier: user.tier,
       subscriptionType: user.subscriptionType,
       subscriptionStartDate: user.subscriptionStartDate,
       subscriptionEndDate: user.subscriptionEndDate,

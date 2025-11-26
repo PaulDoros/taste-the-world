@@ -20,7 +20,15 @@ import Animated, {
   FadeInLeft,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { YStack, XStack, Text, Paragraph, Button, Card, Separator } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Text,
+  Paragraph,
+  Button,
+  Card,
+  Separator,
+} from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { Colors } from '@/constants/Colors';
@@ -157,7 +165,6 @@ export default function LoginScreen() {
     alert('Facebook Sign In coming soon!');
   };
 
-
   return (
     <SafeAreaView
       className="flex-1"
@@ -199,11 +206,18 @@ export default function LoginScreen() {
                 paddingVertical: 10,
                 paddingHorizontal: 14,
                 borderRadius: 12,
-                backgroundColor: pressed 
-                  ? (colorScheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)')
-                  : (colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)'),
+                backgroundColor: pressed
+                  ? colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.15)'
+                    : 'rgba(0,0,0,0.08)'
+                  : colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.04)',
                 borderWidth: 1,
-                borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                borderColor:
+                  colorScheme === 'dark'
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(0,0,0,0.06)',
                 alignSelf: 'flex-start',
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
@@ -235,7 +249,10 @@ export default function LoginScreen() {
           {/* Header + Card */}
           <YStack flex={1} px="$4" mt="$1">
             {/* Header with Icon */}
-            <Animated.View entering={FadeInUp.delay(90)} style={{ marginBottom: 24, alignItems: 'center' }}>
+            <Animated.View
+              entering={FadeInUp.delay(90)}
+              style={{ marginBottom: 24, alignItems: 'center' }}
+            >
               <YStack ai="center" mb="$3">
                 {/* App Icon */}
                 <Animated.View
@@ -252,7 +269,6 @@ export default function LoginScreen() {
                     shadowOpacity: 0.3,
                     shadowRadius: 12,
                     elevation: 6,
-                  
                   }}
                 >
                   <FontAwesome5 name="utensils" size={18} color="#FFFFFF" />
@@ -277,7 +293,6 @@ export default function LoginScreen() {
                 Welcome back to Taste the World
               </Paragraph>
             </Animated.View>
-       
 
             {/* iOS-style login card */}
             <Card
@@ -301,7 +316,6 @@ export default function LoginScreen() {
               shadowRadius={20}
               elevation={6}
             >
-
               {/* Form fields */}
               <YStack space="$4" mb="$4">
                 <Input
@@ -365,11 +379,7 @@ export default function LoginScreen() {
                     color={colors.error}
                     style={{ marginRight: 10 }}
                   />
-                  <Text
-                    flex={1}
-                    fontSize="$3"
-                    color={colors.error}
-                  >
+                  <Text flex={1} fontSize="$3" color={colors.error}>
                     {error}
                   </Text>
                 </Animated.View>
@@ -387,11 +397,7 @@ export default function LoginScreen() {
                 chromeless
                 pressStyle={{ opacity: 0.6 }}
               >
-                <Text
-                  fontSize="$3"
-                  fontWeight="600"
-                  color={colors.tint}
-                >
+                <Text fontSize="$3" fontWeight="600" color={colors.tint}>
                   Forgot Password?
                 </Text>
               </Button>
@@ -416,12 +422,7 @@ export default function LoginScreen() {
               {/* Divider - iOS style */}
               <XStack ai="center" my="$4" space="$2">
                 <Separator flex={1} borderColor="$color5" />
-                <Text
-                  fontSize="$2"
-                  px="$3"
-                  color="$color10"
-                  fontWeight="500"
-                >
+                <Text fontSize="$2" px="$3" color="$color10" fontWeight="500">
                   or
                 </Text>
                 <Separator flex={1} borderColor="$color5" />
@@ -433,9 +434,7 @@ export default function LoginScreen() {
                   provider="google"
                   onPress={handleGoogleSignIn}
                   loading={!!isLoading}
-                 
                   delay={220}
-                  
                 />
                 {Platform.OS === 'ios' && (
                   <OAuthButton
@@ -460,10 +459,7 @@ export default function LoginScreen() {
               style={{ alignItems: 'center', marginTop: 32 }}
             >
               <XStack ai="center" space="$2">
-                <Text
-                  fontSize="$3"
-                  color="$color11"
-                >
+                <Text fontSize="$3" color="$color11">
                   Don&apos;t have an account?
                 </Text>
                 <Button
@@ -475,11 +471,7 @@ export default function LoginScreen() {
                   chromeless
                   pressStyle={{ opacity: 0.6 }}
                 >
-                  <Text
-                    fontSize="$3"
-                    fontWeight="600"
-                    color={colors.tint}
-                  >
+                  <Text fontSize="$3" fontWeight="600" color={colors.tint}>
                     Sign Up
                   </Text>
                 </Button>
