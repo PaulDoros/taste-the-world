@@ -554,4 +554,26 @@ export const ru = {
   // Shared
   shared_error_title: 'Ой!',
   shared_retry: 'Попробовать снова',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Откройте ВСЕ 195+ стран, включая Италию, Францию, Японию и другие!',
+  premium_benefit_ai: 'Безлимитный ИИ-шеф и Тревел-шеф',
+  premium_benefit_planner: 'Умный планировщик питания (на неделю и для детей)',
+  premium_benefit_recipes: 'Безлимитные рецепты из каждой страны',
+
+  premium_benefit_favorites:
+    'Сохраняйте безлимитное количество любимых рецептов',
+  premium_benefit_shopping: 'Умные списки покупок с категориями',
+  premium_benefit_nutri: 'Информация о пищевой ценности',
+  premium_benefit_offline: 'Офлайн режим - скачивание рецептов',
+  premium_benefit_ads: 'Без рекламы',
+  premium_benefit_support: 'Приоритетная поддержка',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

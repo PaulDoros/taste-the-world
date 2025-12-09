@@ -38,6 +38,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { Id } from '@/convex/_generated/dataModel';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useLanguage } from '@/context/LanguageContext';
+import { NutritionalInfo } from '@/components/NutritionalInfo';
 
 const RecipeDetailsScreen = () => {
   const { id } = useLocalSearchParams();
@@ -782,6 +783,9 @@ const RecipeDetailsScreen = () => {
               </View>
             </View>
           </Animated.View>
+
+          {/* Nutritional Info (Gated) */}
+          <NutritionalInfo ingredients={ingredients} />
 
           {/* Instructions Section */}
           {recipe.strInstructions && (

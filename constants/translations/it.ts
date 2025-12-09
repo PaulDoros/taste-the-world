@@ -101,7 +101,7 @@ export const it = {
   pantry_add_error_name: 'Please enter an ingredient name',
 
   // Shopping List
-  shopping_list: 'Lista della Spesa',
+
   shopping_list_add: 'Aggiungi Articolo',
   shopping_list_clear_all: 'Cancella Tutto',
   shopping_list_empty_title: 'Lista vuota',
@@ -114,6 +114,9 @@ export const it = {
   shopping_list_filter_completed: 'Completati',
   shopping_list_filter_all: 'Tutti',
   shopping_list_no_filter_items: 'Nessun articolo {{filter}}',
+  shopping_list_clear_empty_error: 'Nessun articolo completato da cancellare.',
+  shopping_list_confirm_clear_completed:
+    'Cancellare {{count}} articoli completati?',
 
   shopping_list_already_empty: 'La lista è già vuota.',
   shopping_list_cleared_success: 'Lista svuotata',
@@ -577,4 +580,26 @@ export const it = {
   ingredient_modal_in_pantry: 'IN DISPENSA',
   ingredient_modal_selected_count: '{{selected}} su {{total}} selezionati',
   ingredient_modal_cancel: 'Annulla',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Sblocca TUTTI i 195+ paesi inclusi Italia, Francia, Giappone e altri!',
+  premium_benefit_ai: 'Chef AI e Travel Chef illimitati',
+  premium_benefit_planner:
+    'Pianificatore pasti settimanale e per bambini intelligente',
+  premium_benefit_recipes: 'Ricette illimitate da ogni paese',
+
+  premium_benefit_favorites: 'Salva ricette preferite illimitate',
+  premium_benefit_shopping: 'Liste della spesa intelligenti con categorie',
+  premium_benefit_nutri: 'Informazioni nutrizionali',
+  premium_benefit_offline: 'Modalità offline - scarica ricette',
+  premium_benefit_ads: 'Esperienza senza pubblicità',
+  premium_benefit_support: 'Supporto clienti prioritario',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

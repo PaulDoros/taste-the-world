@@ -576,4 +576,25 @@ export const ro = {
   pricing_save: 'ECONOMISEȘTE {{amount}}',
   pricing_get_premium: 'Obține Premium Acum',
   pricing_cancel_anytime: 'Anulează oricând.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Deblochează TOATE cele 195+ țări inclusiv Italia, Franța, Japonia și altele!',
+  premium_benefit_ai: 'Chef AI și Travel Chef nelimitat',
+  premium_benefit_planner: 'Planificator de mese Săptămânal și pentru Bebeluși',
+  premium_benefit_recipes: 'Rețete nelimitate din fiecare țară',
+
+  premium_benefit_favorites: 'Salvează rețete favorite nelimitate',
+  premium_benefit_shopping: 'Liste de cumpărături inteligente cu categorii',
+  premium_benefit_nutri: 'Informații nutriționale',
+  premium_benefit_offline: 'Mod offline - descarcă rețete',
+  premium_benefit_ads: 'Experiență fără reclame',
+  premium_benefit_support: 'Suport clienți prioritar',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

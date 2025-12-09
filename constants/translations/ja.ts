@@ -559,4 +559,25 @@ export const ja = {
   // Shared
   shared_error_title: 'おっと！',
   shared_retry: '再試行',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'イタリア、フランス、日本など195カ国すべてをアンロック！',
+  premium_benefit_ai: 'AIシェフとトラベルシェフが無制限',
+  premium_benefit_planner: 'スマートな週間＆ベビー食事プランナー',
+  premium_benefit_recipes: 'すべての国のレシピが無制限',
+
+  premium_benefit_favorites: 'お気に入りのレシピを無制限に保存',
+  premium_benefit_shopping: 'カテゴリ付きスマート買い物リスト',
+  premium_benefit_nutri: '栄養情報',
+  premium_benefit_offline: 'オフラインモード - レシピをダウンロード',
+  premium_benefit_ads: '広告なしの体験',
+  premium_benefit_support: '優先カスタマーサポート',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

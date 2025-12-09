@@ -15,7 +15,12 @@ export default defineSchema({
     passwordHash: v.string(), // Hashed password (OAuth users have empty string)
     name: v.optional(v.string()),
     image: v.optional(v.string()),
-    tier: v.union(v.literal('guest'), v.literal('free'), v.literal('premium')), // User access tier
+    tier: v.union(
+      v.literal('guest'),
+      v.literal('free'),
+      v.literal('personal'),
+      v.literal('pro')
+    ), // User access tier
     subscriptionType: v.union(
       v.literal('free'),
       v.literal('monthly'),
@@ -30,8 +35,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
     lastLoginAt: v.optional(v.number()),
-    aiMessagesUsed: v.optional(v.number()), // Track AI prompt usage for quota enforcement
-    unlockedCountries: v.optional(v.array(v.string())), // Array of unlocked cca2 codes
+    // Monetization & Limits
+    unlockedCountries: v.optional(v.array(v.string())), // Array of unlocked cca2 codes for Free tier
+    dailyAiCount: v.optional(v.number()), // Daily AI prompt usage
+    dailyTravelCount: v.optional(v.number()), // Daily Travel prompt usage
+    lastAiReset: v.optional(v.number()), // Timestamp of last usage reset
+    aiMessagesUsed: v.optional(v.number()), // Total lifetime usage (legacy/analytics)
     language: v.optional(v.string()), // User's preferred language (en, ro, fr, etc.)
   })
     .index('by_email', ['email'])
@@ -69,6 +78,7 @@ export default defineSchema({
       v.literal('failed'),
       v.literal('refunded')
     ),
+    tier: v.optional(v.string()), // 'personal' | 'pro'
   })
     .index('by_user', ['userId'])
     .index('by_status', ['status']),

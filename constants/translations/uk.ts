@@ -335,10 +335,12 @@ export const uk = {
   chef_error_pantry: 'Не вдалося оновити комору',
   chef_success_shopping_list: 'Додано до списку покупок',
   chef_error_shopping_list: 'Не вдалося додати до списку покупок',
+  chef_error_send: 'Не вдалося надіслати повідомлення',
 
   pantry_title: 'Моя Комора',
   pantry_subtitle: '{{count}} товарів',
   pantry_subtitle_single: '1 товар',
+  pantry_add_error_name: 'Будь ласка, введіть назву інгредієнта',
 
   modal_success_detail: 'Операція успішна',
   modal_get_unlimited: 'Отримати безлімітний доступ',
@@ -544,4 +546,27 @@ export const uk = {
   pricing_save: 'ЗБЕРЕЖІТЬ {{amount}}',
   pricing_get_premium: 'Отримати Premium зараз',
   pricing_cancel_anytime: 'Скасувати в будь-який час. Жодних питань.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Відкрийте ВСІ 195+ країн, включаючи Італію, Францію, Японію та інші!',
+  premium_benefit_ai: 'Безлімітний ШІ-шеф та Тревел-шеф',
+  premium_benefit_planner:
+    'Розумний планувальник харчування (тижневий та дитячий)',
+  premium_benefit_recipes: 'Безлімітні рецепти з кожної країни',
+
+  premium_benefit_favorites:
+    'Зберігайте безлімітну кількість улюблених рецептів',
+  premium_benefit_shopping: 'Розумні списки покупок з категоріями',
+  premium_benefit_nutri: 'Інформація про харчову цінність',
+  premium_benefit_offline: 'Офлайн режим - завантаження рецептів',
+  premium_benefit_ads: 'Без реклами',
+  premium_benefit_support: 'Пріоритетна підтримка',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

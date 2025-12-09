@@ -570,22 +570,29 @@ export const fr = {
   pricing_get_premium: 'Obtenir Premium Maintenant',
   pricing_cancel_anytime: 'Annulez à tout moment.',
 
-  // Missing Keys
-  edit_screen_open_code: 'Open code for this screen:',
-  edit_screen_change_text: 'Change text, save file, and app updates.',
-  edit_screen_help_link: 'Tap here if app does not update.',
-
-  chef_title: 'Chef IA',
-  chef_prompt_random: 'Donne-moi une recette aléatoire.',
-  chef_prompt_surprise: 'Surprends-moi avec un fait culinaire.',
-  chef_prompt_country: 'Je visite {{country}}, que manger ?',
-  chef_error_send: "Échec de l'envoi",
-  pantry_add_error_name: "Veuillez entrer un nom d'ingrédient",
-
   scan_success_message: 'Articles ajoutés au garde-manger.',
-  scan_permission_camera: "Nous avons besoin d'accès à la caméra.",
 
   not_found_title: 'Oups!',
   not_found_text: "Cet écran n'existe pas.",
-  not_found_link: "Retour à l'accueil!",
+
+  // Premium Benefits
+  premium_benefit_countries:
+    "Débloquez TOUS les 195+ pays y compris l'Italie, la France, le Japon et plus !",
+  premium_benefit_ai: 'Chef IA et Chef de Voyage illimités',
+  premium_benefit_planner: 'Planificateur de repas intelligent (Hebdo & Bébé)',
+  premium_benefit_recipes: 'Recettes illimitées de chaque pays',
+
+  premium_benefit_favorites: 'Sauvegardez des recettes favorites en illimité',
+  premium_benefit_shopping: 'Listes de courses intelligentes avec catégories',
+  premium_benefit_nutri: 'Informations nutritionnelles',
+  premium_benefit_offline: 'Mode hors ligne - téléchargez des recettes',
+  premium_benefit_ads: 'Expérience sans publicité',
+  premium_benefit_support: 'Support client prioritaire',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

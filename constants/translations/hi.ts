@@ -550,4 +550,25 @@ export const hi = {
   pricing_save: 'बचत {{amount}}',
   pricing_get_premium: 'अब प्रीमियम प्राप्त करें',
   pricing_cancel_anytime: 'कभी भी रद्द करें। कोई सवाल नहीं।',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'इटली, फ्रांस, जापान और अन्य सहित सभी 195+ देशों को अनलॉक करें!',
+  premium_benefit_ai: 'असीमित एआई शेफ और ट्रैवल शेफ',
+  premium_benefit_planner: 'स्मार्ट साप्ताहिक और बेबी मील प्लानर',
+  premium_benefit_recipes: 'हर देश से असीमित रेसिपी',
+
+  premium_benefit_favorites: 'असीमित पसंदीदा रेसिपी सहेजें',
+  premium_benefit_shopping: 'श्रेणियों के साथ स्मार्ट शॉपिंग सूचियां',
+  premium_benefit_nutri: 'पोषण संबंधी जानकारी',
+  premium_benefit_offline: 'ऑफ़लाइन मोड - रेसिपी डाउनलोड करें',
+  premium_benefit_ads: 'विज्ञापन-मुक्त अनुभव',
+  premium_benefit_support: 'प्राथमिकता ग्राहक सहायता',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

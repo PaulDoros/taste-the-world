@@ -549,4 +549,25 @@ export const tr = {
   pricing_save: '{{amount}} KAZANÇ',
   pricing_get_premium: 'Şimdi Premium Al',
   pricing_cancel_anytime: 'İstediğiniz zaman iptal edin. Soru sorulmaz.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'İtalya, Fransa, Japonya ve daha fazlası dahil 195+ ülkenin kilidini aç!',
+  premium_benefit_ai: 'Sınırsız Yapay Zeka Şefi ve Gezi Şefi',
+  premium_benefit_planner: 'Akıllı Haftalık ve Bebek Yemek Planlayıcı',
+  premium_benefit_recipes: 'Her ülkeden sınırsız tarif',
+
+  premium_benefit_favorites: 'Sınırsız favori tarif kaydet',
+  premium_benefit_shopping: 'Kategorili akıllı alışveriş listeleri',
+  premium_benefit_nutri: 'Besin değerleri bilgisi',
+  premium_benefit_offline: 'Çevrimdışı mod - tarifleri indir',
+  premium_benefit_ads: 'Reklamsız deneyim',
+  premium_benefit_support: 'Öncelikli müşteri desteği',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

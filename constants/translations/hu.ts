@@ -517,6 +517,13 @@ export const hu = {
   scan_add_pantry: 'Hozzáadás a Kamrához',
   scan_scan_another: 'Másik Szkennelése',
   scan_permission_title: 'Engedély Szükséges',
+  scan_permission_camera: 'Kamera hozzáférés szükséges.',
+  scan_permission_gallery:
+    'A fényképek szkenneléséhez galéria-hozzáférés szükséges.',
+  scan_error_title: 'Hiba',
+  scan_error_failed: 'Az elemzés sikertelen. Kérjük, próbálja újra.',
+  scan_success_title: 'Siker!',
+  scan_success_message: 'Elemek hozzáadva a kamrához.',
   not_found_link: 'Ugrás a kezdőképernyőre!',
 
   // Shared
@@ -535,18 +542,33 @@ export const hu = {
   pricing_save: 'MEGTAKARÍTÁS {{amount}}',
   pricing_get_premium: 'Prémium Megszerzése Most',
   pricing_cancel_anytime: 'Bármikor lemondhatja. Nincs kérdés.',
+
   // Chef Missing
   chef_prompt_random: 'Adj egy véletlenszerű receptet.',
   chef_prompt_surprise: 'Mondj egy érdekes tényt az ételről.',
   chef_prompt_country: '{{country}}-ba utazom, mit egyek?',
-  chef_error_send: 'Küldés sikertelen',
-  pantry_add_error_name: 'Kérlek add meg a nevét',
-
-  scan_permission_camera: 'Kamera hozzáférés szükséges.',
-  scan_success_message: 'Elemek hozzáadva a kamrához.',
 
   not_found_title: 'Hoppá!',
   not_found_text: 'Ez az oldal nem létezik.',
 
-  settings_select_language: 'Nyelv választás',
+  // Premium Benefits
+  premium_benefit_countries:
+    'Oldd fel mind a 195+ országot, beleértve Olaszországot, Franciaországot, Japánt és többit!',
+  premium_benefit_ai: 'Korlátlan AI Séf és Utazó Séf',
+  premium_benefit_planner: 'Okos Heti és Baba Menütervező',
+  premium_benefit_recipes: 'Korlátlan recept minden országból',
+
+  premium_benefit_favorites: 'Ments el korlátlan kedvenc receptet',
+  premium_benefit_shopping: 'Okos bevásárlólisták kategóriákkal',
+  premium_benefit_nutri: 'Tápérték információk',
+  premium_benefit_offline: 'Offline mód - receptek letöltése',
+  premium_benefit_ads: 'Reklámmentes élmény',
+  premium_benefit_support: 'Kiemelt ügyfélszolgálat',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

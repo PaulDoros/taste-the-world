@@ -245,6 +245,7 @@ export function useAuth() {
     isLoading: isLoading || (!!token && !user && currentUser === undefined),
     error,
     isAuthenticated,
+    tier: user?.tier || 'guest',
     isPremium,
     signUp,
     signIn,

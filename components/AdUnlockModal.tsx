@@ -8,9 +8,26 @@ import Animated, {
   Easing,
   FadeInDown,
 } from 'react-native-reanimated';
+import {
+  RewardedInterstitialAd,
+  RewardedAdEventType,
+  AdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
+
+const adUnitId = __DEV__
+  ? TestIds.REWARDED_INTERSTITIAL
+  : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyy'; // Replace with real ID in prod
+
+const rewardedInterstitial = RewardedInterstitialAd.createForAdRequest(
+  adUnitId,
+  {
+    requestNonPersonalizedAdsOnly: true,
+  }
+);
 
 interface AdUnlockModalProps {
   visible: boolean;
@@ -30,17 +47,51 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
   const [stage, setStage] = useState<'prompt' | 'watching' | 'reward'>(
     'prompt'
   );
-  const [timeLeft, setTimeLeft] = useState(5);
+  const [timeLeft, setTimeLeft] = useState(5); // Fallback timer if ad events fail/lag
+  const [loaded, setLoaded] = useState(false);
   const progress = useSharedValue(0);
+
+  // Load Ad on Mount
+  useEffect(() => {
+    const unsubscribeLoaded = rewardedInterstitial.addAdEventListener(
+      RewardedAdEventType.LOADED,
+      () => {
+        setLoaded(true);
+      }
+    );
+    const unsubscribeEarned = rewardedInterstitial.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD,
+      () => {
+        haptics.success();
+        setStage('reward');
+        onUnlock();
+      }
+    );
+    const unsubscribeClosed = rewardedInterstitial.addAdEventListener(
+      AdEventType.CLOSED,
+      () => {
+        setLoaded(false);
+        rewardedInterstitial.load(); // Preload next
+      }
+    );
+
+    rewardedInterstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+      unsubscribeClosed();
+    };
+  }, []);
 
   useEffect(() => {
     if (visible) {
       setStage('prompt');
-      setTimeLeft(5);
       progress.value = 0;
     }
   }, [visible]);
 
+  // Fallback timer visual
   useEffect(() => {
     let timer: any;
     if (stage === 'watching') {
@@ -48,30 +99,24 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
         duration: 5000,
         easing: Easing.linear,
       });
-
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setStage('reward');
-            haptics.success();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
     }
-    return () => clearInterval(timer);
   }, [stage]);
 
   const handleWatchAd = () => {
-    haptics.medium();
-    setStage('watching');
+    if (loaded) {
+      haptics.medium();
+      setStage('watching');
+      rewardedInterstitial.show();
+    } else {
+      haptics.error();
+      alert('Ad is loading... Please wait a moment.');
+      rewardedInterstitial.load();
+    }
   };
 
   const handleClaimReward = () => {
     haptics.success();
-    onUnlock();
+    onClose(); // Close modal after claiming (unlock already happened on earned event)
   };
 
   const progressStyle = useAnimatedStyle(() => ({
@@ -144,15 +189,14 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
                   lineHeight: 24,
                 }}
               >
-                Watch a short video ad to permanently unlock {countryName} and
-                access its local recipes and travel tips.
+                Watch a short video ad to permanently unlock {countryName}.
               </Text>
 
               <Pressable
                 onPress={handleWatchAd}
                 style={({ pressed }) => ({
                   width: '100%',
-                  backgroundColor: colors.tint,
+                  backgroundColor: loaded ? colors.tint : colors.tabIconDefault,
                   paddingVertical: 16,
                   borderRadius: 16,
                   alignItems: 'center',
@@ -167,7 +211,7 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
                     fontWeight: '600',
                   }}
                 >
-                  Watch Ad to Unlock
+                  {loaded ? 'Watch Ad to Unlock' : 'Loading Ad...'}
                 </Text>
               </Pressable>
 
@@ -224,16 +268,6 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
                   ]}
                 />
               </View>
-
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: colors.text,
-                  opacity: 0.6,
-                }}
-              >
-                Reward in {timeLeft}s
-              </Text>
             </>
           )}
 
@@ -261,7 +295,7 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
                   marginBottom: 8,
                 }}
               >
-                Reward Granted!
+                Unlocked!
               </Text>
 
               <Text
@@ -273,7 +307,7 @@ export const AdUnlockModal: React.FC<AdUnlockModalProps> = ({
                   textAlign: 'center',
                 }}
               >
-                {countryName} has been successfully unlocked.
+                {countryName} is now available.
               </Text>
 
               <Pressable

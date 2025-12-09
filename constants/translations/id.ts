@@ -550,4 +550,26 @@ export const id = {
   pricing_save: 'HEMAT {{amount}}',
   pricing_get_premium: 'Dapatkan Premium Sekarang',
   pricing_cancel_anytime: 'Batalkan kapan saja. Tanpa pertanyaan.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Buka SEMUA 195+ negara termasuk Italia, Prancis, Jepang & lainnya!',
+  premium_benefit_ai: 'Koki AI & Koki Perjalanan Tak Terbatas',
+  premium_benefit_planner: 'Perencana Makanan Mingguan & Bayi Cerdas',
+  premium_benefit_recipes: 'Resep tak terbatas dari setiap negara',
+  premium_benefit_filters:
+    'Filter canggih (vegetarian, vegan, tingkat kesulitan)',
+  premium_benefit_favorites: 'Simpan resep favorit tak terbatas',
+  premium_benefit_shopping: 'Daftar belanja cerdas dengan kategori',
+  premium_benefit_nutri: 'Informasi nutrisi',
+  premium_benefit_offline: 'Mode offline - unduh resep',
+  premium_benefit_ads: 'Pengalaman bebas iklan',
+  premium_benefit_support: 'Dukungan pelanggan prioritas',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

@@ -546,4 +546,26 @@ export const pt = {
   pricing_save: 'ECONOMIZE {{amount}}',
   pricing_get_premium: 'Obter Premium Agora',
   pricing_cancel_anytime: 'Cancele a qualquer momento. Sem perguntas.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Desbloqueie TODOS os 195+ países, incluindo Itália, França, Japão e mais!',
+  premium_benefit_ai: 'Chef IA e Chef de Viagem ilimitados',
+  premium_benefit_planner:
+    'Planejador de refeições inteligente (Semanal e Bebês)',
+  premium_benefit_recipes: 'Receitas ilimitadas de todos os países',
+
+  premium_benefit_favorites: 'Salve receitas favoritas ilimitadas',
+  premium_benefit_shopping: 'Listas de compras inteligentes com categorias',
+  premium_benefit_nutri: 'Informações nutricionais',
+  premium_benefit_offline: 'Modo offline - baixar receitas',
+  premium_benefit_ads: 'Experiência sem anúncios',
+  premium_benefit_support: 'Suporte ao cliente prioritário',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

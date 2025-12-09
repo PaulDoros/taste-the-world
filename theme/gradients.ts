@@ -7,4 +7,5 @@ export const gradients = {
 
   backgroundLight: ['#FFFFFF', '#F8FAFC'] as const,
   backgroundDark: ['#0F172A', '#1E293B'] as const,
+  gold: ['#FDE68A', '#F59E0B', '#B45309'] as const,
 };

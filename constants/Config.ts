@@ -57,23 +57,40 @@ export const API_KEYS = {
 
 // App Configuration
 export const APP_CONFIG = {
-  // Free tier limits
-  FREE_TIER: {
-    maxCountries: 20, // Free users can browse 20 countries
-    maxRecipesPerCountry: 3, // 3 recipes per country
-    maxShoppingListRecipes: 3, // Max 3 recipes in shopping list
-  },
-
-  // Premium tier (unlimited)
-  PREMIUM_TIER: {
-    maxCountries: -1, // -1 means unlimited
-    maxRecipesPerCountry: -1,
-    maxShoppingListRecipes: -1,
+  // Tier Limits
+  TIERS: {
+    free: {
+      maxCountries: 20, // Plus earnable
+      aiPromptsPerDay: 3,
+      travelPromptsPerDay: 0,
+      maxFavorites: 10,
+      canAccessNutrition: false,
+      canDownloadOffline: false,
+      hasAds: true,
+    },
+    personal: {
+      maxCountries: -1, // Unlimited
+      aiPromptsPerDay: 20,
+      travelPromptsPerDay: 5,
+      maxFavorites: -1,
+      canAccessNutrition: true,
+      canDownloadOffline: false,
+      hasAds: false,
+    },
+    pro: {
+      maxCountries: -1,
+      aiPromptsPerDay: -1,
+      travelPromptsPerDay: -1,
+      maxFavorites: -1,
+      canAccessNutrition: true,
+      canDownloadOffline: true,
+      hasAds: false,
+    },
   },
 
   // Featured countries for FREE users (20 countries)
-  // Any country NOT in this list requires premium!
-  FEATURED_COUNTRIES: [
+  // Any country NOT in this list requires unlock!
+  FREE_COUNTRIES: [
     'United States',
     'Canada',
     'United Kingdom',
@@ -103,30 +120,38 @@ export const APP_CONFIG = {
   CACHE_DURATION: 1000 * 60 * 60 * 24, // 24 hours
 };
 
-// Helper function to check if a country requires premium
-export const isPremiumCountry = (countryName: string): boolean => {
-  return !APP_CONFIG.FEATURED_COUNTRIES.includes(countryName);
+// Helper function to check if a country is in the free list
+export const isFreeCountry = (countryName: string): boolean => {
+  return APP_CONFIG.FREE_COUNTRIES.includes(countryName);
 };
 
-// Premium subscription prices (monthly/yearly)
+// Subscription Prices (EUR)
 export const SUBSCRIPTION_PRICES = {
-  monthly: 4.99,
-  yearly: 29.99,
-  yearlySavings: '50% OFF!',
+  personal: {
+    monthly: 5.99,
+    yearly: 49.99,
+    savings: '30%',
+  },
+  pro: {
+    monthly: 11.99,
+    yearly: 89.99,
+    savings: '37%',
+  },
 };
 
 // Premium value proposition (for marketing)
 export const PREMIUM_BENEFITS = [
-  'Unlock ALL 195+ countries including Italy, France, Japan & more!',
-  'Unlimited recipes from every country',
-  'Advanced filters (vegetarian, vegan, difficulty)',
-  'Save unlimited favorite recipes',
-  'Weekly meal planner',
-  'Smart shopping lists with categories',
-  'Nutritional information',
-  'Offline mode - download recipes',
-  'Ad-free experience',
-  'Priority customer support',
+  'premium_benefit_countries',
+  'premium_benefit_ai',
+  'premium_benefit_planner',
+  'premium_benefit_recipes',
+
+  'premium_benefit_favorites',
+  'premium_benefit_shopping',
+  'premium_benefit_nutri',
+  'premium_benefit_offline',
+  'premium_benefit_ads',
+  'premium_benefit_support',
 ];
 
 // Highlight some premium countries for marketing (not exhaustive)

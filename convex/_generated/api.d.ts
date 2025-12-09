@@ -16,6 +16,7 @@ import type * as favorites from "../favorites.js";
 import type * as guest from "../guest.js";
 import type * as mealPlan from "../mealPlan.js";
 import type * as migrations_backfill_language from "../migrations/backfill_language.js";
+import type * as monetization from "../monetization.js";
 import type * as oauth from "../oauth.js";
 import type * as pantry from "../pantry.js";
 import type * as purchases from "../purchases.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   guest: typeof guest;
   mealPlan: typeof mealPlan;
   "migrations/backfill_language": typeof migrations_backfill_language;
+  monetization: typeof monetization;
   oauth: typeof oauth;
   pantry: typeof pantry;
   purchases: typeof purchases;

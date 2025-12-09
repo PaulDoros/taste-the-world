@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type UserTier = 'guest' | 'free' | 'premium';
+export type UserTier = 'guest' | 'free' | 'personal' | 'pro';
 
 interface UserState {
   user: { email: string; name?: string } | null;
@@ -73,7 +73,7 @@ export const useUserStore = create<UserState>()(
           ],
           token: null,
         }),
-      upgradeToPremium: () => set({ tier: 'premium' }),
+      upgradeToPremium: () => set({ tier: 'personal' }),
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       toggleVisited: (code) =>
         set((state) => ({

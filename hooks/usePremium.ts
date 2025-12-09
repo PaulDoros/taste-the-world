@@ -8,23 +8,36 @@ export function usePremium() {
   const { user, isPremium, isAuthenticated, token } = useAuth();
   const updateSubscriptionMutation = useMutation(api.auth.updateSubscription);
 
-  const setSubscription = async (type: SubscriptionType) => {
+  const setSubscription = async (
+    type: SubscriptionType,
+    tier?: 'personal' | 'pro'
+  ) => {
     if (!token) {
-        // Handle guest/local state if needed, or just return
-        return;
+      // Handle guest/local state if needed, or just return
+      return;
     }
-    
+
+    // Determine amount based on tier and type
+    let amount = 0;
+    if (tier === 'pro') {
+      amount = type === 'monthly' ? 1199 : 8999;
+    } else {
+      // Default to personal
+      amount = type === 'monthly' ? 599 : 4999;
+    }
+
     await updateSubscriptionMutation({
-        token,
-        subscriptionType: type,
-        // In a real app, we'd handle payment here and pass transactionId/amount
-        amount: type === 'monthly' ? 499 : type === 'yearly' ? 2999 : 0,
-        transactionId: `demo_${Date.now()}`,
+      token,
+      subscriptionType: type,
+      tier: tier || 'personal',
+      // In a real app, we'd handle payment here and pass transactionId/amount
+      amount,
+      transactionId: `demo_${Date.now()}`,
     });
   };
 
   const cancelSubscription = async () => {
-      await setSubscription('free');
+    await setSubscription('free');
   };
 
   return {
@@ -32,6 +45,6 @@ export function usePremium() {
     subscriptionType: (user?.subscriptionType || 'free') as SubscriptionType,
     setSubscription,
     cancelSubscription,
-    isAuthenticated
+    isAuthenticated,
   };
 }

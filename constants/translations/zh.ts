@@ -536,5 +536,25 @@ export const zh = {
   shared_error_title: '哎呀！',
   shared_retry: '重试',
 
-  // Pricing Section
+  // Pricing Section,
+
+  // Premium Benefits
+  premium_benefit_countries: '解锁所有 195+ 个国家，包括意大利、法国、日本等！',
+  premium_benefit_ai: '无限使用 AI 厨师和旅行厨师',
+  premium_benefit_planner: '智能每周及婴儿膳食计划',
+  premium_benefit_recipes: '来自每个国家的无限食谱',
+
+  premium_benefit_favorites: '保存无限喜爱的食谱',
+  premium_benefit_shopping: '带分类的智能购物清单',
+  premium_benefit_nutri: '营养信息',
+  premium_benefit_offline: '离线模式 - 下载食谱',
+  premium_benefit_ads: '无广告体验',
+  premium_benefit_support: '优先客户支持',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

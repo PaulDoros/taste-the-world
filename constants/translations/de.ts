@@ -564,4 +564,25 @@ export const de = {
   pricing_save: 'SPARE {{amount}}',
   pricing_get_premium: 'Jetzt Premium holen',
   pricing_cancel_anytime: 'Jederzeit kündbar.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'Schalte ALLE 195+ Länder frei, inklusive Italien, Frankreich, Japan & mehr!',
+  premium_benefit_ai: 'Unbegrenzte KI-Chef & Reise-Chef Nutzung',
+  premium_benefit_planner: 'Smarter Wochen- & Baby-Essensplaner',
+  premium_benefit_recipes: 'Unbegrenzte Rezepte aus jedem Land',
+
+  premium_benefit_favorites: 'Speichere unbegrenzt Lieblingsrezepte',
+  premium_benefit_shopping: 'Smarte Einkaufslisten mit Kategorien',
+  premium_benefit_nutri: 'Nährwertinformationen',
+  premium_benefit_offline: 'Offline-Modus - Rezepte herunterladen',
+  premium_benefit_ads: 'Werbefreie Erfahrung',
+  premium_benefit_support: 'Bevorzugter Kundensupport',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

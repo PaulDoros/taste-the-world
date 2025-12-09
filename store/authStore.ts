@@ -10,7 +10,7 @@ export interface User {
   email: string;
   name?: string;
   image?: string;
-  tier: 'guest' | 'free' | 'premium';
+  tier: 'guest' | 'free' | 'personal' | 'pro';
   subscriptionType: 'free' | 'monthly' | 'yearly';
   subscriptionStartDate?: number;
   subscriptionEndDate?: number;

@@ -536,4 +536,32 @@ export const ko = {
   pricing_save: '{{amount}} 절약',
   pricing_get_premium: '지금 프리미엄 받기',
   pricing_cancel_anytime: '언제든지 취소 가능. 질문 없음.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    '이탈리아, 프랑스, 일본 등 195개국 이상 모두 잠금 해제!',
+  premium_benefit_ai: '무제한 AI 셰프 & 여행 셰프',
+  premium_benefit_planner: '스마트 주간 & 유아 식단 플래너',
+  premium_benefit_recipes: '모든 국가의 무제한 레시피',
+
+  premium_benefit_favorites: '무제한 즐겨찾기 레시피 저장',
+  premium_benefit_shopping: '카테고리가 있는 스마트 쇼핑 목록',
+  premium_benefit_nutri: '영양 정보',
+  premium_benefit_offline: '오프라인 모드 - 레시피 다운로드',
+  premium_benefit_ads: '광고 없는 경험',
+  premium_benefit_support: '우선 고객 지원',
+  // Chef Prompts
+  chef_prompt_random:
+    '세계 어딘가에서 온 무작위적이고 흥미로운 레시피를 알려주세요.',
+  chef_prompt_surprise:
+    '재미있는 음식 사실을 알려주고 관련 요리를 추천해주세요.',
+  chef_prompt_country:
+    '{{country}} ({{region}}) 여행을 계획 중입니다. 방문해야 할 상위 3곳과 꼭 먹어봐야 할 현지 요리를 알려주세요.',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

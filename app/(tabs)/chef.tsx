@@ -46,6 +46,7 @@ import { Country } from '@/types';
 import { ChatHistoryModal } from '@/components/ChatHistoryModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTierLimit } from '@/hooks/useTierLimit';
 
 // Local assets
 const CHEF_AVATAR = require('@/assets/images/chef-avatar.png');
@@ -54,7 +55,7 @@ const TRAVEL_AVATAR = require('@/assets/images/travel-avatar.png');
 export default function ChefScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { user: currentUser, token, signOut } = useAuth();
+  const { user: currentUser, token, signOut, tier } = useAuth();
   const { t, language } = useLanguage();
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -98,28 +99,13 @@ export default function ChefScreen() {
 
   const sendMessage = useAction(api.ai.sendMessage);
 
-  // Calculate remaining prompts
-  const aiMessagesUsed = currentUser?.aiMessagesUsed || 0;
-  const tier = currentUser?.tier || 'guest';
-  const subscriptionType = currentUser?.subscriptionType || 'free';
+  // Quota & Tier Limit
+  const { usage } = useTierLimit();
 
-  let maxQuota: number;
-  let remainingPrompts: number | string;
-
-  if (
-    subscriptionType === 'monthly' ||
-    subscriptionType === 'yearly' ||
-    tier === 'premium'
-  ) {
-    maxQuota = Infinity;
-    remainingPrompts = '∞';
-  } else if (tier === 'guest') {
-    maxQuota = 10;
-    remainingPrompts = Math.max(0, maxQuota - aiMessagesUsed);
-  } else {
-    maxQuota = 30;
-    remainingPrompts = Math.max(0, maxQuota - aiMessagesUsed);
-  }
+  const isUnlimited = usage?.aiLimit === -1;
+  const remainingPrompts = isUnlimited
+    ? '∞'
+    : Math.max(0, usage?.remainingAi || 0);
 
   // Animation for tab indicator
   const tabPosition = useSharedValue(0);

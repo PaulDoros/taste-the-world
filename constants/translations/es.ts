@@ -490,7 +490,22 @@ export const es = {
   ingredient_modal_selected_count: '{{selected}} de {{total}} seleccionados',
   ingredient_modal_cancel: 'Cancelar',
 
-  chef_placeholder_chef: 'Ask for a recipe...',
+  // Chef & Travel Guide
+  chef_title: 'Chef IA',
+  chef_travel_guide: 'Guía de Viaje',
+  chef_prompts_unlimited: 'Prompts ilimitados',
+  chef_prompts_single: 'prompt',
+  chef_prompts_left: 'prompts restantes',
+  chef_tab_chef: 'Chef',
+  chef_tab_travel: 'Viajes',
+  chef_qa_random: 'Receta Aleatoria',
+  chef_qa_pantry: 'Usar Despensa',
+  chef_qa_surprise: 'Sorpréndeme',
+  chef_qa_random_recipe: 'Obtener Receta Aleatoria',
+  chef_qa_use_pantry: 'Crear desde Despensa',
+  chef_action_add_to_list: 'Añadir a Lista',
+  chef_action_cook_update: 'Cocinar y Actualizar',
+  chef_placeholder_chef: 'Pide una receta...',
   chef_placeholder_travel: 'Ask about a destination...',
   chef_chat_cooking: 'Chef is cooking...',
   chef_chat_planning: 'Guide is planning...',
@@ -556,17 +571,25 @@ export const es = {
   edit_screen_change_text: 'Cambia el texto, guarda y la app se actualiza.',
   edit_screen_help_link: 'Toca aquí si la app no se actualiza.',
 
-  chef_title: 'Chef IA',
-  chef_prompt_random: 'Dame una receta aleatoria.',
-  chef_prompt_surprise: 'Sorpréndeme con un dato culinario.',
-  chef_prompt_country: 'Visito {{country}}, ¿qué comer?',
-  chef_error_send: 'Error al enviar',
-  pantry_add_error_name: 'Por favor ingresa un nombre',
+  // Premium Benefits
+  premium_benefit_countries:
+    '¡Desbloquea MÁS DE 195 países incluyendo Italia, Francia, Japón y más!',
+  premium_benefit_ai: 'Chef IA y Chef de Viajes ilimitados',
+  premium_benefit_planner:
+    'Planificador de comidas inteligente (Semanal y Bebés)',
+  premium_benefit_recipes: 'Recetas ilimitadas de todos los países',
 
-  scan_success_message: 'Artículos añadidos a la despensa.',
-  scan_permission_camera: 'Necesitamos acceso a la cámara.',
+  premium_benefit_favorites: 'Guarda recetas favoritas ilimitadas',
+  premium_benefit_shopping: 'Listas de compras inteligentes con categorías',
+  premium_benefit_nutri: 'Información nutricional',
+  premium_benefit_offline: 'Modo sin conexión - descarga recetas',
+  premium_benefit_ads: 'Experiencia sin anuncios',
+  premium_benefit_support: 'Soporte al cliente prioritario',
 
-  not_found_title: '¡Vaya!',
-  not_found_text: 'Esta pantalla no existe.',
-  not_found_link: '¡Ir al inicio!',
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };

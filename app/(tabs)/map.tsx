@@ -23,11 +23,15 @@ import { useCountries } from '@/hooks/useCountries';
 import { useUserStore } from '@/store/useUserStore';
 import { useTheme } from 'tamagui';
 import { Colors } from '@/constants/Colors';
-import { isPremiumCountry } from '@/constants/Config';
+// isPremiumCountry removed - replaced by useTierLimit logic
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { AdUnlockModal } from '@/components/AdUnlockModal';
+import { useTierLimit } from '@/hooks/useTierLimit';
 
 // Import local GeoJSON asset
 const geoJsonData = require('../../assets/countries.json');
@@ -44,13 +48,20 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
 
   const { countries, loading } = useCountries();
-  const { visitedCountries, bucketList, isGuest, tier } = useUserStore();
+
+  const { visitedCountries, bucketList } = useUserStore();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
 
-  // Consider user a guest if local state says so OR tier is 'guest' (persisted)
-  const isEffectiveGuest = isGuest || tier === 'guest';
+  // Monetization & Unlocking
+  const { isCountryUnlocked, canAccessFeature } = useTierLimit();
+  const unlockCountryMutation = useMutation(api.monetization.unlockCountry);
+  const [adModalVisible, setAdModalVisible] = useState(false);
+  const [selectedLockedCountry, setSelectedLockedCountry] = useState<{
+    name: string;
+    cca2: string;
+  } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -68,11 +79,9 @@ export default function MapScreen() {
     if (visitedCountries.includes(cca2)) return '#f59e0b'; // Gold (Visited)
     if (bucketList.includes(cca2)) return '#3b82f6'; // Blue (Bucket List)
 
-    // Logic for available/locked
-    if (!isEffectiveGuest) return '#10b981'; // Premium users see everything available (Green)
-    if (!isPremiumCountry(name)) return '#10b981'; // Guest see free as Green
+    if (isCountryUnlocked(name, cca2)) return '#10b981'; // Unlocked/Available (Green)
 
-    return '#9ca3af'; // Guest see premium as Gray (Locked)
+    return '#9ca3af'; // Locked (Gray)
   };
 
   const openOfflineMaps = () => {
@@ -112,15 +121,10 @@ export default function MapScreen() {
       } else if (bucketList.includes(cca2)) {
         bucket.features.push(feature);
       } else {
-        if (isEffectiveGuest) {
-          if (isPremiumCountry(name)) {
-            locked.features.push(feature);
-          } else {
-            available.features.push(feature);
-          }
-        } else {
-          // Premium user - everything else is available
+        if (isCountryUnlocked(name, cca2)) {
           available.features.push(feature);
+        } else {
+          locked.features.push(feature);
         }
       }
     });
@@ -131,7 +135,7 @@ export default function MapScreen() {
       availableGeo: available,
       lockedGeo: locked,
     };
-  }, [visitedCountries, bucketList, isGuest, tier]);
+  }, [visitedCountries, bucketList, isCountryUnlocked]);
 
   const onRegionChange = (region: any) => {
     // console.log(region);
@@ -240,7 +244,10 @@ export default function MapScreen() {
           // Provide fallback for latlng if missing
           if (!country.latlng || country.latlng.length < 2) return null;
 
-          const isLocked = isGuest && isPremiumCountry(country.name.common);
+          const isUnlocked = isCountryUnlocked(
+            country.name.common,
+            country.cca2
+          );
           const pinColor = getMarkerColor(country.cca2, country.name.common);
 
           return (
@@ -251,14 +258,16 @@ export default function MapScreen() {
                 longitude: country.latlng[1],
               }}
               pinColor={pinColor}
-              opacity={isLocked ? 0.6 : 1}
+              opacity={!isUnlocked ? 0.6 : 1}
             >
               <Callout
                 onPress={() => {
-                  if (isLocked) {
-                    showError(
-                      t('map_locked_upgrade', { country: country.name.common })
-                    );
+                  if (!isUnlocked) {
+                    setSelectedLockedCountry({
+                      name: country.name.common,
+                      cca2: country.cca2,
+                    });
+                    setAdModalVisible(true);
                   } else {
                     router.push(`/country/${country.cca2}`);
                   }
@@ -275,7 +284,7 @@ export default function MapScreen() {
                     {country.name.common} {country.flag}
                   </Text>
                   <Text>
-                    {t(isLocked ? 'map_locked_label' : 'map_view_recipes')}
+                    {t(isUnlocked ? 'map_view_recipes' : 'map_locked_label')}
                   </Text>
                 </View>
               </Callout>
@@ -283,6 +292,21 @@ export default function MapScreen() {
           );
         })}
       </MapView>
+
+      <AdUnlockModal
+        visible={adModalVisible}
+        countryName={selectedLockedCountry?.name || ''}
+        onClose={() => setAdModalVisible(false)}
+        onUnlock={async () => {
+          if (selectedLockedCountry) {
+            await unlockCountryMutation({
+              countryCode: selectedLockedCountry.cca2,
+            });
+            // Ideally optimize update here or wait for convex query update
+            setAdModalVisible(false);
+          }
+        }}
+      />
 
       {/* Legend Overlay */}
       <View
@@ -366,9 +390,19 @@ export default function MapScreen() {
           }}
         >
           <FontAwesome5.Button
-            name="map-marked-alt"
-            backgroundColor={colors.tint}
-            onPress={openOfflineMaps}
+            name={canAccessFeature('offline') ? 'map-marked-alt' : 'lock'}
+            backgroundColor={
+              canAccessFeature('offline') ? colors.tint : '#64748b'
+            }
+            onPress={() => {
+              if (canAccessFeature('offline')) {
+                openOfflineMaps();
+              } else {
+                showError(t('common_upgrade_required'));
+                // Optional: navigate to pricing
+                router.push('/(tabs)/settings');
+              }
+            }}
             size={18}
           >
             {t('map_offline')}

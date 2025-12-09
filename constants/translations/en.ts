@@ -74,6 +74,7 @@ export const en = {
   planner_error_recipe: 'Could not generate recipe.',
   common_error: 'Error',
   common_success: 'Success',
+  common_upgrade_required: 'Upgrade required to access this feature.',
   common_meal_breakfast: 'Breakfast',
   shopping_list_cancel: 'Cancel',
   shopping_list_add: 'Add',
@@ -538,4 +539,21 @@ export const en = {
   pricing_save: 'SAVE {{amount}}',
   pricing_get_premium: 'Get Premium Now',
   pricing_cancel_anytime: 'Cancel anytime. No questions asked.',
+  pricing_personal_title: 'Personal Plan',
+  pricing_personal_subtitle: 'Unlock all countries & more AI prompts.',
+  pricing_pro_title: 'PRO Plan',
+  pricing_pro_subtitle: 'Ultimate experience with Offline Maps.',
+  // Premium Benefits
+  premium_benefit_countries:
+    'Unlock ALL 195+ countries including Italy, France, Japan & more!',
+  premium_benefit_ai: 'Unlimited AI Chef & Travel Chef',
+  premium_benefit_planner: 'Smart Weekly & Baby Meal Planner',
+  premium_benefit_recipes: 'Unlimited recipes from every country',
+
+  premium_benefit_favorites: 'Save unlimited favorite recipes',
+  premium_benefit_shopping: 'Smart shopping lists with categories',
+  premium_benefit_nutri: 'Nutritional information',
+  premium_benefit_offline: 'Offline mode - download recipes',
+  premium_benefit_ads: 'Ad-free experience',
+  premium_benefit_support: 'Priority customer support',
 };

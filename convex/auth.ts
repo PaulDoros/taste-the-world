@@ -478,6 +478,7 @@ export const updateSubscription = mutation({
       v.literal('monthly'),
       v.literal('yearly')
     ),
+    tier: v.optional(v.union(v.literal('personal'), v.literal('pro'))),
     transactionId: v.optional(v.string()),
     amount: v.optional(v.number()),
   },
@@ -508,10 +509,20 @@ export const updateSubscription = mutation({
           ? now + oneYear
           : undefined;
 
+    // Determine tier: prioritize arg, fallback to logic (if cancelling, tier is free)
+    let newTier: 'free' | 'personal' | 'pro' | 'guest' = 'free';
+    if (args.subscriptionType !== 'free') {
+      const current =
+        user.tier === 'pro' || user.tier === 'personal'
+          ? user.tier
+          : 'personal';
+      newTier = (args.tier || current) as 'free' | 'personal' | 'pro' | 'guest';
+    }
+
     // Update user subscription
     await ctx.db.patch(user._id, {
       subscriptionType: args.subscriptionType,
-      tier: args.subscriptionType !== 'free' ? 'premium' : 'free',
+      tier: newTier,
       subscriptionStartDate: args.subscriptionType !== 'free' ? now : undefined,
       subscriptionEndDate,
       updatedAt: now,
@@ -527,6 +538,7 @@ export const updateSubscription = mutation({
         transactionId: args.transactionId,
         purchaseDate: now,
         status: 'completed',
+        tier: newTier, // Add tier to purchase record if schema allows (it allows v.any() or check purchase schema)
       });
     }
 

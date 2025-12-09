@@ -217,17 +217,17 @@ export default function SettingsScreen() {
   const [selectedSubscription, setSelectedSubscription] = useState<
     'monthly' | 'yearly'
   >(subscriptionType === 'yearly' ? 'yearly' : 'monthly');
+  const [selectedTier, setSelectedTier] = useState<'personal' | 'pro'>(
+    'personal'
+  );
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleUpgrade = () => {
     haptics.light();
-    setSubscription(selectedSubscription);
+    setSubscription(selectedSubscription, selectedTier);
     showSuccess(
       t('settings_upgrade_success', {
-        plan:
-          selectedSubscription === 'monthly'
-            ? t('common_monthly')
-            : t('common_yearly'),
+        plan: selectedTier === 'pro' ? 'PRO' : 'Personal', // We should translate this too ideally
       })
     );
   };
@@ -408,7 +408,9 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(150).springify()}>
             <PricingSection
               selectedSubscription={selectedSubscription}
+              selectedTier={selectedTier}
               onSelectSubscription={setSelectedSubscription}
+              onSelectTier={setSelectedTier}
               onUpgrade={handleUpgrade}
             />
             <BenefitsGrid

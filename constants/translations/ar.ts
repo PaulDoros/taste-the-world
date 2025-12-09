@@ -534,4 +534,25 @@ export const ar = {
   pricing_save: 'وفر {{amount}}',
   pricing_get_premium: 'احصل على Premium الآن',
   pricing_cancel_anytime: 'إلغاء في أي وقت. لا أسئلة.',
+
+  // Premium Benefits
+  premium_benefit_countries:
+    'افتح جميع الدول الـ 195+ بما في ذلك إيطاليا وفرنسا واليابان والمزيد!',
+  premium_benefit_ai: 'طاهي ذكاء اصطناعي وطاهي سفر غير محدود',
+  premium_benefit_planner: 'مخطط وجبات ذكي أسبوعي وللأطفال',
+  premium_benefit_recipes: 'وصفات غير محدودة من كل بلد',
+
+  premium_benefit_favorites: 'حفظ وصفات مفضلة غير محدودة',
+  premium_benefit_shopping: 'قوائم تسوق ذكية مع فئات',
+  premium_benefit_nutri: 'معلومات غذائية',
+  premium_benefit_offline: 'وضع عدم الاتصال - تنزيل الوصفات',
+  premium_benefit_ads: 'تجربة خالية من الإعلانات',
+  premium_benefit_support: 'دعم عملاء ذو أولوية',
+
+  // Pricing (Added)
+  common_upgrade_required: 'Upgrade required',
+  pricing_personal_title: 'Personal',
+  pricing_personal_subtitle: 'Unlock everything + more limits',
+  pricing_pro_title: 'PRO',
+  pricing_pro_subtitle: 'Ultimate experience + offline',
 };
