@@ -37,6 +37,9 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { RecipeCard } from '@/components/RecipeCard';
 import { haptics } from '@/utils/haptics';
 import { DetailSkeleton } from '@/components/SkeletonLoader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { useLanguage } from '@/context/LanguageContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_KEY;
@@ -45,6 +48,7 @@ const CountryDetailsScreen = () => {
   // Get country code from URL
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { t } = useLanguage();
 
   // State
   const [country, setCountry] = useState<Country | null>(null);
@@ -106,7 +110,7 @@ const CountryDetailsScreen = () => {
       await fetchRecipes(foundCountry.name.common);
     } catch (err) {
       console.error('Error fetching country details:', err);
-      setError('Failed to load country details');
+      setError(t('country_error_failed'));
     } finally {
       setLoading(false);
     }
@@ -156,68 +160,25 @@ const CountryDetailsScreen = () => {
   // Error state
   if (error || !country) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: 24,
-          backgroundColor: colors.background,
-        }}
-      >
-        <FontAwesome5
-          name="exclamation-circle"
-          size={64}
-          color={colors.error}
-        />
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: '700',
-            marginTop: 16,
-            color: colors.error,
-          }}
-        >
-          Oops!
-        </Text>
-        <Text
-          style={{
-            textAlign: 'center',
-            marginTop: 8,
-            marginBottom: 24,
-            color: colors.text,
-            fontSize: 16,
-          }}
-        >
-          {error || 'Country not found'}
-        </Text>
-        <Pressable
-          onPress={handleBack}
-          style={{
-            backgroundColor: colors.tint,
-            paddingHorizontal: 32,
-            paddingVertical: 16,
-            borderRadius: 12,
-          }}
-        >
-          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-            Go Back
-          </Text>
-        </Pressable>
-      </View>
+      <ErrorState
+        title={t('country_error_title')}
+        message={error || t('country_error_not_found')}
+        onRetry={handleBack}
+        retryText={t('country_retry')}
+      />
     );
   }
 
   // Helper functions
   const formatPopulation = (pop: number) => {
     if (pop >= 1_000_000_000) {
-      return `${(pop / 1_000_000_000).toFixed(1)}B`;
+      return t('common_pop_b', { count: (pop / 1_000_000_000).toFixed(1) });
     } else if (pop >= 1_000_000) {
-      return `${(pop / 1_000_000).toFixed(1)}M`;
+      return t('common_pop_m', { count: (pop / 1_000_000).toFixed(1) });
     } else if (pop >= 1_000) {
-      return `${(pop / 1_000).toFixed(1)}K`;
+      return t('common_pop_k', { count: (pop / 1_000).toFixed(1) });
     }
-    return pop.toString();
+    return t('common_pop_unit', { count: pop });
   };
 
   const getCurrencyInfo = () => {
@@ -396,7 +357,7 @@ const CountryDetailsScreen = () => {
             {country.capital && (
               <AnimatedInfoCard
                 icon="map-marker-alt"
-                label="Capital City"
+                label={t('country_capital')}
                 value={country.capital[0]}
                 colors={colors}
                 delay={150}
@@ -407,7 +368,7 @@ const CountryDetailsScreen = () => {
             {/* Region */}
             <AnimatedInfoCard
               icon="globe-americas"
-              label="Region"
+              label={t('country_region')}
               value={`${country.region}${country.subregion ? ` • ${country.subregion}` : ''}`}
               colors={colors}
               delay={200}
@@ -417,8 +378,8 @@ const CountryDetailsScreen = () => {
             {/* Population */}
             <AnimatedInfoCard
               icon="users"
-              label="Population"
-              value={`${formatPopulation(country.population)} people`}
+              label={t('country_population')}
+              value={`${formatPopulation(country.population)}`}
               colors={colors}
               delay={250}
               color="#f59e0b"
@@ -427,7 +388,7 @@ const CountryDetailsScreen = () => {
             {/* Currency */}
             <AnimatedInfoCard
               icon="money-bill-wave"
-              label="Currency"
+              label={t('country_currency')}
               value={getCurrencyInfo()}
               colors={colors}
               delay={300}
@@ -437,7 +398,7 @@ const CountryDetailsScreen = () => {
             {/* Languages */}
             <AnimatedInfoCard
               icon="language"
-              label="Languages"
+              label={t('country_languages')}
               value={getLanguages()}
               colors={colors}
               delay={350}
@@ -480,7 +441,7 @@ const CountryDetailsScreen = () => {
                         color: colors.text,
                       }}
                     >
-                      Popular Recipes
+                      {t('country_section_recipes')}
                     </Text>
                     <Text
                       style={{
@@ -490,7 +451,9 @@ const CountryDetailsScreen = () => {
                         marginTop: 2,
                       }}
                     >
-                      {recipes.length} authentic dishes
+                      {t('country_section_recipes_subtitle', {
+                        count: recipes.length,
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -534,7 +497,7 @@ const CountryDetailsScreen = () => {
                       marginRight: 6,
                     }}
                   >
-                    View All
+                    {t('country_view_all_recipes')}
                   </Text>
                   <FontAwesome5
                     name="arrow-right"
@@ -595,7 +558,7 @@ const CountryDetailsScreen = () => {
                   opacity: 0.7,
                 }}
               >
-                Loading recipes...
+                {t('country_loading_recipes')}
               </Text>
             </Animated.View>
           )}
@@ -604,57 +567,15 @@ const CountryDetailsScreen = () => {
           {!loadingRecipes && recipes.length === 0 && (
             <Animated.View
               entering={FadeInUp.delay(400).springify()}
-              style={{
-                marginTop: 24,
-                padding: 24,
-                borderRadius: 20,
-                backgroundColor: `${colors.tint}15`,
-                borderWidth: 2,
-                borderColor: `${colors.tint}30`,
-              }}
+              style={{ marginTop: 24 }}
             >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: `${colors.tint}25`,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 16,
-                  }}
-                >
-                  <Text style={{ fontSize: 24 }}>🍳</Text>
-                </View>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: colors.text,
-                    flex: 1,
-                  }}
-                >
-                  No Recipes Yet
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: colors.text,
-                  fontSize: 15,
-                  lineHeight: 22,
-                  opacity: 0.8,
-                }}
-              >
-                We're still gathering authentic recipes for{' '}
-                {country.name.common}. Check back soon! 🎉
-              </Text>
+              <EmptyState
+                icon="utensils"
+                title={t('country_no_recipes_title')}
+                description={t('country_no_recipes_desc', {
+                  country: country.name.common,
+                })}
+              />
             </Animated.View>
           )}
 
@@ -709,12 +630,14 @@ const CountryDetailsScreen = () => {
                       color: colors.text,
                     }}
                   >
-                    Current Weather
+                    {t('country_weather_title')}
                   </Text>
                   <Text
                     style={{ color: colors.text, opacity: 0.6, fontSize: 13 }}
                   >
-                    In {country.capital?.[0]}
+                    {t('country_weather_in', {
+                      city: country.capital?.[0] || '',
+                    })}
                   </Text>
                 </View>
                 <Text
@@ -811,7 +734,7 @@ const CountryDetailsScreen = () => {
                     flex: 1,
                   }}
                 >
-                  Live Weather
+                  {t('country_weather_live')}
                 </Text>
               </View>
               <Text
@@ -823,8 +746,8 @@ const CountryDetailsScreen = () => {
                 }}
               >
                 {API_KEY
-                  ? 'Loading weather data...'
-                  : 'Add OpenWeatherMap API key to see live weather!'}
+                  ? t('country_weather_loading')
+                  : t('country_weather_api_key')}
               </Text>
             </Animated.View>
           )}
@@ -894,7 +817,7 @@ const AnimatedBackButton = ({
           elevation: 8,
         }}
       >
-        <FontAwesome5 name="arrow-left" size={20} color="#000" solid />
+        <FontAwesome5 name="arrow-left" size={20} color={colors.text} />
       </Pressable>
     </Animated.View>
   );
@@ -902,7 +825,17 @@ const AnimatedBackButton = ({
 
 /**
  * Animated Info Card Component
+ * Reusable component for country details
  */
+interface AnimatedInfoCardProps {
+  icon: string;
+  label: string;
+  value: string;
+  colors: any;
+  delay: number;
+  color: string;
+}
+
 const AnimatedInfoCard = ({
   icon,
   label,
@@ -910,77 +843,47 @@ const AnimatedInfoCard = ({
   colors,
   delay,
   color,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  colors: typeof Colors.light;
-  delay: number;
-  color: string;
-}) => {
+}: AnimatedInfoCardProps) => {
   return (
     <Animated.View
       entering={FadeInUp.delay(delay).springify()}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 20,
-        borderRadius: 20,
         backgroundColor: colors.card,
+        padding: 16,
+        borderRadius: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 8,
-        elevation: 3,
+        elevation: 2,
       }}
     >
-      {/* Icon */}
       <View
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: `${color}20`,
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: `${color}15`,
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 16,
         }}
       >
-        <FontAwesome5 name={icon} size={20} color={color} solid />
+        <FontAwesome5 name={icon} size={18} color={color} />
       </View>
-
-      {/* Text */}
       <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: 13,
-            color: colors.text,
-            opacity: 0.6,
-            fontWeight: '600',
-            marginBottom: 4,
-          }}
-        >
+        <Text style={{ fontSize: 13, color: colors.text, opacity: 0.6 }}>
           {label}
         </Text>
         <Text
-          style={{
-            fontSize: 16,
-            fontWeight: '600',
-            color: colors.text,
-          }}
-          numberOfLines={2}
+          style={{ fontSize: 16, fontWeight: '600', color: colors.text }}
+          numberOfLines={1}
         >
           {value}
         </Text>
       </View>
-
-      {/* Arrow */}
-      <FontAwesome5
-        name="chevron-right"
-        size={16}
-        color={colors.text}
-        style={{ opacity: 0.3 }}
-      />
     </Animated.View>
   );
 };

@@ -1,22 +1,23 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { 
-  FadeInDown, 
-  FadeIn, 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withRepeat, 
-  withSequence, 
-  withTiming, 
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import { YStack, XStack, Heading, Paragraph, Button, Card } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { HOME_STATS } from '@/constants/HomeConfig';
 import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface HomeHeroProps {
   isAuthenticated: boolean;
@@ -56,13 +57,19 @@ const WavingHand = () => {
   );
 };
 
-const CountingNumber = ({ value, color }: { value: string | number, color: string }) => {
+const CountingNumber = ({
+  value,
+  color,
+}: {
+  value: string | number;
+  color: string;
+}) => {
   const [displayValue, setDisplayValue] = useState('0');
-  
+
   useEffect(() => {
     let numericValue = 0;
     let suffix = '';
-    
+
     if (typeof value === 'number') {
       numericValue = value;
     } else {
@@ -72,10 +79,10 @@ const CountingNumber = ({ value, color }: { value: string | number, color: strin
         suffix = match[2];
       }
     }
-    
+
     if (numericValue === 0) {
-        setDisplayValue(value.toString());
-        return;
+      setDisplayValue(value.toString());
+      return;
     }
 
     // Dynamic duration based on value magnitude, capped at 2s
@@ -86,10 +93,10 @@ const CountingNumber = ({ value, color }: { value: string | number, color: strin
     const updateCounter = () => {
       const now = Date.now();
       const progress = Math.min(1, (now - startTime) / duration);
-      
+
       // Ease out quart
       const easeProgress = 1 - Math.pow(1 - progress, 4);
-      
+
       const current = Math.floor(numericValue * easeProgress);
       setDisplayValue(current + suffix);
 
@@ -102,79 +109,65 @@ const CountingNumber = ({ value, color }: { value: string | number, color: strin
   }, [value]);
 
   return (
-    <Heading
-      size="$6" // Reduced from $8
-      fontWeight="900"
-      color={color}
-      letterSpacing={-0.5}
-      textAlign="center"
-      mb="$1"
-    >
+    <Heading size="$6" fontWeight="800" color={color}>
       {displayValue}
     </Heading>
   );
 };
 
-/**
- * Hero Section Component
- * Premium App Store-quality design with Tamagui components
- */
 export const HomeHero = React.memo<HomeHeroProps>(
   ({ isAuthenticated, userName, countriesCount, onBrowseAll }) => {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
-
-    const welcomeText = useMemo(() => {
-      if (isAuthenticated && userName) {
-        return `Welcome back, ${userName.split(' ')[0]}!`;
-      }
-      return 'Taste the World';
-    }, [isAuthenticated, userName]);
-
-    const subtitleText = useMemo(() => {
-      return isAuthenticated
-        ? 'Continue your culinary journey'
-        : 'Discover authentic cuisines from around the world';
-    }, [isAuthenticated]);
+    const { t } = useLanguage();
 
     const handleBrowseAllPress = () => {
       haptics.medium();
       onBrowseAll();
     };
 
+    const welcomeText = useMemo(() => {
+      if (isAuthenticated && userName) {
+        // Extract first name for a friendlier greeting
+        const firstName = userName.split(' ')[0];
+        return t('home_welcome_back', { name: firstName });
+      }
+      return t('home_title');
+    }, [isAuthenticated, userName, t]);
+
+    const subtitleText = useMemo(() => {
+      return isAuthenticated
+        ? t('home_subtitle_loggedin')
+        : t('home_subtitle_guest');
+    }, [isAuthenticated, t]);
+
     const stats = useMemo(
       () => [
         {
-          label: 'Countries',
-          value: `${countriesCount}+`,
-          icon: 'globe' as const,
+          label: t('home_countries'),
+          value: countriesCount,
+          icon: 'globe-americas',
         },
         {
-          label: 'Recipes',
+          label: t('home_recipes'),
           value: HOME_STATS.RECIPES,
-          icon: 'utensils' as const,
+          icon: 'utensils',
         },
         {
-          label: 'Regions',
-          value: `${HOME_STATS.REGIONS}`,
-          icon: 'map' as const,
+          label: t('home_regions'),
+          value: HOME_STATS.REGIONS,
+          icon: 'map-marked-alt',
         },
       ],
-      [countriesCount]
+      [countriesCount, t]
     );
 
     return (
-      <Animated.View entering={FadeInDown.delay(100)} style={{ width: '100%', marginBottom: 20, paddingHorizontal: 20 }}>
+      <Animated.View entering={FadeInDown.duration(600).springify()}>
         <Card
+          padded
           elevate
           bordered
-          borderRadius="$7"
-          padding="$6"
-          backgroundColor={
-            colorScheme === 'dark'
-              ? 'rgba(30, 30, 30, 0.7)'
-              : 'rgba(255, 255, 255, 0.7)'
-          }
           borderColor={
             colorScheme === 'dark'
               ? 'rgba(255, 255, 255, 0.1)'
@@ -184,17 +177,19 @@ export const HomeHero = React.memo<HomeHeroProps>(
           shadowOffset={{ width: 0, height: 16 }}
           shadowOpacity={colorScheme === 'dark' ? 0.5 : 0.15}
           shadowRadius={32}
-          elevation={12}
+          elevation={Platform.select({ android: 8, default: 12 })} // Reduced elevation for Android
           justifyContent="center"
           overflow="hidden" // Required for BlurView borderRadius
         >
-          {/* Native Blur View */}
-          <BlurView
-            intensity={30}
-            tint={colorScheme === 'dark' ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-          
+          {/* Native Blur View - Hide on Android if opacity is high to avoid double-layer look */}
+          {Platform.OS !== 'android' && (
+            <BlurView
+              intensity={30}
+              tint={colorScheme === 'dark' ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+
           {/* Header Section */}
           <YStack alignItems="center" justifyContent="center" mb="$5">
             {/* Title and Subtitle */}
@@ -213,7 +208,12 @@ export const HomeHero = React.memo<HomeHeroProps>(
                   </Heading>
                   {isAuthenticated && userName && <WavingHand />}
                 </XStack>
-                <Paragraph size="$4" color="$color11" opacity={0.8} lineHeight="$2">
+                <Paragraph
+                  size="$4"
+                  color="$color11"
+                  opacity={0.8}
+                  lineHeight="$2"
+                >
                   {subtitleText}
                 </Paragraph>
               </Animated.View>
@@ -301,7 +301,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
               elevation={10}
             >
               <LinearGradient
-                colors={[colors.tint, '#FB923C']} // Gradient from tint to lighter orange
+                colors={[colors.tint, '#FB923C']} // Gradient from primary to lighter orange
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -340,10 +340,10 @@ export const HomeHero = React.memo<HomeHeroProps>(
                       color="white"
                       letterSpacing={-0.5}
                     >
-                      Explore Countries
+                      {t('home_explore_countries')}
                     </Heading>
                     <Paragraph size="$3" color="white" opacity={0.9}>
-                      {countriesCount}+ destinations
+                      {t('home_destinations', { count: countriesCount })}
                     </Paragraph>
                   </YStack>
                 </XStack>
@@ -357,11 +357,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
                   jc="center"
                   backgroundColor="rgba(255,255,255,0.25)"
                 >
-                  <FontAwesome5
-                    name="arrow-right"
-                    size={18}
-                    color="white"
-                  />
+                  <FontAwesome5 name="arrow-right" size={18} color="white" />
                 </YStack>
               </LinearGradient>
             </Button>

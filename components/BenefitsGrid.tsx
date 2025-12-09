@@ -1,7 +1,8 @@
 import { YStack, XStack, Text, Card } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { brandColors } from '@/theme/colors';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 
 export interface Benefit {
   icon: string;
@@ -19,9 +20,12 @@ interface BenefitsGridProps {
 export const BenefitsGrid = ({
   title = "What's Included",
   benefits,
-  accentColor = brandColors.primary,
+  accentColor,
   layout = 'grid',
 }: BenefitsGridProps) => {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const finalAccentColor = accentColor || colors.tint;
   const isGrid = layout === 'grid';
 
   return (
@@ -58,7 +62,7 @@ export const BenefitsGrid = ({
                   <FontAwesome5
                     name={benefit.icon}
                     size={20}
-                    color={accentColor}
+                    color={finalAccentColor}
                   />
                   <YStack alignItems="center">
                     <Text fontSize="$3" fontWeight="700" textAlign="center">
@@ -104,7 +108,7 @@ export const BenefitsGrid = ({
                     <FontAwesome5
                       name={benefit.icon}
                       size={18}
-                      color={accentColor}
+                      color={finalAccentColor}
                     />
                   </YStack>
                   <YStack flex={1}>

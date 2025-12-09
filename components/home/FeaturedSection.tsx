@@ -1,6 +1,13 @@
 import React, { useCallback } from 'react';
 import { Dimensions } from 'react-native';
-import { YStack, XStack, Heading, Paragraph, ScrollView, Button } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Heading,
+  Paragraph,
+  ScrollView,
+  Button,
+} from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { Country, Recipe } from '@/types';
@@ -49,7 +56,8 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
       onSeeAll?.();
     }, [onSeeAll]);
 
-    const hasContent = (countries?.length ?? 0) > 0 || (recipes?.length ?? 0) > 0;
+    const hasContent =
+      (countries?.length ?? 0) > 0 || (recipes?.length ?? 0) > 0;
     if (!hasContent) return null;
 
     return (
@@ -103,7 +111,13 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
               borderWidth={1}
               borderColor={colors.tint + '30'}
               pressStyle={{ scale: 0.95, opacity: 0.8 }}
-              icon={<FontAwesome5 name="arrow-right" size={16} color={colors.tint} />}
+              icon={
+                <FontAwesome5
+                  name="arrow-right"
+                  size={16}
+                  color={colors.tint}
+                />
+              }
             />
           )}
         </XStack>
@@ -112,13 +126,20 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{paddingVertical: 20, paddingHorizontal: 20, gap: 16, paddingRight: 80 }}
+          contentContainerStyle={{
+            paddingVertical: 20,
+            paddingHorizontal: 20,
+            gap: 16,
+            paddingRight: 80,
+          }}
         >
           {countries?.map((country, index) => (
             <Animated.View
               key={country.cca2}
               entering={FadeInDown.delay(delay + 100 + index * 50)}
-              style={{ width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_COUNTRY_WIDTH }}
+              style={{
+                width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_COUNTRY_WIDTH,
+              }}
             >
               <CountryCard
                 country={country}
@@ -132,7 +153,9 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
             <Animated.View
               key={recipe.idMeal}
               entering={FadeInDown.delay(delay + 100 + index * 50)}
-              style={{ width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_RECIPE_WIDTH }}
+              style={{
+                width: SCREEN_WIDTH * CARD_DIMENSIONS.FEATURED_RECIPE_WIDTH,
+              }}
             >
               <RecipeCard
                 recipe={recipe}
@@ -147,4 +170,3 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
 );
 
 FeaturedSection.displayName = 'FeaturedSection';
-

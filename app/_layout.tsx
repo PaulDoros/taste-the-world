@@ -40,11 +40,14 @@ if (__DEV__) {
   };
 }
 
+import { LanguageProvider } from '@/context/LanguageContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-import { useUserStore } from '@/store/useUserStore';
+import { useAuth } from '@/hooks/useAuth';
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
@@ -93,86 +96,113 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { user, isGuest } = useUserStore();
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const inAuthGroup = segments[0] === 'auth';
-    const isAuthed = user !== null || isGuest;
+    setIsMounted(true);
+  }, []);
 
-    if (!isAuthed && !inAuthGroup) {
-      // Redirect to welcome screen if not logged in
+  useEffect(() => {
+    if (!isMounted || authLoading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    // If user is authenticated (has token + user data loaded)
+    if (isAuthenticated && user) {
+      // If they are a GUEST, they are allowed to be on auth screens (to sign up/login)
+      // BUT if they are on welcome screen specifically, we might want to redirect them to tabs?
+      // Actually, existing logic said: "Guests ARE allowed to visit auth screens"
+
+      // If they are a REAL user (not guest), they shouldn't be in auth group
+      const isRealUser = user.tier !== 'guest';
+
+      if (isRealUser && inAuthGroup) {
+        // Redirect real users to home
+        router.replace('/(tabs)');
+      } else if (
+        !isRealUser &&
+        segments[0] === 'auth' &&
+        segments[1] === 'welcome'
+      ) {
+        // If guest is on welcome screen, redirect to tabs (they are already "logged in" as guest)
+        router.replace('/(tabs)');
+      }
+    } else if (!isAuthenticated && !inAuthGroup) {
+      // If not authenticated and not in auth group, redirect to welcome
       router.replace('/auth/welcome');
-    } else if (user !== null && !isGuest && inAuthGroup) {
-      // Redirect to home if already logged in as a real user
-      // Guests are allowed to visit auth screens to upgrade/login
-      router.replace('/(tabs)');
     }
-  }, [user, isGuest, segments]);
+  }, [isAuthenticated, user, authLoading, segments, isMounted]);
 
   return (
-    <TamaguiProvider config={config} defaultTheme={colorScheme ?? 'light'}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: true,
-            gestureDirection: 'horizontal',
-          }}
+    <LanguageProvider>
+      <TamaguiProvider config={config} defaultTheme={colorScheme ?? 'light'}>
+        <ThemeProvider
+          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{
-              presentation: 'modal',
-              animation: 'slide_from_bottom',
-            }}
-          />
-          <Stack.Screen
-            name="country/[id]"
-            options={{
-              animation: 'slide_from_right',
+          {/* ... */}
+          <Stack
+            screenOptions={{
               headerShown: false,
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
             }}
-          />
-          <Stack.Screen
-            name="recipe/[id]"
-            options={{
-              animation: 'slide_from_right',
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="country-recipes"
-            options={{
-              animation: 'slide_from_right',
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="auth/welcome"
-            options={{
-              animation: 'fade',
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="auth/login"
-            options={{
-              presentation: 'modal',
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="auth/signup"
-            options={{
-              presentation: 'modal',
-              headerShown: false,
-            }}
-          />
-        </Stack>
-      </ThemeProvider>
-    </TamaguiProvider>
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="country/[id]"
+              options={{
+                animation: 'slide_from_right',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="recipe/[id]"
+              options={{
+                animation: 'slide_from_right',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="country-recipes"
+              options={{
+                animation: 'slide_from_right',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="auth/welcome"
+              options={{
+                animation: 'fade',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="auth/login"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="auth/signup"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </TamaguiProvider>
+    </LanguageProvider>
   );
 }

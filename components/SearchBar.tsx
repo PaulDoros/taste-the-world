@@ -6,6 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 
 /**
  * SearchBar Component
@@ -17,15 +18,15 @@ interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  colors: typeof Colors.light;
 }
 
 export const SearchBar = ({
   value,
   onChangeText,
   placeholder = 'Search...',
-  colors,
 }: SearchBarProps) => {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const isFocused = useSharedValue(false);
 
   // Animation for search bar scaling

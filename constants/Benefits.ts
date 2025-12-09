@@ -1,34 +1,34 @@
 import { Benefit } from '@/components/BenefitsGrid';
 
-export const benefits: Benefit[] = [
+export const getBenefits = (t: any): Benefit[] => [
   {
     icon: 'robot',
-    title: 'AI Chef Assistant',
-    description: 'Personalized AI suggestions',
+    title: t('benefit_ai_title'),
+    description: t('benefit_ai_desc'),
   },
   {
     icon: 'globe-americas',
-    title: 'All 195+ Countries',
-    description: 'Unlock the entire world',
+    title: t('benefit_countries_title'),
+    description: t('benefit_countries_desc'),
   },
   {
     icon: 'download',
-    title: 'Offline Mode',
-    description: 'Download maps & recipes',
+    title: t('benefit_offline_title'),
+    description: t('benefit_offline_desc'),
   },
   {
     icon: 'camera',
-    title: 'Pantry Scanner',
-    description: 'Scan ingredients instantly',
+    title: t('benefit_scanner_title'),
+    description: t('benefit_scanner_desc'),
   },
   {
     icon: 'ban',
-    title: 'No Ads',
-    description: 'Seamless experience',
+    title: t('benefit_noads_title'),
+    description: t('benefit_noads_desc'),
   },
   {
     icon: 'star',
-    title: 'Premium Recipes',
-    description: 'Exclusive chef-curated dishes',
+    title: t('benefit_premium_title'),
+    description: t('benefit_premium_desc'),
   },
 ];

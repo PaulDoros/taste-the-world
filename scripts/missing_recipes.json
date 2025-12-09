@@ -1,0 +1,130 @@
+[
+  {
+    "name": "Armenia",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Fr. S. Antarctic Lands",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Bosnia and Herz.",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Central African Rep.",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "China",
+    "expectedArea": "Chinese"
+  },
+  {
+    "name": "Côte d'Ivoire",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Dem. Rep. Congo",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Congo",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "N. Cyprus",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Dominican Rep.",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Egypt",
+    "expectedArea": "Egyptian"
+  },
+  {
+    "name": "Spain",
+    "expectedArea": "Spanish"
+  },
+  {
+    "name": "Falkland Is.",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "France",
+    "expectedArea": "French"
+  },
+  {
+    "name": "United Kingdom",
+    "expectedArea": "British"
+  },
+  {
+    "name": "Eq. Guinea",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Croatia",
+    "expectedArea": "Croatian"
+  },
+  {
+    "name": "Kazakhstan",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Morocco",
+    "expectedArea": "Moroccan"
+  },
+  {
+    "name": "Macedonia",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Malaysia",
+    "expectedArea": "Malaysian"
+  },
+  {
+    "name": "Netherlands",
+    "expectedArea": "Dutch"
+  },
+  {
+    "name": "Portugal",
+    "expectedArea": "Portuguese"
+  },
+  {
+    "name": "W. Sahara",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "S. Sudan",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Solomon Is.",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Somaliland",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Swaziland",
+    "expectedArea": "(No mapping found - needs 'American/British' style demonym)"
+  },
+  {
+    "name": "Thailand",
+    "expectedArea": "Thai"
+  },
+  {
+    "name": "Tunisia",
+    "expectedArea": "Tunisian"
+  },
+  {
+    "name": "Ukraine",
+    "expectedArea": "Ukrainian"
+  },
+  {
+    "name": "Vietnam",
+    "expectedArea": "Vietnamese"
+  }
+]

@@ -63,9 +63,17 @@ export function useAuth() {
   );
 
   // Update user when query result changes
+  // Update user when query result changes
   useEffect(() => {
-    if (currentUser && currentUser !== user) {
-      updateUser(currentUser);
+    // Only update if query has finished loading (not undefined)
+    if (currentUser !== undefined) {
+      // If currentUser is null (invalid session) or different from stored user
+      if (
+        currentUser === null ||
+        JSON.stringify(currentUser) !== JSON.stringify(user)
+      ) {
+        updateUser(currentUser);
+      }
     }
   }, [currentUser, user, updateUser]);
 
@@ -232,7 +240,9 @@ export function useAuth() {
   return {
     token,
     user,
-    isLoading: isLoading || (token && currentUser === undefined),
+    // Only show loading if we have a token but NO user data yet (and waiting for server)
+    // If we have a user (persisted), we are optimistically authenticated
+    isLoading: isLoading || (!!token && !user && currentUser === undefined),
     error,
     isAuthenticated,
     isPremium,

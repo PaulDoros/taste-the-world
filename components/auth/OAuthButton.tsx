@@ -5,11 +5,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface OAuthButtonProps {
   provider: 'google' | 'apple' | 'facebook';
   onPress: () => void;
   loading?: boolean;
+  disabled?: boolean;
   delay?: number;
 }
 
@@ -45,12 +47,14 @@ const PROVIDER_CONFIG = {
  * Modern, app-store quality OAuth button with proper styling
  */
 export const OAuthButton = React.memo<OAuthButtonProps>(
-  ({ provider, onPress, loading = false, delay = 0 }) => {
+  ({ provider, onPress, loading = false, disabled = false, delay = 0 }) => {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const config = PROVIDER_CONFIG[provider];
+    const { t } = useLanguage();
 
     const handlePress = () => {
+      if (disabled || loading) return;
       haptics.medium();
       onPress();
     };
@@ -64,7 +68,7 @@ export const OAuthButton = React.memo<OAuthButtonProps>(
       <Animated.View entering={FadeInDown.delay(delay)}>
         <Pressable
           onPress={handlePress}
-          disabled={loading}
+          disabled={loading || disabled}
           style={{
             borderRadius: 16,
             padding: 14,
@@ -93,8 +97,8 @@ export const OAuthButton = React.memo<OAuthButtonProps>(
               provider === 'google'
                 ? config.color
                 : provider === 'apple'
-                ? config.textColor
-                : '#FFFFFF'
+                  ? config.textColor
+                  : '#FFFFFF'
             }
             style={{ marginRight: 12 }}
           />
@@ -110,7 +114,9 @@ export const OAuthButton = React.memo<OAuthButtonProps>(
               fontWeight: '700',
             }}
           >
-            {loading ? 'Connecting...' : `Continue with ${config.name}`}
+            {loading
+              ? t('oauth_connecting')
+              : t('oauth_continue_with', { provider: config.name })}
           </Text>
         </Pressable>
       </Animated.View>
@@ -119,4 +125,3 @@ export const OAuthButton = React.memo<OAuthButtonProps>(
 );
 
 OAuthButton.displayName = 'OAuthButton';
-

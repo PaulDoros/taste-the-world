@@ -1,32 +1,34 @@
-const tintColorLight = '#F97316'; // Spiced Coral (Vibrant & Premium)
-const tintColorDark = '#FB923C'; // Lighter Coral for Dark Mode
+import { brandColors } from '../theme/colors';
+
+const tintColorLight = brandColors.primary;
+const tintColorDark = brandColors.primarySoft;
 
 export const Colors = {
   light: {
-    text: '#1F2937', // Deep Charcoal (Gray 800)
-    background: '#FAFAFA', // Warm Off-White
-    card: '#FFFFFF', // Pure White
+    text: brandColors.slate900,
+    background: brandColors.slate50,
+    card: '#FFFFFF',
     tint: tintColorLight,
-    tabIconDefault: '#9CA3AF', // Gray 400
+    tabIconDefault: brandColors.slate400,
     tabIconSelected: tintColorLight,
-    border: '#E5E7EB', // Gray 200
-    success: '#10B981', // Emerald 500
-    error: '#EF4444', // Red 500
-    warning: '#F59E0B', // Amber 500
-    premium: '#8B5CF6', // Violet 500
+    border: brandColors.slate200,
+    success: brandColors.success,
+    error: brandColors.danger,
+    warning: brandColors.warning,
+    premium: '#8B5CF6', // Keep as specific accent or move to theme if needed
   },
   dark: {
-    text: '#F3F4F6', // Light gray text
-    background: '#111827', // Dark gray background
-    card: '#1F2937', // Slightly lighter card
-    tint: tintColorDark, // Brand color (golden)
-    tabIconDefault: '#6B7280', // Muted gray
+    text: brandColors.slate50,
+    background: brandColors.slate900,
+    card: brandColors.slate800,
+    tint: tintColorDark,
+    tabIconDefault: brandColors.slate500,
     tabIconSelected: tintColorDark,
-    border: '#374151', // Dark border
-    success: '#34D399', // Lighter green
-    error: '#F87171', // Lighter red
-    warning: '#FBBF24', // Lighter amber
-    premium: '#A78BFA', // Lighter purple
+    border: brandColors.slate700,
+    success: brandColors.successSoft,
+    error: brandColors.dangerSoft,
+    warning: brandColors.warningSoft,
+    premium: '#A78BFA',
   },
 };
 

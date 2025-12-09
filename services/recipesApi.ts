@@ -23,6 +23,17 @@ if (CONVEX_URL) {
  * We need to convert them to a clean array
  */
 export const extractIngredients = (recipe: Recipe): Ingredient[] => {
+  // Check if ingredients array already exists (from AI or pre-processed)
+  // @ts-ignore
+  if (
+    recipe.ingredients &&
+    Array.isArray(recipe.ingredients) &&
+    recipe.ingredients.length > 0
+  ) {
+    // @ts-ignore
+    return recipe.ingredients;
+  }
+
   const ingredients: Ingredient[] = [];
 
   // Loop through 20 possible ingredients
@@ -30,14 +41,19 @@ export const extractIngredients = (recipe: Recipe): Ingredient[] => {
     const ingredientKey = `strIngredient${i}` as keyof Recipe;
     const measureKey = `strMeasure${i}` as keyof Recipe;
 
-    const ingredient = recipe[ingredientKey];
-    const measure = recipe[measureKey];
+    // Cast to string because we know strIngredientX are strings
+    const ingredient = recipe[ingredientKey] as string | undefined;
+    const measure = recipe[measureKey] as string | undefined;
 
     // Only add if ingredient exists and is not empty
-    if (ingredient && ingredient.trim() !== '') {
+    if (
+      ingredient &&
+      typeof ingredient === 'string' &&
+      ingredient.trim() !== ''
+    ) {
       ingredients.push({
         name: ingredient.trim(),
-        measure: measure?.trim() || '',
+        measure: measure && typeof measure === 'string' ? measure.trim() : '',
       });
     }
   }
@@ -61,7 +77,7 @@ export const getRecipesByArea = async (area: string): Promise<Recipe[]> => {
         console.log(
           `✅ Found ${cachedRecipes.length} recipes in Convex for ${area}`
         );
-        return cachedRecipes;
+        return cachedRecipes as unknown as Recipe[];
       }
     } catch (error) {
       console.warn(
@@ -151,6 +167,26 @@ async function fetchFromExternalAPIs(area: string): Promise<Recipe[]> {
  * Get full recipe details by ID
  */
 export const getRecipeById = async (recipeId: string): Promise<Recipe> => {
+  // 1. Try Convex cache first
+  if (convexClient) {
+    try {
+      const cachedRecipe = await convexClient.query(api.recipes.getRecipeById, {
+        idMeal: recipeId,
+      });
+      if (cachedRecipe) {
+        console.log(`✅ Found recipe ${recipeId} in Convex`);
+        // Ensure ingredients array is present (schema has it, but type might need mapping)
+        return cachedRecipe as unknown as Recipe;
+      }
+    } catch (error) {
+      console.warn(
+        '⚠️ Convex query failed, falling back to external API:',
+        error
+      );
+    }
+  }
+
+  // 2. Fallback to external API
   try {
     const response = await fetch(
       `${API_URLS.mealDB}/lookup.php?i=${encodeURIComponent(recipeId)}`

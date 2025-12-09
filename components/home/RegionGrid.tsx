@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { REGION_CONFIG } from '@/constants/HomeConfig';
 import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export const RegionGrid = React.memo<RegionGridProps>(
     const router = useRouter();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+    const { t } = useLanguage();
 
     const handleRegionPress = useCallback(
       (regionName: string) => {
@@ -54,116 +56,118 @@ export const RegionGrid = React.memo<RegionGridProps>(
     const cardWidth = (SCREEN_WIDTH - 48 - 24) / 3;
 
     return (
-      <Animated.View entering={FadeInUp.delay(delay)} style={{ marginTop: 32, paddingHorizontal: 12, marginBottom: 32 }}>
-        {/* Section Header */}
-        <XStack alignItems="center" space="$3" marginBottom="$4">
-          <YStack
-            width={4}
-            height={24}
-            borderRadius="$10"
-            backgroundColor={colors.tint}
-          />
-          <Heading size="$8" fontWeight="900" color="$color" letterSpacing={-0.5}>
-            Explore by Region
-          </Heading>
-        </XStack>
-        
-        <Paragraph
-          size="$3"
-          marginBottom="$5"
-          color="$color11"
-          opacity={0.8}
-        >
-          Discover authentic cuisines by continent
-        </Paragraph>
+      <Animated.View entering={FadeInUp.delay(delay).springify()}>
+        <YStack paddingHorizontal="$6" marginTop="$4" paddingBottom="$4">
+          <XStack alignItems="center" space="$3" marginBottom="$4">
+            <YStack
+              width={4}
+              height={24}
+              borderRadius="$10"
+              backgroundColor={colors.tint}
+            />
+            <Heading size="$8" fontWeight="900" color="$color">
+              {t('home_explore_by_region')}
+            </Heading>
+          </XStack>
+          <Paragraph
+            size="$3"
+            color="$color11"
+            opacity={0.8}
+            marginBottom="$4"
+            marginLeft="$4"
+          >
+            {t('home_region_subtitle')}
+          </Paragraph>
 
-        {/* Region Cards Grid - 3 columns */}
-        <YStack flexDirection="row" flexWrap="wrap" gap="$2" justifyContent="center">
-          {regionCards.map((region, index) => (
-            <Animated.View
-              key={region.name}
-              entering={FadeInDown.delay(delay + 100 + index * 50)}
-            >
-              <Card
-                elevate
-                bordered
-                onPress={() => handleRegionPress(region.name)}
-                padding="$3"
-                borderRadius="$5"
-                width={cardWidth}
-                minHeight={130}
-                backgroundColor={
-                  colorScheme === 'dark'
-                    ? 'rgba(30, 30, 30, 0.7)'
-                    : 'rgba(255, 255, 255, 0.7)'
-                }
-                borderColor={
-                  colorScheme === 'dark'
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : 'rgba(0, 0, 0, 0.05)'
-                }
-                shadowColor={colorScheme === 'dark' ? '#000' : colors.tint}
-                shadowOffset={{ width: 0, height: 4 }}
-                shadowOpacity={colorScheme === 'dark' ? 0.3 : 0.1}
-                shadowRadius={8}
-                pressStyle={{ scale: 0.96, opacity: 0.9 }}
-                hoverStyle={{
-                  backgroundColor:
+          <XStack flexWrap="wrap" gap="$3">
+            {regionCards.map((region, index) => (
+              <Animated.View
+                key={region.name}
+                entering={FadeInDown.delay(delay + 100 + index * 50)}
+              >
+                <Card
+                  elevate
+                  bordered
+                  onPress={() => handleRegionPress(region.name)}
+                  padding="$3"
+                  borderRadius="$5"
+                  width={cardWidth}
+                  minHeight={130}
+                  backgroundColor={
+                    colorScheme === 'dark'
+                      ? 'rgba(30, 30, 30, 0.7)'
+                      : 'rgba(255, 255, 255, 0.7)'
+                  }
+                  borderColor={
                     colorScheme === 'dark'
                       ? 'rgba(255, 255, 255, 0.1)'
-                      : 'rgba(255, 255, 255, 0.8)',
-                }}
-                animation="quick"
-                overflow="hidden" // Required for BlurView borderRadius
-              >
-                {/* Native Blur View */}
-                <BlurView
-                  intensity={20}
-                  tint={colorScheme === 'dark' ? 'dark' : 'light'}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                {/* Icon Container */}
-                <YStack
-                  width={40}
-                  height={40}
-                  borderRadius="$4"
-                  alignItems="center"
-                  justifyContent="center"
-                  marginBottom="$3"
-                  backgroundColor={region.color + '25'} // Increased opacity for richer pastel
+                      : 'rgba(0, 0, 0, 0.05)'
+                  }
+                  shadowColor={colorScheme === 'dark' ? '#000' : colors.tint}
+                  shadowOffset={{ width: 0, height: 4 }}
+                  shadowOpacity={colorScheme === 'dark' ? 0.3 : 0.1}
+                  shadowRadius={8}
+                  pressStyle={{ scale: 0.96, opacity: 0.9 }}
+                  hoverStyle={{
+                    backgroundColor:
+                      colorScheme === 'dark'
+                        ? 'rgba(255, 255, 255, 0.1)'
+                        : 'rgba(255, 255, 255, 0.8)',
+                  }}
+                  animation="quick"
+                  overflow="hidden" // Required for BlurView borderRadius
                 >
-                  <FontAwesome5
-                    name={region.icon as any}
-                    size={18}
-                    color={region.color}
+                  {/* Native Blur View */}
+                  <BlurView
+                    intensity={20}
+                    tint={colorScheme === 'dark' ? 'dark' : 'light'}
+                    style={StyleSheet.absoluteFill}
                   />
-                </YStack>
 
-                {/* Region Name */}
-                <Heading 
-                  size="$3" 
-                  fontWeight="800" 
-                  marginBottom="$1" 
-                  color="$color"
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  {region.name}
-                </Heading>
+                  {/* Icon Container */}
+                  <YStack
+                    width={40}
+                    height={40}
+                    borderRadius="$4"
+                    alignItems="center"
+                    justifyContent="center"
+                    marginBottom="$3"
+                    backgroundColor={region.color + '25'} // Increased opacity for richer pastel
+                  >
+                    <FontAwesome5
+                      name={region.icon as any}
+                      size={18}
+                      color={region.color}
+                    />
+                  </YStack>
 
-                {/* Count */}
-                <XStack alignItems="center" space="$1.5">
-                  <Paragraph size="$2" fontWeight="700" color={region.color}>
-                    {region.count}
-                  </Paragraph>
-                  <Paragraph size="$1" color="$color11" opacity={0.6}>
-                    {region.count === 1 ? 'loc' : 'locs'}
-                  </Paragraph>
-                </XStack>
-              </Card>
-            </Animated.View>
-          ))}
+                  {/* Region Name */}
+                  <Heading
+                    size="$3"
+                    fontWeight="800"
+                    marginBottom="$1"
+                    color="$color"
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {region.name}
+                  </Heading>
+
+                  {/* Count */}
+                  <XStack alignItems="center" space="$1.5">
+                    <Paragraph size="$2" fontWeight="700" color={region.color}>
+                      {region.count}
+                    </Paragraph>
+                    <Paragraph size="$1" color="$color11" opacity={0.6}>
+                      {region.count === 1
+                        ? t('home_loc_single')
+                        : t('home_loc_plural')}
+                    </Paragraph>
+                  </XStack>
+                </Card>
+              </Animated.View>
+            ))}
+          </XStack>
         </YStack>
       </Animated.View>
     );

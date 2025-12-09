@@ -7,8 +7,14 @@ const appConfig = createTamagui({
   ...config,
   themes: {
     ...config.themes,
-    light: lightTheme,
-    dark: darkTheme,
+    light: {
+      ...config.themes.light,
+      ...lightTheme,
+    },
+    dark: {
+      ...config.themes.dark,
+      ...darkTheme,
+    },
   },
 });
 

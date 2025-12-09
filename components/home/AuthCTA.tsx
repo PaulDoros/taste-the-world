@@ -1,27 +1,30 @@
 import React, { useCallback } from 'react';
+import { StyleSheet } from 'react-native';
 import { YStack, XStack, Heading, Paragraph, Button } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
-
-const AnimatedYStack = Animated.createAnimatedComponent(YStack);
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AuthCTAProps {
   delay?: number;
 }
 
+const AnimatedYStack = Animated.createAnimatedComponent(YStack);
+
 /**
- * Authentication Call-to-Action Component
- * Modern Tamagui-powered authentication prompt
+ * Auth CTA Component
+ * Encourages users to sign up/login
  */
 export const AuthCTA = React.memo<AuthCTAProps>(({ delay = 800 }) => {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
 
   const handleSignIn = useCallback(() => {
     haptics.medium();
@@ -29,17 +32,24 @@ export const AuthCTA = React.memo<AuthCTAProps>(({ delay = 800 }) => {
   }, [router]);
 
   return (
-    <AnimatedYStack entering={FadeIn.delay(delay)} marginTop="$12" marginHorizontal="$6" marginBottom="$6">
+    <AnimatedYStack
+      entering={FadeInUp.delay(delay).springify()}
+      marginHorizontal="$4"
+      marginBottom="$8"
+      marginTop="$4"
+    >
       <LinearGradient
-        colors={[colors.tint, colors.tint + 'E6', colors.tint + 'CC']}
+        colors={[colors.tint, '#F59E0B']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
           borderRadius: 24,
-          padding: 28,
+          padding: 24,
+          elevation: 8,
           shadowColor: colors.tint,
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.5,
-          shadowRadius: 24,
-          elevation: 12,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 16,
         }}
       >
         <XStack alignItems="flex-start" space="$5" marginBottom="$5">
@@ -63,11 +73,10 @@ export const AuthCTA = React.memo<AuthCTAProps>(({ delay = 800 }) => {
           {/* Content */}
           <YStack flex={1} paddingTop="$1">
             <Heading size="$7" fontWeight="900" marginBottom="$2" color="white">
-              Join the Journey
+              {t('home_join_journey')}
             </Heading>
             <Paragraph size="$3" lineHeight="$2" color="white" opacity={0.95}>
-              Sign in to save favorites, sync across devices, and unlock premium
-              features
+              {t('home_join_subtitle')}
             </Paragraph>
           </YStack>
         </XStack>
@@ -87,7 +96,7 @@ export const AuthCTA = React.memo<AuthCTAProps>(({ delay = 800 }) => {
           shadowRadius={12}
           elevation={6}
         >
-          Sign In to Continue
+          {t('home_signin_continue')}
         </Button>
       </LinearGradient>
     </AnimatedYStack>
@@ -95,4 +104,3 @@ export const AuthCTA = React.memo<AuthCTAProps>(({ delay = 800 }) => {
 });
 
 AuthCTA.displayName = 'AuthCTA';
-

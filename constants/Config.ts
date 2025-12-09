@@ -51,8 +51,8 @@ export const COUNTRY_TO_AREA_MAP: { [key: string]: string } = {
 
 // API Keys (we'll add these later when we sign up)
 export const API_KEYS = {
-  openWeather: '', // TODO: Add your OpenWeather API key
-  unsplash: '', // TODO: Add your Unsplash API key
+  openWeather: process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY || '',
+  unsplash: process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY || '',
 };
 
 // App Configuration

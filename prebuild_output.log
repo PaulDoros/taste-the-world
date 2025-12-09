@@ -1,0 +1,9 @@
+env: load .env.local .env
+env: export CONVEX_DEPLOYMENT EXPO_PUBLIC_CONVEX_URL EXPO_PUBLIC_API_NINJAS_KEY EXPO_PUBLIC_OPENWEATHER_KEY GEMINI_API_KEY EXPO_PUBLIC_GOOGLE_CLIENT_ID EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+! Git branch has uncommitted file changes
+› It's recommended to commit all changes before proceeding in case you want to revert generated changes.
+Git status is dirty but the command will continue because the terminal is not interactive.
+- Clearing android
+✖ Failed to delete android code: EBUSY: resource busy or locked, rmdir 'E:\EXPO Training\taste-the-world\android'
+Error: EBUSY: resource busy or locked, rmdir 'E:\EXPO Training\taste-the-world\android'
+Error: EBUSY: resource busy or locked, rmdir 'E:\EXPO Training\taste-the-world\android'

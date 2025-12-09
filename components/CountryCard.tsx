@@ -11,6 +11,7 @@ import Animated, {
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from './useColorScheme';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CountryCardProps {
   country: Country;
@@ -27,6 +28,7 @@ export const CountryCard = ({
 }: CountryCardProps) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
 
   // Animation values
   const scale = useSharedValue(1);
@@ -57,6 +59,17 @@ export const CountryCard = ({
       stiffness: 250,
     });
     opacity.value = withTiming(1, { duration: 100 });
+  };
+
+  const formatPopulation = (pop: number): string => {
+    if (pop >= 1_000_000_000) {
+      return t('common_pop_b', { count: (pop / 1_000_000_000).toFixed(1) });
+    } else if (pop >= 1_000_000) {
+      return t('common_pop_m', { count: (pop / 1_000_000).toFixed(1) });
+    } else if (pop >= 1_000) {
+      return t('common_pop_k', { count: (pop / 1_000).toFixed(1) });
+    }
+    return t('common_pop_unit', { count: pop });
   };
 
   return (
@@ -159,7 +172,7 @@ export const CountryCard = ({
                   letterSpacing: 0.5,
                 }}
               >
-                PRO
+                {t('common_pro')}
               </Text>
             </View>
           )}
@@ -269,7 +282,7 @@ export const CountryCard = ({
                       fontWeight: '500',
                     }}
                   >
-                    Capital
+                    {t('common_capital')}
                   </Text>
                   <Text
                     numberOfLines={1}
@@ -315,16 +328,4 @@ export const CountryCard = ({
       </Pressable>
     </Animated.View>
   );
-};
-
-// Helper function to format population
-const formatPopulation = (pop: number): string => {
-  if (pop >= 1_000_000_000) {
-    return `${(pop / 1_000_000_000).toFixed(1)}B people`;
-  } else if (pop >= 1_000_000) {
-    return `${(pop / 1_000_000).toFixed(1)}M people`;
-  } else if (pop >= 1_000) {
-    return `${(pop / 1_000).toFixed(1)}K people`;
-  }
-  return `${pop} people`;
 };

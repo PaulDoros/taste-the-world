@@ -1,0 +1,53 @@
+{
+  "project_name": "Taste the World",
+  "app_description": "The ultimate culinary travel companion featuring over 17,00 recipes from 255+ countries. It combines a global recipe database, an AI-powered Chef & Travel Guide, and interactive map exploration.",
+  "target_audience": "Home cooks, food enthusiasts, travelers, and tech-savvy users looking for personalized cooking experiences and travel inspiration.",
+  "video_concept": {
+    "title": "Taste the World: 1700+ Recipes, One App",
+    "tone": "Inspiring, adventurous, informative, and appetizing.",
+    "duration": "60 seconds",
+    "key_message": "Explore the world through food. 255+ Countries. 1700+ Recipes. Your personal AI Travel Guide."
+  },
+  "scenes": [
+    {
+      "scene_number": 1,
+      "visual_description": "Cinematic spinning globe animation that zooms into different countries, popping up with recipe counts (e.g., 'Italy: 500+ Recipes', 'Japan: 300+ Recipes'). Text overlay emphasizes '255+ Countries'.",
+      "audio_narration": "Imagine having the world's kitchen in your pocket. Access over 1700 recipes from more than 255 countries.",
+      "text_overlay": "255+ Countries | 1700+ Recipes"
+    },
+    {
+      "scene_number": 2,
+      "visual_description": "User interacting with the 'Map' tab. They pan across the globe, tapping on pins to reveal country details and local dishes. Transition to the 'Travel Guide' mode in the AI chat.",
+      "audio_narration": "Plan your next culinary adventure with our interactive map and AI Travel Guide. Get local insights, dining tips, and must-try dishes for any destination.",
+      "text_overlay": "Interactive Map & Travel Guide"
+    },
+    {
+      "scene_number": 3,
+      "visual_description": "Split screen: Left side shows the 'Chef' mode suggesting a meal. Right side shows the 'Travel' mode suggesting a restaurant in Paris. Both avatars (Chef and Pilot) are visible.",
+      "audio_narration": "Whether you're cooking at home or exploring abroad, your AI companion switches instantly between expert Chef and savvy Travel Guide.",
+      "text_overlay": "Your Personal AI Companion"
+    },
+    {
+      "scene_number": 4,
+      "visual_description": "Fast montage of the 'Smart Recipe Generator' creating a recipe from pantry items, followed by adding ingredients to the 'Shopping List'.",
+      "audio_narration": "Turn your pantry ingredients into global feasts instantly, and manage your shopping list with ease.",
+      "text_overlay": "Smart Generator & Shopping List"
+    },
+    {
+      "scene_number": 5,
+      "visual_description": "Final shot showing the app icon on a phone screen with a background of diverse people eating together. 'Download Now' button pulses.",
+      "audio_narration": "Taste the World. Explore, Cook, and Travel like a local. Download now.",
+      "text_overlay": "Download Now"
+    }
+  ],
+  "visual_style": {
+    "color_palette": [
+      "Vibrant Orange",
+      "Fresh Green",
+      "Clean White",
+      "Dark Mode UI"
+    ],
+    "imagery": "Dynamic map animations, high-quality food footage, and smooth app UI interactions."
+  },
+  "music_style": "Upbeat, energetic, with a mix of modern beats and global instrumental flares."
+}

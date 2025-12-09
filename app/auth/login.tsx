@@ -37,18 +37,22 @@ import { Input } from '@/components/forms/Input';
 
 import { OAuthButton } from '@/components/auth/OAuthButton';
 import { useAuth } from '@/hooks/useAuth';
+
 import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
+
   const router = useRouter();
   const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
+  const { t } = useLanguage();
 
   // Google OAuth
   const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -70,15 +74,15 @@ export default function LoginScreen() {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth_email_required');
     } else if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('auth_email_invalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth_password_required');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth_password_short');
     }
 
     setErrors(newErrors);
@@ -157,12 +161,12 @@ export default function LoginScreen() {
 
   const handleAppleSignIn = async () => {
     haptics.light();
-    alert('Apple Sign In coming soon!');
+    alert(t('auth_apple_coming_soon'));
   };
 
   const handleFacebookSignIn = async () => {
     haptics.light();
-    alert('Facebook Sign In coming soon!');
+    alert(t('auth_facebook_coming_soon'));
   };
 
   return (
@@ -241,7 +245,7 @@ export default function LoginScreen() {
                   color: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
                 }}
               >
-                Back
+                {t('auth_back')}
               </Text>
             </Pressable>
           </Animated.View>
@@ -280,7 +284,7 @@ export default function LoginScreen() {
                 color="$color"
                 textAlign="center"
               >
-                Log In
+                {t('auth_login_title')}
               </Text>
               <Paragraph
                 size="$3"
@@ -290,7 +294,7 @@ export default function LoginScreen() {
                 maxWidth={280}
                 mt="$2"
               >
-                Welcome back to Taste the World
+                {t('auth_login_subtitle')}
               </Paragraph>
             </Animated.View>
 
@@ -319,8 +323,8 @@ export default function LoginScreen() {
               {/* Form fields */}
               <YStack space="$4" mb="$4">
                 <Input
-                  label="Email"
-                  placeholder="you@example.com"
+                  label={t('auth_email_label')}
+                  placeholder={t('auth_email_placeholder')}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -339,8 +343,8 @@ export default function LoginScreen() {
                 />
 
                 <Input
-                  label="Password"
-                  placeholder="Enter your password"
+                  label={t('auth_password_label')}
+                  placeholder={t('auth_password_placeholder')}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -390,6 +394,7 @@ export default function LoginScreen() {
                 onPress={() => {
                   haptics.light();
                   // TODO: Implement forgot password flow
+                  alert(t('auth_forgot_password_soon'));
                 }}
                 size="$3"
                 alignSelf="flex-end"
@@ -398,7 +403,7 @@ export default function LoginScreen() {
                 pressStyle={{ opacity: 0.6 }}
               >
                 <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                  Forgot Password?
+                  {t('auth_forgot_password')}
                 </Text>
               </Button>
 
@@ -416,14 +421,14 @@ export default function LoginScreen() {
                 pressStyle={{ scale: 0.98, opacity: 0.9 }}
                 opacity={isLoading ? 0.6 : 1}
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
+                {isLoading ? t('auth_logging_in') : t('auth_login_button')}
               </Button>
 
               {/* Divider - iOS style */}
               <XStack ai="center" my="$4" space="$2">
                 <Separator flex={1} borderColor="$color5" />
                 <Text fontSize="$2" px="$3" color="$color10" fontWeight="500">
-                  or
+                  {t('auth_or')}
                 </Text>
                 <Separator flex={1} borderColor="$color5" />
               </XStack>
@@ -460,7 +465,7 @@ export default function LoginScreen() {
             >
               <XStack ai="center" space="$2">
                 <Text fontSize="$3" color="$color11">
-                  Don&apos;t have an account?
+                  {t('auth_no_account')}
                 </Text>
                 <Button
                   onPress={() => {
@@ -472,7 +477,7 @@ export default function LoginScreen() {
                   pressStyle={{ opacity: 0.6 }}
                 >
                   <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                    Sign Up
+                    {t('auth_signup_link')}
                   </Text>
                 </Button>
               </XStack>

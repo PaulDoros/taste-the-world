@@ -4,7 +4,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { CountryCard } from '@/components/CountryCard';
@@ -12,17 +11,21 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterBar } from '@/components/FilterBar';
 import { StaggeredListItem } from '@/components/StaggeredList';
 import { SkeletonGrid } from '@/components/SkeletonLoader';
-import { UpgradePrompt } from '@/components/UpgradePrompt';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useTheme } from 'tamagui';
 import { isPremiumCountry } from '@/constants/Config';
 import { useCountries } from '@/hooks/useCountries';
 import { useUserStore } from '@/store/useUserStore';
 import { canAccessCountry, TIER_LIMITS } from '@/utils/userTiers';
 import { haptics } from '@/utils/haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Define filter types
 type RegionFilter =
@@ -40,6 +43,7 @@ export default function ExploreScreen() {
   const tier = useUserStore((state) => state.tier);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { t } = useLanguage();
 
   // Filter states
   const [selectedRegion, setSelectedRegion] = useState<RegionFilter>(
@@ -48,8 +52,10 @@ export default function ExploreScreen() {
   const [selectedPremium, setSelectedPremium] = useState<PremiumFilter>('All');
 
   const router = useRouter();
+  const theme = useTheme();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { showError } = useAlertDialog();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const bottomPadding = tabBarHeight + insets.bottom + 16;
@@ -73,12 +79,10 @@ export default function ExploreScreen() {
 
   // Calculate tier limits
   const tierLimit = TIER_LIMITS[tier].countries;
-  const accessibleCount = Math.min(countries.length, tierLimit);
-  const lockedCount = Math.max(0, countries.length - tierLimit);
 
   // Filter countries based on search, region, and tier
   const filteredCountries = useMemo(() => {
-    return countries.filter((country, index) => {
+    return countries.filter((country) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -107,20 +111,6 @@ export default function ExploreScreen() {
     });
   }, [countries, tier, searchQuery, selectedRegion, selectedPremium]);
 
-  const handleCountryPress = (country: Country, index: number) => {
-    const hasAccess = canAccessCountry(tier, index);
-
-    if (!hasAccess) {
-      haptics.warning();
-      alert(
-        `🔒 Upgrade to access ${country.name.common}\nYou have access to ${tierLimit} countries on the ${tier} tier.`
-      );
-    } else {
-      haptics.light();
-      router.push(`/country/${country.cca2}` as any);
-    }
-  };
-
   const renderItem = useCallback(
     ({ item, index }: { item: Country; index: number }) => {
       const originalIndex = countries.findIndex((c) => c.cca2 === item.cca2);
@@ -137,7 +127,7 @@ export default function ExploreScreen() {
                 haptics.warning();
                 router.push({
                   pathname: '/modal',
-                  params: { feature: 'All Countries' },
+                  params: { feature: t('explore_all_countries') },
                 });
               } else {
                 haptics.selection();
@@ -148,8 +138,26 @@ export default function ExploreScreen() {
         </StaggeredListItem>
       );
     },
-    [countries, tier, router]
+    [countries, tier, router, t]
   );
+
+  // Error state
+  if (error && countries.length === 0) {
+    return (
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+        edges={['top', 'left', 'right']}
+      >
+        <ErrorState
+          title={t('explore_error_title')}
+          message={error || t('explore_error_message')}
+          onRetry={refetch}
+          retryText={t('explore_retry')}
+        />
+      </SafeAreaView>
+    );
+  }
 
   // Loading state with header/search always visible
   if (loading && countries.length === 0) {
@@ -173,10 +181,10 @@ export default function ExploreScreen() {
               marginBottom: 4,
             }}
           >
-            Explore Countries
+            {t('explore_title')}
           </Text>
           <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-            Discover authentic cuisines from around the world
+            {t('explore_subtitle')}
           </Text>
         </Animated.View>
 
@@ -185,8 +193,7 @@ export default function ExploreScreen() {
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search countries, capitals, regions..."
-            colors={colors}
+            placeholder={t('explore_search_placeholder')}
           />
 
           <FilterBar
@@ -195,7 +202,6 @@ export default function ExploreScreen() {
             onRegionChange={setSelectedRegion}
             onPremiumChange={setSelectedPremium}
             onClearAll={handleClearAllFilters}
-            colors={colors}
           />
         </Animated.View>
 
@@ -222,44 +228,44 @@ export default function ExploreScreen() {
             marginBottom: 4,
           }}
         >
-          Explore Countries
+          {t('explore_title')}
         </Text>
         <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-          Discover authentic cuisines from around the world
+          {t('explore_subtitle')}
         </Text>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(150).springify()}>
-        {/* Modern Search Bar Component */}
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Search countries, capitals, regions..."
-          colors={colors}
+          placeholder={t('explore_search_placeholder')}
         />
 
-        {/* Modern Filter Bar Component */}
         <FilterBar
           selectedRegion={selectedRegion}
           selectedPremium={selectedPremium}
           onRegionChange={setSelectedRegion}
           onPremiumChange={setSelectedPremium}
           onClearAll={handleClearAllFilters}
-          colors={colors}
         />
-      </Animated.View>
 
-      {/* Results Count */}
-      {(searchQuery.length > 0 ||
-        selectedRegion !== 'All' ||
-        selectedPremium !== 'All') && (
-        <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-          <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
-            {filteredCountries.length}{' '}
-            {filteredCountries.length === 1 ? 'country' : 'countries'} found
-          </Text>
-        </View>
-      )}
+        {(searchQuery ||
+          selectedRegion !== 'All' ||
+          selectedPremium !== 'All') && (
+          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+            <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+              {filteredCountries.length === 1
+                ? t('explore_results_count', {
+                    count: filteredCountries.length,
+                  })
+                : t('explore_results_count_plural', {
+                    count: filteredCountries.length,
+                  })}
+            </Text>
+          </View>
+        )}
+      </Animated.View>
     </View>
   );
 
@@ -295,40 +301,11 @@ export default function ExploreScreen() {
           />
         }
         ListEmptyComponent={
-          <View
-            style={{
-              alignItems: 'center',
-              paddingTop: 40,
-              paddingHorizontal: 16,
-            }}
-          >
-            <FontAwesome5
-              name="search"
-              size={48}
-              color={colors.text}
-              style={{ opacity: 0.2 }}
-            />
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 16,
-                marginTop: 16,
-                opacity: 0.6,
-              }}
-            >
-              No countries found
-            </Text>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 14,
-                marginTop: 4,
-                opacity: 0.4,
-              }}
-            >
-              Try adjusting your search or filters
-            </Text>
-          </View>
+          <EmptyState
+            icon="search"
+            title={t('explore_no_results_title')}
+            description={t('explore_no_results_desc')}
+          />
         }
       />
     </SafeAreaView>

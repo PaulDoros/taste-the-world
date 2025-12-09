@@ -25,6 +25,80 @@ function generateToken(): string {
 }
 
 /**
+ * Create a guest user with Convex authentication
+ */
+export const createGuestUser = mutation({
+  handler: async (ctx) => {
+    // Generate unique guest email
+    const guestId = crypto.randomUUID();
+    const guestEmail = `guest_${guestId}@guest.local`;
+
+    // Create guest user
+    const userId = await ctx.db.insert('users', {
+      email: guestEmail,
+      passwordHash: '', // No password for guests
+      tier: 'guest',
+      subscriptionType: 'free',
+      aiMessagesUsed: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Create session token (expires in 7 days)
+    const token = generateToken();
+    const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
+
+    await ctx.db.insert('sessions', {
+      userId,
+      token,
+      expiresAt,
+      createdAt: Date.now(),
+    });
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('Failed to create guest user');
+    }
+
+    return {
+      userId,
+      token,
+      expiresAt,
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        tier: user.tier,
+        subscriptionType: user.subscriptionType,
+        subscriptionStartDate: user.subscriptionStartDate,
+        subscriptionEndDate: user.subscriptionEndDate,
+        createdAt: user.createdAt,
+        aiMessagesUsed: user.aiMessagesUsed,
+      },
+    };
+  },
+});
+
+/**
+ * Increment AI message usage counter
+ */
+export const incrementAiUsage = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await ctx.db.patch(args.userId, {
+      aiMessagesUsed: (user.aiMessagesUsed || 0) + 1,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
  * Sign up a new user
  */
 export const signUp = mutation({
@@ -333,6 +407,8 @@ export const verifySession = query({
       subscriptionStartDate: user.subscriptionStartDate,
       subscriptionEndDate: user.subscriptionEndDate,
       createdAt: user.createdAt,
+      aiMessagesUsed: user.aiMessagesUsed,
+      unlockedCountries: user.unlockedCountries,
     };
   },
 });
@@ -385,6 +461,8 @@ export const getCurrentUser = query({
       subscriptionStartDate: user.subscriptionStartDate,
       subscriptionEndDate: user.subscriptionEndDate,
       createdAt: user.createdAt,
+      aiMessagesUsed: user.aiMessagesUsed,
+      unlockedCountries: user.unlockedCountries,
     };
   },
 });
@@ -433,6 +511,7 @@ export const updateSubscription = mutation({
     // Update user subscription
     await ctx.db.patch(user._id, {
       subscriptionType: args.subscriptionType,
+      tier: args.subscriptionType !== 'free' ? 'premium' : 'free',
       subscriptionStartDate: args.subscriptionType !== 'free' ? now : undefined,
       subscriptionEndDate,
       updatedAt: now,
@@ -476,6 +555,8 @@ export const getUserByEmail = query({
       email: user.email,
       name: user.name,
       subscriptionType: user.subscriptionType,
+      tier: user.tier,
+      aiMessagesUsed: user.aiMessagesUsed,
     };
   },
 });

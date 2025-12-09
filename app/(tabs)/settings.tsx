@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Switch } from 'react-native';
+import { Switch, Modal, Pressable } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -7,7 +7,6 @@ import {
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   FadeInDown,
-  FadeInUp,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -19,25 +18,25 @@ import {
   ScrollView,
   Card,
   Button,
-  Separator,
-  useTheme,
   Avatar,
   Switch as TamaguiSwitch,
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
 import { usePremium } from '@/hooks/usePremium';
-import { FEATURED_PREMIUM_COUNTRIES } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
 import { useAuth } from '@/hooks/useAuth';
 import { PricingSection } from '@/components/settings/PricingSection';
 import { shareApp } from '@/utils/shareApp';
 import { requestRating } from '@/utils/rateApp';
 import { BenefitsGrid } from '@/components/BenefitsGrid';
-import { benefits } from '@/constants/Benefits';
-import { brandColors } from '@/theme/colors';
+import { getBenefits } from '@/constants/Benefits';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useLanguage } from '@/context/LanguageContext';
+import { Translations, Language } from '@/constants/Translations';
+import { LanguageSelectorModal } from '@/components/settings/LanguageSelectorModal';
 
 interface SettingsItemProps {
   icon: string;
@@ -60,7 +59,9 @@ const SettingsItem = ({
   premium = false,
   isDestructive = false,
 }: SettingsItemProps) => {
-  const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -84,41 +85,92 @@ const SettingsItem = ({
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          backgroundColor="$card"
+          backgroundColor="$bg2"
           padding="$3.5"
           pressStyle={{ opacity: 0.9 }}
           marginBottom="$3"
         >
           <XStack alignItems="center" gap="$3">
+            {/* Icon Container */}
             <YStack
-              width={40}
-              height={40}
-              borderRadius={20}
+              width={44}
+              height={44}
+              borderRadius={22}
               backgroundColor={
-                premium ? '#EDE9FE' : isDestructive ? '$red4' : '$background'
+                premium
+                  ? isDark
+                    ? '$purple4'
+                    : '$purple3'
+                  : isDestructive
+                    ? isDark
+                      ? '$red4'
+                      : '$red3'
+                    : '$bg3'
               }
               alignItems="center"
               justifyContent="center"
-              opacity={premium ? 1 : 0.8}
+              shadowOffset={{ width: 0, height: isDark ? 0 : 2 }}
+              shadowOpacity={isDark ? 0.6 : premium ? 0.4 : 0.2}
+              shadowRadius={isDark ? 12 : premium ? 10 : 6}
+              elevation={premium ? 10 : 8}
+              borderWidth={isDark ? 0 : premium ? 1.5 : 0}
+              borderColor={
+                premium
+                  ? isDark
+                    ? '$purple9'
+                    : '$purple7'
+                  : isDestructive
+                    ? isDark
+                      ? '$red9'
+                      : '$red7'
+                    : isDark
+                      ? '$borderColor'
+                      : '$red10'
+              }
+              shadowColor={isDark ? '$purple10' : '$red10'}
             >
+              {/* Premium crown badge */}
               {premium && (
-                <FontAwesome5
-                  name="crown"
-                  size={16}
-                  color="#8B5CF6"
-                  style={{ position: 'absolute', top: -5, right: -5 }}
-                />
+                <YStack
+                  position="absolute"
+                  top={-6}
+                  right={-6}
+                  width={20}
+                  height={20}
+                  borderRadius={10}
+                  backgroundColor="$purple9"
+                  alignItems="center"
+                  justifyContent="center"
+                  shadowColor={
+                    isDark ? 'rgba(255, 255, 255, 0.4)' : '$purple10'
+                  }
+                  shadowOffset={{ width: 0, height: isDark ? 0 : 2 }}
+                  shadowOpacity={isDark ? 0.9 : 0.4}
+                  shadowRadius={isDark ? 10 : 4}
+                  elevation={4}
+                  borderWidth={isDark ? 1 : 0}
+                  borderColor={isDark ? '$purple7' : 'transparent'}
+                >
+                  <FontAwesome5 name="crown" size={10} color="white" />
+                </YStack>
               )}
+
+              {/* Main icon */}
               <FontAwesome5
                 name={icon}
-                size={16}
+                size={18}
                 color={
                   premium
-                    ? '#8B5CF6'
+                    ? isDark
+                      ? '#A78BFA' // purple.400
+                      : '#7C3AED' // purple.600
                     : isDestructive
-                      ? theme.red10?.val
-                      : theme.color11?.val
+                      ? isDark
+                        ? '#F87171' // red.400
+                        : '#DC2626' // red.600
+                      : colors.text
                 }
+                style={{ zIndex: 1, opacity: 0.8 }}
               />
             </YStack>
 
@@ -137,7 +189,8 @@ const SettingsItem = ({
               <FontAwesome5
                 name="chevron-right"
                 size={14}
-                color={theme.color9?.val}
+                color={colors.text}
+                style={{ opacity: 0.5 }}
               />
             )}
           </XStack>
@@ -152,11 +205,14 @@ export default function SettingsScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const theme = useTheme();
+  const { showConfirm, showError, showSuccess } = useAlertDialog();
 
   const { subscriptionType, isPremium, setSubscription, cancelSubscription } =
     usePremium();
   const { user, isAuthenticated, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
+
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   const [selectedSubscription, setSelectedSubscription] = useState<
     'monthly' | 'yearly'
@@ -166,29 +222,28 @@ export default function SettingsScreen() {
   const handleUpgrade = () => {
     haptics.light();
     setSubscription(selectedSubscription);
-    Alert.alert(
-      '🎉 Welcome to Premium!',
-      `You've successfully upgraded to ${selectedSubscription === 'monthly' ? 'Monthly' : 'Yearly'} Premium. Enjoy unlimited access to all features!`,
-      [{ text: 'Awesome!', onPress: () => haptics.success() }]
+    showSuccess(
+      t('settings_upgrade_success', {
+        plan:
+          selectedSubscription === 'monthly'
+            ? t('common_monthly')
+            : t('common_yearly'),
+      })
     );
   };
 
   const handleCancelSubscription = () => {
-    haptics.light();
-    Alert.alert(
-      'Cancel Subscription',
-      "Are you sure you want to cancel your premium subscription? You'll lose access to premium features at the end of your billing period.",
-      [
-        { text: 'Keep Premium', style: 'cancel' },
-        {
-          text: 'Cancel',
-          style: 'destructive',
-          onPress: () => {
-            cancelSubscription();
-            haptics.success();
-          },
-        },
-      ]
+    showConfirm(
+      {
+        title: t('settings_cancel_sub_confirm_title'),
+        message: t('settings_cancel_sub_confirm_msg'),
+        confirmText: t('settings_cancel_sub_confirm_confirm'),
+        cancelText: t('settings_cancel_sub_confirm_cancel'),
+      },
+      () => {
+        cancelSubscription();
+        showSuccess(t('settings_sub_canceled'));
+      }
     );
   };
 
@@ -197,10 +252,7 @@ export default function SettingsScreen() {
     if (!isAuthenticated) {
       router.push('/auth/login');
     } else {
-      Alert.alert(
-        'Account Management',
-        'Account management features coming soon!'
-      );
+      showError(t('settings_manage_account_soon'));
     }
   };
 
@@ -210,26 +262,22 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = () => {
-    haptics.light();
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
+    showConfirm(
       {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          haptics.success();
-        },
+        title: t('settings_signout_confirm_title'),
+        message: t('settings_signout_confirm_msg'),
+        confirmText: t('settings_signout_confirm_button'),
       },
-    ]);
+      async () => {
+        await signOut();
+        showSuccess(t('settings_signout_success'));
+      }
+    );
   };
 
   const handleAbout = () => {
     haptics.light();
-    Alert.alert(
-      'Taste the World',
-      'Version 1.0.0\n\nExplore cuisines from around the globe and discover amazing recipes from 195+ countries!\n\nMade with ❤️ for food lovers worldwide.'
-    );
+    showSuccess(t('settings_about_toast'));
   };
 
   return (
@@ -258,18 +306,18 @@ export default function SettingsScreen() {
                 alignItems="center"
                 justifyContent="center"
               >
-                <FontAwesome5 name="user" size={24} color={theme.color.val} />
+                <FontAwesome5 name="user" size={24} color={colors.text} />
               </Avatar.Fallback>
             </Avatar>
 
             <YStack flex={1}>
               <Text fontSize="$8" fontWeight="800" color="$color">
-                Settings
+                {t('settings_title')}
               </Text>
               <Text fontSize="$4" color="$color" opacity={0.6}>
                 {isAuthenticated
-                  ? user?.name || user?.email || 'Signed In'
-                  : 'Not Signed In'}
+                  ? user?.name || user?.email || t('settings_signed_in')
+                  : t('settings_signed_out')}
               </Text>
             </YStack>
 
@@ -286,7 +334,7 @@ export default function SettingsScreen() {
                   fontWeight="800"
                   textTransform="uppercase"
                 >
-                  PREMIUM
+                  {t('settings_premium_badge')}
                 </Text>
               </YStack>
             )}
@@ -304,22 +352,21 @@ export default function SettingsScreen() {
                 <FontAwesome5
                   name="user-circle"
                   size={24}
-                  color={theme.color.val}
+                  color={colors.text}
                 />
                 <Text fontSize="$5" fontWeight="700">
-                  Sign In to Sync
+                  {t('settings_signin_title')}
                 </Text>
               </XStack>
               <Text fontSize="$3" opacity={0.7} marginBottom="$4">
-                Sign in to save your favorite recipes, shopping lists, and
-                access your data across all devices.
+                {t('settings_signin_subtitle')}
               </Text>
               <Button
                 themeInverse
                 onPress={handleLogin}
                 icon={<FontAwesome5 name="sign-in-alt" />}
               >
-                Sign In
+                {t('settings_signin_button')}
               </Button>
             </Card>
           </Animated.View>
@@ -336,7 +383,7 @@ export default function SettingsScreen() {
                 </Avatar>
                 <YStack>
                   <Text fontSize="$4" fontWeight="700">
-                    {user?.name || 'User'}
+                    {user?.name || t('settings_user_fallback')}
                   </Text>
                   <Text fontSize="$3" opacity={0.6}>
                     {user?.email}
@@ -350,7 +397,7 @@ export default function SettingsScreen() {
                 icon={<FontAwesome5 name="sign-out-alt" />}
                 size="$3"
               >
-                Sign Out
+                {t('settings_signout_button')}
               </Button>
             </Card>
           </Animated.View>
@@ -366,8 +413,8 @@ export default function SettingsScreen() {
             />
             <BenefitsGrid
               layout="grid"
-              benefits={benefits}
-              accentColor={brandColors.primary}
+              benefits={getBenefits(t)}
+              accentColor={colors.tint}
             />
           </Animated.View>
         )}
@@ -387,7 +434,7 @@ export default function SettingsScreen() {
               <XStack alignItems="center" gap="$3" marginBottom="$3">
                 <FontAwesome5 name="crown" size={20} color="#0F172A" />
                 <Text fontSize="$5" fontWeight="700" color="#1E293B">
-                  Premium Active
+                  {t('settings_premium_active')}
                 </Text>
               </XStack>
               <Text
@@ -396,8 +443,12 @@ export default function SettingsScreen() {
                 marginBottom="$4"
                 color="#6D28D9"
               >
-                You are currently on the{' '}
-                {subscriptionType === 'monthly' ? 'Monthly' : 'Yearly'} plan.
+                {t('settings_plan_desc', {
+                  plan:
+                    subscriptionType === 'monthly'
+                      ? t('common_monthly')
+                      : t('common_yearly'),
+                })}
               </Text>
               <Button
                 theme="red"
@@ -405,7 +456,7 @@ export default function SettingsScreen() {
                 onPress={handleCancelSubscription}
                 size="$3"
               >
-                Cancel Subscription
+                {t('settings_cancel_sub_button')}
               </Button>
             </Card>
           </Animated.View>
@@ -422,21 +473,38 @@ export default function SettingsScreen() {
             marginBottom="$3"
             marginLeft="$2"
           >
-            Account
+            {t('settings_account_section')}
           </Text>
+          <SettingsItem
+            icon="globe"
+            title={t('language')}
+            subtitle={
+              Translations[language].languageName || language.toUpperCase()
+            }
+            onPress={() => {
+              haptics.selection();
+              setLanguageModalVisible(true);
+            }}
+            delay={220}
+            rightElement={
+              <Text color="$color11" fontSize="$3" fontWeight="600">
+                {language.toUpperCase()}
+              </Text>
+            }
+          />
           {isAuthenticated ? (
             <SettingsItem
               icon="user-cog"
-              title="Manage Account"
-              subtitle="Profile, preferences, and settings"
+              title={t('settings_manage_account')}
+              subtitle={t('settings_manage_account_subtitle')}
               onPress={handleManageAccount}
               delay={250}
             />
           ) : null}
           <SettingsItem
             icon="bell"
-            title="Notifications"
-            subtitle="Recipe reminders and updates"
+            title={t('settings_notifications')}
+            subtitle={t('settings_notifications_subtitle')}
             onPress={() => {}} // Empty handler - Switch handles the toggle
             delay={300}
             rightElement={
@@ -456,130 +524,6 @@ export default function SettingsScreen() {
           />
         </Animated.View>
 
-        {/* Premium Features Section */}
-        {/* <Animated.View entering={FadeInDown.delay(400).springify()}>
-          <Text
-            fontSize="$5"
-            fontWeight="700"
-            marginBottom="$3"
-            marginLeft="$2"
-            marginTop="$4"
-          >
-            Premium Features
-          </Text>
-          <SettingsItem
-            icon="globe-americas"
-            title="All Countries"
-            subtitle={`${FEATURED_PREMIUM_COUNTRIES.length}+ premium countries`}
-            onPress={() => {
-              haptics.light();
-              if (!isPremium) {
-                Alert.alert(
-                  'Premium Feature',
-                  'Upgrade to Premium to access all 195+ countries!',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Upgrade',
-                      onPress: () => setSelectedSubscription('yearly'),
-                    },
-                  ]
-                );
-              } else {
-                Alert.alert(
-                  'Premium Countries',
-                  `You have access to all countries including:\n\n${FEATURED_PREMIUM_COUNTRIES.slice(0, 5).join(', ')}... and more!`
-                );
-              }
-            }}
-            delay={450}
-            premium
-            rightElement={
-              !isPremium ? (
-                <FontAwesome5
-                  name="lock"
-                  size={14}
-                  color={theme.color11?.val}
-                />
-              ) : undefined
-            }
-          />
-          <SettingsItem
-            icon="filter"
-            title="Advanced Filters"
-            subtitle="Dietary, difficulty, and more"
-            onPress={() => {
-              haptics.light();
-              if (!isPremium) {
-                Alert.alert(
-                  'Premium Feature',
-                  'Upgrade to Premium to use advanced filters!',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Upgrade',
-                      onPress: () => setSelectedSubscription('yearly'),
-                    },
-                  ]
-                );
-              } else {
-                Alert.alert(
-                  'Advanced Filters',
-                  'Use advanced filters to find recipes that match your dietary preferences and skill level!'
-                );
-              }
-            }}
-            delay={500}
-            premium
-            rightElement={
-              !isPremium ? (
-                <FontAwesome5
-                  name="lock"
-                  size={14}
-                  color={theme.color11?.val}
-                />
-              ) : undefined
-            }
-          />
-          <SettingsItem
-            icon="download"
-            title="Offline Mode"
-            subtitle="Access recipes without internet"
-            onPress={() => {
-              haptics.light();
-              if (!isPremium) {
-                Alert.alert(
-                  'Premium Feature',
-                  'Upgrade to Premium to download recipes for offline use!',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Upgrade',
-                      onPress: () => setSelectedSubscription('yearly'),
-                    },
-                  ]
-                );
-              } else {
-                Alert.alert(
-                  'Offline Mode',
-                  'Download your favorite recipes to access them even without an internet connection!'
-                );
-              }
-            }}
-            delay={550}
-            premium
-            rightElement={
-              !isPremium ? (
-                <FontAwesome5
-                  name="lock"
-                  size={14}
-                  color={theme.color11?.val}
-                />
-              ) : undefined
-            }
-          />
-        </Animated.View> */}
-
         {/* App Section */}
         <Animated.View entering={FadeInDown.delay(600).springify()}>
           <Text
@@ -589,19 +533,19 @@ export default function SettingsScreen() {
             marginLeft="$2"
             marginTop="$4"
           >
-            App
+            {t('settings_app_section')}
           </Text>
           <SettingsItem
             icon="info-circle"
-            title="About"
-            subtitle="Version 1.0.0"
+            title={t('settings_about')}
+            subtitle={t('settings_version')}
             onPress={handleAbout}
             delay={650}
           />
           <SettingsItem
             icon="star"
-            title="Rate App"
-            subtitle="Love the app? Leave a review!"
+            title={t('settings_rate_app')}
+            subtitle={t('settings_rate_app_subtitle')}
             onPress={async () => {
               haptics.light();
               await requestRating();
@@ -610,22 +554,23 @@ export default function SettingsScreen() {
           />
           <SettingsItem
             icon="share-alt"
-            title="Share App"
-            subtitle="Tell your friends about us"
+            title={t('settings_share_app')}
+            subtitle={t('settings_share_app_subtitle')}
             onPress={async () => {
               const shared = await shareApp();
               if (shared) {
-                Alert.alert(
-                  '🎉 Thank You!',
-                  'Thanks for spreading the word about Taste the World!',
-                  [{ text: 'OK', onPress: () => haptics.light() }]
-                );
+                showSuccess(t('settings_share_success'));
               }
             }}
             delay={750}
           />
         </Animated.View>
       </ScrollView>
+
+      <LanguageSelectorModal
+        visible={languageModalVisible}
+        onClose={() => setLanguageModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

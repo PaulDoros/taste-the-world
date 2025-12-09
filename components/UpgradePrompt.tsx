@@ -5,6 +5,7 @@ import { LinearGradient } from '@tamagui/linear-gradient';
 import { YStack, XStack, Text, Button, Card, Theme } from 'tamagui';
 import { useUserStore } from '@/store/useUserStore';
 import { getTierDisplayName } from '@/utils/userTiers';
+import { useLanguage } from '@/context/LanguageContext';
 
 type UpgradePromptProps = {
   feature: string;
@@ -13,6 +14,7 @@ type UpgradePromptProps = {
 export function UpgradePrompt({ feature }: UpgradePromptProps) {
   const router = useRouter();
   const tier = useUserStore((state) => state.tier);
+  const { t } = useLanguage();
 
   return (
     <Theme name="dark">
@@ -45,7 +47,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
             >
               <Ionicons name="star" size={14} color="#FACC15" />
               <Text ml="$1" fontSize={11} fontWeight="600" color="#E5E7EB">
-                PREMIUM ACCESS
+                {t('upgrade_premium_access')}
               </Text>
             </XStack>
 
@@ -73,7 +75,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
                 color="#F9FAFB"
                 textAlign="center"
               >
-                Upgrade to Premium
+                {t('upgrade_title')}
               </Text>
               <Text
                 fontSize={14}
@@ -81,11 +83,11 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
                 textAlign="center"
                 maxWidth={260}
               >
-                Unlock {feature} and explore all{' '}
+                {t('upgrade_unlock_text', { feature })}{' '}
                 <Text fontWeight="700" color="#E5E7EB">
-                  250+ countries
+                  {t('upgrade_countries_count')}
                 </Text>{' '}
-                with full access.
+                {t('upgrade_full_access')}
               </Text>
             </YStack>
 
@@ -103,7 +105,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
             >
               <Ionicons name="person-circle" size={16} color="#E5E7EB" />
               <Text ml="$2" fontSize={13} fontWeight="600" color="#E5E7EB">
-                Current: {getTierDisplayName(tier)}
+                {t('upgrade_current_tier', { tier: getTierDisplayName(tier) })}
               </Text>
             </XStack>
 
@@ -115,13 +117,13 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
               br="$6"
               bg="#FACC15"
               pressStyle={{ opacity: 0.9, scale: 0.98 }}
-              onPress={() => router.push('/settings/premium')}
+              onPress={() => router.push('/(tabs)/settings')}
               iconAfter={
                 <Ionicons name="arrow-forward" size={16} color="#0F172A" />
               }
             >
               <Text fontSize={15} fontWeight="700" color="#0F172A">
-                View Premium Plans
+                {t('upgrade_view_plans')}
               </Text>
             </Button>
 
@@ -132,7 +134,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
               color="rgba(226,232,240,0.75)"
               textAlign="center"
             >
-              Cancel anytime. Your current tier will stay active until the end
+              {t('upgrade_cancel_anytime')}
               of the billing period.
             </Text>
           </YStack>

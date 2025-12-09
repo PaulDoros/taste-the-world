@@ -17,6 +17,21 @@ export const getRecipesByArea = query({
 });
 
 /**
+ * Get recipe by exact name (for caching)
+ */
+export const getRecipeByName = query({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const recipe = await ctx.db
+      .query('recipes')
+      .withIndex('by_name', (q) => q.eq('strMeal', args.name))
+      .first();
+
+    return recipe;
+  },
+});
+
+/**
  * Get recipe by ID
  */
 export const getRecipeById = query({
@@ -77,5 +92,26 @@ export const saveRecipes = mutation({
     }
 
     return { saved: saved.length, total: args.recipes.length };
+  },
+});
+
+// Query to count recipes
+export const countRecipes = query({
+  args: {},
+  handler: async (ctx) => {
+    const recipes = await ctx.db.query('recipes').collect();
+    return recipes.length;
+  },
+});
+
+// Query to get all distinct areas/countries available in the database
+export const getAllRecipeAreas = query({
+  args: {},
+  handler: async (ctx) => {
+    // Note: This matches the logic of "fetching all and uniquing in memory"
+    // For large datasets, this should be optimized with a separate 'areas' table
+    const recipes = await ctx.db.query('recipes').collect();
+    const areas = new Set(recipes.map((r) => r.strArea));
+    return Array.from(areas).sort();
   },
 });

@@ -81,6 +81,10 @@ export interface Recipe {
   strMeasure18?: string;
   strMeasure19?: string;
   strMeasure20?: string;
+
+  // New field for AI/Convex stored ingredients
+  ingredients?: Ingredient[];
+  [key: string]: string | undefined | Ingredient[];
 }
 
 // Simplified ingredient type for our shopping list

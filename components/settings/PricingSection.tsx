@@ -1,20 +1,14 @@
 import { View } from 'react-native';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Card,
-  Separator,
-  useTheme,
-} from 'tamagui';
+import { YStack, XStack, Text, Button, Card, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { SUBSCRIPTION_PRICES, PREMIUM_BENEFITS } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
 import { gradients } from '@/theme/gradients';
-import { brandColors } from '@/theme/colors';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PricingSectionProps {
   selectedSubscription: 'monthly' | 'yearly';
@@ -27,7 +21,9 @@ export const PricingSection = ({
   onSelectSubscription,
   onUpgrade,
 }: PricingSectionProps) => {
-  const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
 
   return (
     <YStack gap="$4" marginBottom="$6">
@@ -57,10 +53,10 @@ export const PricingSection = ({
           <XStack alignItems="center" gap="$3">
             <View
               style={{
-                backgroundColor: brandColors.primary,
+                backgroundColor: colors.tint,
                 padding: 10,
                 borderRadius: 20,
-                shadowColor: brandColors.primary,
+                shadowColor: colors.tint,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
@@ -71,10 +67,10 @@ export const PricingSection = ({
             </View>
             <YStack flex={1}>
               <Text fontSize="$6" fontWeight="800" color="$color">
-                Upgrade to Premium
+                {t('pricing_upgrade_title')}
               </Text>
               <Text fontSize="$3" color="$color" opacity={0.7}>
-                Unlock the full culinary experience
+                {t('pricing_upgrade_subtitle')}
               </Text>
             </YStack>
           </XStack>
@@ -88,7 +84,7 @@ export const PricingSection = ({
                 <FontAwesome5
                   name="check-circle"
                   size={14}
-                  color={brandColors.primary}
+                  color={colors.tint}
                   solid
                 />
                 <Text fontSize="$3" color="$color" opacity={0.9}>
@@ -111,13 +107,11 @@ export const PricingSection = ({
                 onSelectSubscription('monthly');
               }}
               backgroundColor={
-                selectedSubscription === 'monthly'
-                  ? brandColors.primary
-                  : '$background'
+                selectedSubscription === 'monthly' ? colors.tint : '$background'
               }
               borderColor={
                 selectedSubscription === 'monthly'
-                  ? brandColors.primary
+                  ? colors.tint
                   : '$borderColor'
               }
               padding="$3"
@@ -130,7 +124,7 @@ export const PricingSection = ({
                     selectedSubscription === 'monthly' ? 'white' : '$color'
                   }
                 >
-                  Monthly
+                  {t('pricing_monthly')}
                 </Text>
                 <Text
                   fontSize="$5"
@@ -155,14 +149,10 @@ export const PricingSection = ({
                 onSelectSubscription('yearly');
               }}
               backgroundColor={
-                selectedSubscription === 'yearly'
-                  ? brandColors.primary
-                  : '$background'
+                selectedSubscription === 'yearly' ? colors.tint : '$background'
               }
               borderColor={
-                selectedSubscription === 'yearly'
-                  ? brandColors.primary
-                  : '$borderColor'
+                selectedSubscription === 'yearly' ? colors.tint : '$borderColor'
               }
               padding="$3"
               position="relative"
@@ -173,7 +163,7 @@ export const PricingSection = ({
                   position: 'absolute',
                   top: -10,
                   right: -10,
-                  backgroundColor: brandColors.success,
+                  backgroundColor: '#22c55e', // Success color (green)
                   paddingHorizontal: 8,
                   paddingVertical: 2,
                   borderRadius: 10,
@@ -181,7 +171,9 @@ export const PricingSection = ({
                 }}
               >
                 <Text fontSize={10} fontWeight="800" color="white">
-                  SAVE {SUBSCRIPTION_PRICES.yearlySavings}
+                  {t('pricing_save', {
+                    amount: SUBSCRIPTION_PRICES.yearlySavings,
+                  })}
                 </Text>
               </View>
 
@@ -191,7 +183,7 @@ export const PricingSection = ({
                   fontWeight="600"
                   color={selectedSubscription === 'yearly' ? 'white' : '$color'}
                 >
-                  Yearly
+                  {t('pricing_yearly')}
                 </Text>
                 <Text
                   fontSize="$5"
@@ -207,8 +199,8 @@ export const PricingSection = ({
           {/* Upgrade Button */}
           <Button
             size="$5"
-            backgroundColor={brandColors.primary}
-            hoverStyle={{ backgroundColor: brandColors.primaryDeep }}
+            backgroundColor={colors.tint}
+            hoverStyle={{ opacity: 0.9 }}
             pressStyle={{ opacity: 0.9, scale: 0.98 }}
             onPress={onUpgrade}
             icon={<FontAwesome5 name="star" size={14} color="white" />}
@@ -217,12 +209,12 @@ export const PricingSection = ({
             borderWidth={0}
           >
             <Text color="white" fontWeight="700" fontSize="$4">
-              Get Premium Now
+              {t('pricing_get_premium')}
             </Text>
           </Button>
 
           <Text textAlign="center" fontSize="$2" opacity={0.5} marginTop="$1">
-            Cancel anytime. No questions asked.
+            {t('pricing_cancel_anytime')}
           </Text>
         </YStack>
       </Card>

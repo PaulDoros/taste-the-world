@@ -6,19 +6,25 @@ import { PricingSection } from '@/components/settings/PricingSection';
 import { BenefitsGrid } from '@/components/BenefitsGrid';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
-import { YStack, Text, Card, Button, useTheme } from 'tamagui';
+import { YStack, Text, Card, Button } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { haptics } from '@/utils/haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '@/theme/gradients';
-import { brandColors } from '@/theme/colors';
-import { benefits } from '@/constants/Benefits';
+import { getBenefits } from '@/constants/Benefits';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ModalScreen() {
   const { feature } = useLocalSearchParams<{ feature: string }>();
   const router = useRouter();
-  const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const { setSubscription } = usePremium();
+  const { showSuccess } = useAlertDialog();
+  const { t } = useLanguage();
   const [selectedSubscription, setSelectedSubscription] = useState<
     'monthly' | 'yearly'
   >('yearly');
@@ -26,18 +32,17 @@ export default function ModalScreen() {
   const handleUpgrade = () => {
     haptics.light();
     setSubscription(selectedSubscription);
-    Alert.alert(
-      '🎉 Welcome to Premium!',
-      `You've successfully upgraded to ${selectedSubscription === 'monthly' ? 'Monthly' : 'Yearly'} Premium. Enjoy unlimited access to all features!`,
-      [
-        {
-          text: 'Awesome!',
-          onPress: () => {
-            haptics.success();
-            router.back();
-          },
-        },
-      ]
+    showSuccess(
+      t('modal_success_detail', {
+        plan:
+          selectedSubscription === 'monthly'
+            ? t('common_monthly')
+            : t('common_yearly'),
+      }),
+      () => {
+        haptics.success();
+        router.back();
+      }
     );
   };
 
@@ -73,7 +78,7 @@ export default function ModalScreen() {
                 textAlign="center"
                 color="white"
               >
-                Unlock Premium
+                {t('modal_unlock_premium')}
               </Text>
               <Text
                 fontSize="$4"
@@ -83,8 +88,8 @@ export default function ModalScreen() {
                 color="white"
               >
                 {feature
-                  ? `Upgrade to unlock ${feature}`
-                  : 'Get unlimited access'}
+                  ? t('modal_upgrade_unlock', { feature })
+                  : t('modal_get_unlimited')}
               </Text>
             </LinearGradient>
           </Card>
@@ -99,8 +104,8 @@ export default function ModalScreen() {
           {/* Detailed Benefits - Using Reusable Component */}
           <BenefitsGrid
             layout="list"
-            benefits={benefits}
-            accentColor={brandColors.primary}
+            benefits={getBenefits(t)}
+            accentColor={colors.tint}
           />
 
           {/* Close Button */}
@@ -111,7 +116,7 @@ export default function ModalScreen() {
             marginBottom="$6"
             borderColor="$borderColor"
           >
-            Maybe Later
+            {t('modal_maybe_later')}
           </Button>
         </YStack>
       </ScrollView>

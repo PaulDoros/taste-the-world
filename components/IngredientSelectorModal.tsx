@@ -1,18 +1,19 @@
-import React, { useState } from "react";
-import { View, Text, Modal, Pressable, ScrollView } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import React, { useState } from 'react';
+import { View, Text, Modal, Pressable, ScrollView } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   FadeInDown,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-import { Ingredient } from "@/types";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { haptics } from "@/utils/haptics";
-import { canConvert, getConvertedDisplay } from "@/utils/measurementConverter";
+import { Ingredient } from '@/types';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { haptics } from '@/utils/haptics';
+import { canConvert, getConvertedDisplay } from '@/utils/measurementConverter';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface IngredientSelectorModalProps {
   visible: boolean;
@@ -48,10 +49,11 @@ export const IngredientSelectorModal: React.FC<
   showConversions = false,
 }) => {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
 
   const [selectedIngredients, setSelectedIngredients] = useState<Set<number>>(
-    new Set(),
+    new Set()
   );
 
   const toggleIngredient = (index: number) => {
@@ -78,7 +80,7 @@ export const IngredientSelectorModal: React.FC<
 
   const handleConfirm = () => {
     const selected = ingredients.filter((_, index) =>
-      selectedIngredients.has(index),
+      selectedIngredients.has(index)
     );
     if (selected.length > 0) {
       haptics.success();
@@ -108,8 +110,8 @@ export const IngredientSelectorModal: React.FC<
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
-          justifyContent: "flex-end",
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          justifyContent: 'flex-end',
         }}
       >
         {/* Close on backdrop tap */}
@@ -125,8 +127,8 @@ export const IngredientSelectorModal: React.FC<
             paddingTop: 24,
             paddingHorizontal: 20,
             paddingBottom: 40,
-            maxHeight: "85%",
-            shadowColor: "#000",
+            maxHeight: '85%',
+            shadowColor: '#000',
             shadowOffset: { width: 0, height: -4 },
             shadowOpacity: 0.2,
             shadowRadius: 20,
@@ -141,7 +143,7 @@ export const IngredientSelectorModal: React.FC<
               backgroundColor: colors.text,
               opacity: 0.2,
               borderRadius: 3,
-              alignSelf: "center",
+              alignSelf: 'center',
               marginBottom: 20,
             }}
           />
@@ -149,8 +151,8 @@ export const IngredientSelectorModal: React.FC<
           {/* Header */}
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
+              flexDirection: 'row',
+              alignItems: 'center',
               marginBottom: 12,
             }}
           >
@@ -160,8 +162,8 @@ export const IngredientSelectorModal: React.FC<
                 height: 50,
                 borderRadius: 16,
                 backgroundColor: `${iconColor}20`,
-                alignItems: "center",
-                justifyContent: "center",
+                alignItems: 'center',
+                justifyContent: 'center',
                 marginRight: 12,
               }}
             >
@@ -171,7 +173,7 @@ export const IngredientSelectorModal: React.FC<
               <Text
                 style={{
                   fontSize: 24,
-                  fontWeight: "700",
+                  fontWeight: '700',
                   color: colors.text,
                   marginBottom: 4,
                 }}
@@ -193,9 +195,9 @@ export const IngredientSelectorModal: React.FC<
           {/* Select All / Deselect All */}
           <View
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               marginBottom: 16,
               paddingVertical: 12,
               paddingHorizontal: 16,
@@ -207,12 +209,15 @@ export const IngredientSelectorModal: React.FC<
               style={{
                 color: colors.text,
                 fontSize: 14,
-                fontWeight: "600",
+                fontWeight: '600',
               }}
             >
-              {selectedCount} of {ingredients.length} selected
+              {t('ingredient_modal_selected_count', {
+                selected: selectedCount,
+                total: ingredients.length,
+              })}
             </Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               <Pressable
                 onPress={selectAll}
                 style={({ pressed }) => ({
@@ -228,10 +233,10 @@ export const IngredientSelectorModal: React.FC<
                   style={{
                     color: colors.tint,
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                   }}
                 >
-                  Select All
+                  {t('ingredient_modal_select_all')}
                 </Text>
               </Pressable>
               {selectedCount > 0 && (
@@ -250,11 +255,11 @@ export const IngredientSelectorModal: React.FC<
                     style={{
                       color: colors.text,
                       fontSize: 12,
-                      fontWeight: "600",
+                      fontWeight: '600',
                       opacity: 0.6,
                     }}
                   >
-                    Clear
+                    {t('ingredient_modal_clear')}
                   </Text>
                 </Pressable>
               )}
@@ -282,6 +287,7 @@ export const IngredientSelectorModal: React.FC<
                     onToggle={() => toggleIngredient(index)}
                     colors={colors}
                     confirmColor={confirmColor}
+                    t={t}
                   />
                 );
               })}
@@ -291,7 +297,7 @@ export const IngredientSelectorModal: React.FC<
           {/* Action Buttons */}
           <View
             style={{
-              flexDirection: "row",
+              flexDirection: 'row',
               gap: 12,
               marginTop: 20,
             }}
@@ -303,18 +309,18 @@ export const IngredientSelectorModal: React.FC<
                 backgroundColor: colors.background,
                 paddingVertical: 16,
                 borderRadius: 16,
-                alignItems: "center",
+                alignItems: 'center',
                 opacity: pressed ? 0.7 : 1,
               })}
             >
               <Text
                 style={{
                   color: colors.text,
-                  fontWeight: "600",
+                  fontWeight: '600',
                   fontSize: 16,
                 }}
               >
-                Cancel
+                {t('ingredient_modal_cancel')}
               </Text>
             </Pressable>
 
@@ -327,18 +333,18 @@ export const IngredientSelectorModal: React.FC<
                   selectedCount === 0 ? `${confirmColor}40` : confirmColor,
                 paddingVertical: 16,
                 borderRadius: 16,
-                alignItems: "center",
+                alignItems: 'center',
                 opacity: pressed && selectedCount > 0 ? 0.9 : 1,
               })}
             >
               <Text
                 style={{
-                  color: "white",
-                  fontWeight: "700",
+                  color: 'white',
+                  fontWeight: '700',
                   fontSize: 16,
                 }}
               >
-                {confirmText} {selectedCount > 0 ? `(${selectedCount})` : ""}
+                {confirmText} {selectedCount > 0 ? `(${selectedCount})` : ''}
               </Text>
             </Pressable>
           </View>
@@ -359,6 +365,7 @@ interface IngredientCheckboxItemProps {
   onToggle: () => void;
   colors: typeof Colors.light;
   confirmColor: string;
+  t: any;
 }
 
 const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
@@ -369,6 +376,7 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
   onToggle,
   colors,
   confirmColor,
+  t,
 }) => {
   const scale = useSharedValue(1);
   const checkScale = useSharedValue(isSelected ? 1 : 0);
@@ -407,12 +415,12 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={{
-          flexDirection: "row",
-          alignItems: "center",
+          flexDirection: 'row',
+          alignItems: 'center',
           backgroundColor: isSelected
             ? `${confirmColor}10`
             : isInPantry
-              ? "#f59e0b10"
+              ? '#f59e0b10'
               : colors.background,
           padding: 14,
           borderRadius: 14,
@@ -420,7 +428,7 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
           borderColor: isSelected
             ? confirmColor
             : isInPantry
-              ? "#f59e0b30"
+              ? '#f59e0b30'
               : `${colors.text}10`,
         }}
       >
@@ -432,9 +440,9 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
             borderRadius: 8,
             borderWidth: 2,
             borderColor: isSelected ? confirmColor : `${colors.text}30`,
-            backgroundColor: isSelected ? confirmColor : "transparent",
-            alignItems: "center",
-            justifyContent: "center",
+            backgroundColor: isSelected ? confirmColor : 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
             marginRight: 12,
           }}
         >
@@ -447,12 +455,12 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
 
         {/* Ingredient Info */}
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text
               style={{
                 color: colors.text,
                 fontSize: 15,
-                fontWeight: "600",
+                fontWeight: '600',
                 flex: 1,
               }}
             >
@@ -461,7 +469,7 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
             {isInPantry && (
               <View
                 style={{
-                  backgroundColor: "#f59e0b",
+                  backgroundColor: '#f59e0b',
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 6,
@@ -470,25 +478,25 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
               >
                 <Text
                   style={{
-                    color: "white",
+                    color: 'white',
                     fontSize: 10,
-                    fontWeight: "700",
+                    fontWeight: '700',
                   }}
                 >
-                  IN PANTRY
+                  {t('ingredient_modal_in_pantry')}
                 </Text>
               </View>
             )}
           </View>
           <View
-            style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
+            style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}
           >
             <Text
               style={{
                 color: colors.text,
                 fontSize: 13,
                 opacity: 0.6,
-                fontWeight: "500",
+                fontWeight: '500',
               }}
             >
               {ingredient.measure}
@@ -498,7 +506,7 @@ const IngredientCheckboxItem: React.FC<IngredientCheckboxItemProps> = ({
                 style={{
                   color: confirmColor,
                   fontSize: 12,
-                  fontWeight: "600",
+                  fontWeight: '600',
                   marginLeft: 8,
                 }}
               >

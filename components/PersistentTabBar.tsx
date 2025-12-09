@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Pressable, Text, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  Platform,
+} from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter, usePathname, useSegments } from 'expo-router';
 import Animated, {
@@ -16,7 +22,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
 
 /**
- * Tab Configuration
+ * Tab Configuration - 5 Primary Tabs
  */
 const TAB_CONFIG = [
   {
@@ -36,36 +42,20 @@ const TAB_CONFIG = [
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   {
-    name: 'map',
-    path: '/(tabs)/map',
-    title: 'Map',
-    icon: 'map-marked-alt',
-    color: '#3b82f6',
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    name: 'AI Chat',
+    path: '/(tabs)/chef',
+    title: 'AI Chat',
+    icon: 'robot',
+    color: '#14b8a6',
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
   },
   {
-    name: 'shopping-list',
-    path: '/(tabs)/shopping-list',
-    title: 'Shopping',
-    icon: 'shopping-basket',
-    color: '#f59e0b',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-  },
-  {
-    name: 'pantry',
-    path: '/(tabs)/pantry',
-    title: 'Pantry',
-    icon: 'box',
-    color: '#ec4899',
-    backgroundColor: 'rgba(236, 72, 153, 0.15)',
-  },
-  {
-    name: 'history',
-    path: '/(tabs)/history',
-    title: 'History',
-    icon: 'history',
-    color: '#ec4899',
-    backgroundColor: 'rgba(236, 72, 153, 0.15)',
+    name: 'more',
+    path: '/(tabs)/more',
+    title: 'More',
+    icon: 'th-large',
+    color: '#a855f7',
+    backgroundColor: 'rgba(168, 85, 247, 0.15)',
   },
   {
     name: 'settings',
@@ -295,7 +285,7 @@ export const PersistentTabBar = () => {
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.5,
             shadowRadius: 12,
-            elevation: 10,
+            elevation: Platform.select({ android: 4, default: 10 }), // Reduced elevation for Android to avoid harsh black shadow
             zIndex: 0,
           },
           bubbleStyle,

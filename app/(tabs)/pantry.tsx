@@ -1,42 +1,54 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  Alert,
-  TextInput,
-} from "react-native";
+import { useState } from 'react';
+import { View, Text, FlatList, Pressable, TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
 import {
   SafeAreaView,
   useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { FontAwesome5 } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  FadeInUp,
-} from "react-native-reanimated";
+} from 'react-native-safe-area-context';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from 'tamagui';
 
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { usePantryStore, PantryItem } from "@/store/pantryStore";
-import { haptics } from "@/utils/haptics";
+import { PantryItem } from '@/store/pantryStore';
+import { haptics } from '@/utils/haptics';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { PantryItemCard } from '@/components/PantryItemCard';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PantryScreen() {
+  const theme = useTheme();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
+  const router = useRouter();
+  const { confirmDelete, confirmClear, showError } = useAlertDialog();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
-  // Pantry store
-  const items = usePantryStore((state) => state.items);
-  const addItem = usePantryStore((state) => state.addItem);
-  const removeItem = usePantryStore((state) => state.removeItem);
-  const clearAllItems = usePantryStore((state) => state.clearAllItems);
+  const { user, token } = useAuth();
 
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemMeasure, setNewItemMeasure] = useState("");
+  // Convex mutations
+  const addPantryItem = useMutation(api.pantry.addPantryItem);
+  const removePantryItem = useMutation(api.pantry.removePantryItem);
+  const clearPantry = useMutation(api.pantry.clearPantry);
+
+  // Fetch pantry items
+  const convexItems =
+    useQuery(api.pantry.getPantryItems, token ? { token } : 'skip') || [];
+
+  // Map to format expected by UI (id instead of _id)
+  const items = convexItems.map((item: any) => ({
+    ...item,
+    id: item._id,
+  }));
+
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemMeasure, setNewItemMeasure] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
 
   // Calculate bottom padding: tab bar (90px) + safe area bottom + extra space (30px)
@@ -44,74 +56,54 @@ export default function PantryScreen() {
 
   // Sort items alphabetically
   const sortedItems = [...items].sort((a, b) =>
-    a.displayName.localeCompare(b.displayName),
+    a.displayName.localeCompare(b.displayName)
   );
 
   const handleAddItem = () => {
     if (!newItemName.trim()) {
       haptics.warning();
-      Alert.alert("Empty Name", "Please enter an ingredient name.");
+      showError(t('pantry_add_error_name'));
       return;
     }
 
-    addItem(newItemName, newItemMeasure.trim() || "as needed");
-    setNewItemName("");
-    setNewItemMeasure("");
+    if (user?._id) {
+      addPantryItem({
+        userId: user._id as Id<'users'>,
+        name: newItemName.trim(),
+        displayName: newItemName.trim(),
+        measure: newItemMeasure.trim() || t('common_as_needed'),
+      });
+    }
+    setNewItemName('');
+    setNewItemMeasure('');
     setShowAddInput(false);
     haptics.success();
   };
 
   const handleDeleteItem = (item: PantryItem) => {
-    haptics.light();
-    Alert.alert("Remove Item", `Remove "${item.displayName}" from pantry?`, [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: () => {
-          removeItem(item.id);
-          haptics.success();
-        },
-      },
-    ]);
+    confirmDelete(item.displayName, () => {
+      removePantryItem({ itemId: item.id as Id<'pantry'> });
+    });
   };
 
   const handleClearAll = () => {
     if (items.length === 0) {
       haptics.warning();
-      Alert.alert("Empty Pantry", "Your pantry is already empty.");
+      showError(t('pantry_already_empty'));
       return;
     }
 
-    haptics.light();
-    Alert.alert(
-      "Clear All",
-      `Remove all ${items.length} ${items.length === 1 ? "item" : "items"}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: () => {
-            clearAllItems();
-            haptics.success();
-          },
-        },
-      ],
-    );
+    confirmClear(t('pantry'), items.length, () => {
+      if (user?._id) {
+        clearPantry({ userId: user._id as Id<'users'> });
+      }
+    });
   };
 
   return (
     <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-      edges={["top", "left", "right"]}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={['top', 'left', 'right']}
     >
       {/* Header */}
       <View
@@ -119,9 +111,9 @@ export default function PantryScreen() {
       >
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
           <View style={{ flex: 1 }}>
@@ -129,44 +121,77 @@ export default function PantryScreen() {
               style={{
                 color: colors.text,
                 fontSize: 32,
-                fontWeight: "700",
+                fontWeight: '700',
                 letterSpacing: -0.5,
                 marginBottom: 4,
               }}
             >
-              My Pantry
+              {t('pantry_title')}
             </Text>
             <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-              {items.length} {items.length === 1 ? "ingredient" : "ingredients"}{" "}
-              on hand
+              {t(
+                items.length === 1
+                  ? 'pantry_subtitle_single'
+                  : 'pantry_subtitle',
+                { count: items.length }
+              )}
             </Text>
           </View>
 
           {/* Action Buttons */}
           {items.length > 0 && (
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 8, flexDirection: 'row' }}>
               <Pressable
-                onPress={handleClearAll}
+                onPress={() => {
+                  haptics.medium();
+                  // @ts-ignore - router.push works with string path
+                  router.push('/scan');
+                }}
                 style={({ pressed }) => ({
-                  backgroundColor: "#ef444415",
+                  backgroundColor: `${colors.tint}15`,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <FontAwesome5 name="trash-alt" size={12} color="#ef4444" />
+                <FontAwesome5 name="camera" size={12} color={colors.tint} />
                 <Text
                   style={{
-                    color: "#ef4444",
+                    color: colors.tint,
                     fontSize: 12,
-                    fontWeight: "600",
+                    fontWeight: '600',
                     marginLeft: 6,
                   }}
                 >
-                  Clear All
+                  {t('pantry_scan_button')}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleClearAll}
+                style={({ pressed }) => ({
+                  backgroundColor: `${colors.error}15`,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <FontAwesome5 name="trash-alt" size={12} color={colors.error} />
+                <Text
+                  style={{
+                    color: colors.error,
+                    fontSize: 12,
+                    fontWeight: '600',
+                    marginLeft: 6,
+                  }}
+                >
+                  {t('pantry_clear_all_button')}
                 </Text>
               </Pressable>
             </View>
@@ -176,6 +201,43 @@ export default function PantryScreen() {
 
       {/* Add Item Button/Input */}
       <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+        {items.length > 0 && !showAddInput && (
+          <Pressable
+            onPress={() => {
+              haptics.medium();
+              // @ts-ignore - router.push works with string path
+              router.push('/generator');
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: colors.tint,
+              marginBottom: 12,
+              paddingVertical: 14,
+              borderRadius: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.8 : 1,
+              shadowColor: colors.tint,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 4,
+            })}
+          >
+            <FontAwesome5 name="magic" size={16} color="white" />
+            <Text
+              style={{
+                color: 'white',
+                fontWeight: '700',
+                fontSize: 16,
+                marginLeft: 8,
+              }}
+            >
+              {t('pantry_generate_recipe_button')}
+            </Text>
+          </Pressable>
+        )}
+
         {!showAddInput ? (
           <Pressable
             onPress={() => {
@@ -186,22 +248,22 @@ export default function PantryScreen() {
               backgroundColor: colors.tint,
               paddingVertical: 14,
               borderRadius: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
               opacity: pressed ? 0.8 : 1,
             })}
           >
             <FontAwesome5 name="plus" size={16} color="white" />
             <Text
               style={{
-                color: "white",
-                fontWeight: "700",
+                color: 'white',
+                fontWeight: '700',
                 fontSize: 15,
                 marginLeft: 8,
               }}
             >
-              Add Ingredient
+              {t('pantry_add_item_button')}
             </Text>
           </Pressable>
         ) : (
@@ -210,7 +272,7 @@ export default function PantryScreen() {
               backgroundColor: colors.card,
               borderRadius: 16,
               padding: 16,
-              shadowColor: "#000",
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 8,
@@ -220,7 +282,7 @@ export default function PantryScreen() {
             <TextInput
               value={newItemName}
               onChangeText={setNewItemName}
-              placeholder="Ingredient name (e.g., Sugar, Flour)..."
+              placeholder={t('pantry_placeholder_name')}
               placeholderTextColor={`${colors.text}60`}
               autoFocus
               style={{
@@ -238,7 +300,7 @@ export default function PantryScreen() {
             <TextInput
               value={newItemMeasure}
               onChangeText={setNewItemMeasure}
-              placeholder="Quantity (optional, e.g., 500g, 2 cups)..."
+              placeholder={t('pantry_placeholder_amount')}
               placeholderTextColor={`${colors.text}60`}
               style={{
                 color: colors.text,
@@ -253,20 +315,20 @@ export default function PantryScreen() {
               }}
               onSubmitEditing={handleAddItem}
             />
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               <Pressable
                 onPress={() => {
                   haptics.light();
                   setShowAddInput(false);
-                  setNewItemName("");
-                  setNewItemMeasure("");
+                  setNewItemName('');
+                  setNewItemMeasure('');
                 }}
                 style={({ pressed }) => ({
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 12,
                   backgroundColor: `${colors.text}10`,
-                  alignItems: "center",
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
@@ -274,10 +336,10 @@ export default function PantryScreen() {
                   style={{
                     color: colors.text,
                     fontSize: 14,
-                    fontWeight: "600",
+                    fontWeight: '600',
                   }}
                 >
-                  Cancel
+                  {t('pantry_cancel_button')}
                 </Text>
               </Pressable>
               <Pressable
@@ -287,217 +349,53 @@ export default function PantryScreen() {
                   paddingVertical: 10,
                   borderRadius: 12,
                   backgroundColor: colors.tint,
-                  alignItems: "center",
+                  alignItems: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <Text
                   style={{
-                    color: "white",
+                    color: 'white',
                     fontSize: 14,
-                    fontWeight: "600",
+                    fontWeight: '600',
                   }}
                 >
-                  Add
+                  {t('pantry_add_button')}
                 </Text>
               </Pressable>
             </View>
           </View>
         )}
       </View>
+      <View style={{ flex: 1 }}>
+        {/* Pantry List */}
+        {items.length === 0 ? (
+          // Empty State
 
-      {/* Pantry List */}
-      {items.length === 0 ? (
-        // Empty State
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingHorizontal: 40,
-          }}
-        >
-          <View
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: `#f59e0b15`,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 20,
-              position: "absolute",
-              top: "10%",
-              left: "50%",
-              transform: [
-                // half the icon's width
-                { translateY: 200 }, // half the icon's height
-              ],
+          <EmptyState
+            icon="box"
+            title={t('pantry_empty_title')}
+            description={t('pantry_empty_desc')}
+          />
+        ) : (
+          <FlatList
+            data={sortedItems}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: bottomPadding,
             }}
-          >
-            <FontAwesome5 name="box" size={40} color="#f59e0b" solid />
-          </View>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 20,
-              fontWeight: "700",
-              marginBottom: 8,
-              textAlign: "center",
-            }}
-          >
-            Your Pantry is Empty
-          </Text>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 15,
-              opacity: 0.6,
-              textAlign: "center",
-              lineHeight: 22,
-            }}
-          >
-            Add ingredients you have at home. We'll show you which ones you need
-            when viewing recipes!
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={sortedItems}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: bottomPadding,
-          }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <PantryItemCard
-              item={item}
-              index={index}
-              onDelete={() => handleDeleteItem(item)}
-              colors={colors}
-            />
-          )}
-        />
-      )}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
+              <PantryItemCard
+                item={item}
+                index={index}
+                onDelete={() => handleDeleteItem(item)}
+              />
+            )}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
-
-/**
- * Pantry Item Card Component
- */
-const PantryItemCard = ({
-  item,
-  index,
-  onDelete,
-  colors,
-}: {
-  item: PantryItem;
-  index: number;
-  onDelete: () => void;
-  colors: typeof Colors.light;
-}) => {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.97, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
-
-  return (
-    <Animated.View
-      entering={FadeInUp.delay(index * 30).springify()}
-      style={[
-        {
-          marginBottom: 12,
-        },
-        animatedStyle,
-      ]}
-    >
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        {/* Icon */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#f59e0b15",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-          }}
-        >
-          <FontAwesome5 name="check-circle" size={18} color="#f59e0b" solid />
-        </View>
-
-        {/* Item Info */}
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
-            {item.displayName}
-          </Text>
-          <Text
-            style={{
-              color: "#f59e0b",
-              fontSize: 13,
-              fontWeight: "600",
-              marginTop: 2,
-            }}
-          >
-            {item.measure}
-          </Text>
-        </View>
-
-        {/* Delete Button */}
-        <Pressable
-          onPress={onDelete}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: "#ef444415",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <FontAwesome5 name="trash-alt" size={14} color="#ef4444" />
-        </Pressable>
-      </View>
-    </Animated.View>
-  );
-};

@@ -32,19 +32,22 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Input } from '@/components/forms/Input';
 import { OAuthButton } from '@/components/auth/OAuthButton';
+
 import { useAuth } from '@/hooks/useAuth';
 import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SignUpScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
+
   const router = useRouter();
   const { signUp, signInWithOAuth, isLoading, error, clearError } = useAuth();
+  const { t } = useLanguage();
 
   // Google OAuth
   const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -77,30 +80,29 @@ export default function SignUpScreen() {
     } = {};
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('auth_name_required');
     } else if (name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('auth_name_short');
     }
 
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth_email_required');
     } else if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('auth_email_invalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth_password_required');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth_password_short');
     } else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(password)) {
-      newErrors.password =
-        'Password must contain at least one uppercase and one lowercase letter';
+      newErrors.password = t('auth_password_complexity');
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t('auth_confirm_password_required');
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth_passwords_mismatch');
     }
 
     setErrors(newErrors);
@@ -178,12 +180,12 @@ export default function SignUpScreen() {
 
   const handleAppleSignIn = async () => {
     haptics.light();
-    alert('Apple Sign In coming soon!');
+    alert(t('auth_apple_coming_soon'));
   };
 
   const handleFacebookSignIn = async () => {
     haptics.light();
-    alert('Facebook Sign In coming soon!');
+    alert(t('auth_facebook_coming_soon'));
   };
 
   return (
@@ -261,7 +263,7 @@ export default function SignUpScreen() {
                   color: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
                 }}
               >
-                Back
+                {t('auth_back')}
               </Text>
             </Pressable>
           </Animated.View>
@@ -302,7 +304,7 @@ export default function SignUpScreen() {
                 color="$color"
                 textAlign="center"
               >
-                Create Account
+                {t('auth_create_account_title')}
               </Text>
               <Paragraph
                 size="$4"
@@ -311,7 +313,7 @@ export default function SignUpScreen() {
                 textAlign="center"
                 maxWidth={280}
               >
-                Join us and explore cuisines from around the world
+                {t('auth_signup_subtitle')}
               </Paragraph>
             </Animated.View>
 
@@ -340,8 +342,8 @@ export default function SignUpScreen() {
                 {/* Form fields */}
                 <YStack space="$4" mb="$4">
                   <Input
-                    label="Full Name"
-                    placeholder="Enter your full name"
+                    label={t('auth_name_label')}
+                    placeholder={t('auth_name_placeholder')}
                     value={name}
                     onChangeText={(text) => {
                       setName(text);
@@ -358,8 +360,8 @@ export default function SignUpScreen() {
                   />
 
                   <Input
-                    label="Email"
-                    placeholder="you@example.com"
+                    label={t('auth_email_label')}
+                    placeholder={t('auth_email_placeholder')}
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
@@ -378,8 +380,8 @@ export default function SignUpScreen() {
                   />
 
                   <Input
-                    label="Password"
-                    placeholder="Create a password"
+                    label={t('auth_password_label')}
+                    placeholder={t('auth_password_create_placeholder')}
                     value={password}
                     onChangeText={(text) => {
                       setPassword(text);
@@ -401,8 +403,8 @@ export default function SignUpScreen() {
                   />
 
                   <Input
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
+                    label={t('auth_confirm_password_label')}
+                    placeholder={t('auth_confirm_password_placeholder')}
                     value={confirmPassword}
                     onChangeText={(text) => {
                       setConfirmPassword(text);
@@ -449,21 +451,21 @@ export default function SignUpScreen() {
                       mb="$2"
                       color="$color11"
                     >
-                      Password Requirements:
+                      {t('auth_password_requirements')}
                     </Text>
                     <YStack space="$2">
                       {[
                         {
                           check: password.length >= 6,
-                          text: 'At least 6 characters',
+                          text: t('auth_req_length'),
                         },
                         {
                           check: /(?=.*[a-z])/.test(password),
-                          text: 'One lowercase letter',
+                          text: t('auth_req_lowercase'),
                         },
                         {
                           check: /(?=.*[A-Z])/.test(password),
-                          text: 'One uppercase letter',
+                          text: t('auth_req_uppercase'),
                         },
                       ].map((req, index) => (
                         <XStack key={index} ai="center" space="$2">
@@ -513,7 +515,7 @@ export default function SignUpScreen() {
                 {/* Primary button - iOS style */}
                 <Button
                   onPress={handleSignUp}
-                  disabled={isLoading}
+                  disabled={!!isLoading}
                   size="$4"
                   backgroundColor={colors.tint}
                   color="white"
@@ -524,14 +526,16 @@ export default function SignUpScreen() {
                   pressStyle={{ scale: 0.98, opacity: 0.9 }}
                   opacity={isLoading ? 0.6 : 1}
                 >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {isLoading
+                    ? t('auth_creating_account')
+                    : t('auth_create_account_button')}
                 </Button>
 
                 {/* Divider - iOS style */}
                 <XStack ai="center" my="$4" space="$2">
                   <Separator flex={1} borderColor="$color5" />
                   <Text fontSize="$2" px="$3" color="$color10" fontWeight="500">
-                    or
+                    {t('auth_or')}
                   </Text>
                   <Separator flex={1} borderColor="$color5" />
                 </XStack>
@@ -570,7 +574,7 @@ export default function SignUpScreen() {
             >
               <XStack ai="center" space="$2">
                 <Text fontSize="$3" color="$color11">
-                  Already have an account?
+                  {t('auth_already_have_account')}
                 </Text>
                 <Button
                   onPress={() => {
@@ -582,7 +586,7 @@ export default function SignUpScreen() {
                   pressStyle={{ opacity: 0.6 }}
                 >
                   <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                    Sign In
+                    {t('auth_login_link')}
                   </Text>
                 </Button>
               </XStack>

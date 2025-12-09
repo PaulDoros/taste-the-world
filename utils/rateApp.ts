@@ -12,8 +12,10 @@ const RATED_KEY = '@taste_the_world:has_rated';
 const RATE_PROMPT_COUNT_KEY = '@taste_the_world:rate_prompt_count';
 
 // App Store URLs (update these when app is published)
-const IOS_APP_URL = 'https://apps.apple.com/app/taste-the-world/id123456789'; // TODO: Update with actual URL
-const ANDROID_APP_URL = 'https://play.google.com/store/apps/details?id=com.tastetheworld'; // TODO: Update with actual URL
+// App Store URLs (update these when app is published)
+const IOS_APP_URL = 'https://apps.apple.com/app/taste-the-world/id000000000';
+const ANDROID_APP_URL =
+  'https://play.google.com/store/apps/details?id=com.tastetheworld';
 
 /**
  * Check if the user has already rated the app
@@ -75,7 +77,7 @@ export const requestRating = async (): Promise<void> => {
     if (hasRated) {
       Alert.alert(
         '❤️ Thank You!',
-        'You\'ve already rated Taste the World. We appreciate your support!',
+        "You've already rated Taste the World. We appreciate your support!",
         [{ text: 'OK', onPress: () => haptics.light() }]
       );
       return;
@@ -97,7 +99,10 @@ export const requestRating = async (): Promise<void> => {
       } catch (reviewError) {
         // In-app review failed (common in development)
         // Fall back to opening store URL
-        console.log('In-app review not available, falling back to store URL:', reviewError);
+        console.log(
+          'In-app review not available, falling back to store URL:',
+          reviewError
+        );
         await openStoreForRating();
       }
     } else {
@@ -132,7 +137,7 @@ export const requestRating = async (): Promise<void> => {
  */
 const openStoreForRating = async (): Promise<void> => {
   const storeUrl = Platform.OS === 'ios' ? IOS_APP_URL : ANDROID_APP_URL;
-  
+
   Alert.alert(
     '⭐ Rate Taste the World',
     'Would you like to rate us on the App Store? Your feedback helps us improve!',
@@ -182,7 +187,7 @@ export const shouldPromptForRating = async (
 
     // You can add more sophisticated logic here
     // For example, check app open count, days since install, etc.
-    
+
     return true;
   } catch (error) {
     console.error('Error checking if should prompt for rating:', error);

@@ -30,6 +30,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
     lastLoginAt: v.optional(v.number()),
+    aiMessagesUsed: v.optional(v.number()), // Track AI prompt usage for quota enforcement
+    unlockedCountries: v.optional(v.array(v.string())), // Array of unlocked cca2 codes
+    language: v.optional(v.string()), // User's preferred language (en, ro, fr, etc.)
   })
     .index('by_email', ['email'])
     .index('by_tier', ['tier'])
@@ -160,5 +163,104 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_idMeal', ['idMeal'])
-    .index('by_area', ['strArea']),
+    .index('by_area', ['strArea'])
+    .index('by_name', ['strMeal']),
+
+  /**
+   * Chats table
+   * Stores conversation sessions with the AI Chef
+   */
+  chats: defineTable({
+    userId: v.id('users'),
+    title: v.string(), // Auto-generated title based on first message
+    lastMessageAt: v.number(),
+    mode: v.optional(v.union(v.literal('chef'), v.literal('travel'))),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_last_message', ['userId', 'lastMessageAt'])
+    .index('by_user_and_mode', ['userId', 'mode']),
+
+  /**
+   * Messages table
+   * Stores individual messages within a chat
+   */
+  messages: defineTable({
+    chatId: v.id('chats'),
+    userId: v.id('users'),
+    role: v.union(v.literal('user'), v.literal('assistant')),
+    content: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_chat', ['chatId'])
+    .index('by_chat_and_created', ['chatId', 'createdAt']),
+
+  mealPlans: defineTable({
+    userId: v.id('users'),
+    startDate: v.number(), // Timestamp
+    plan: v.string(), // JSON string of the plan
+    createdAt: v.number(),
+    type: v.optional(v.union(v.literal('standard'), v.literal('baby'))),
+    shoppingListData: v.optional(v.string()), // Cache for generated shopping list
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_date', ['userId', 'startDate'])
+    .index('by_user_and_type', ['userId', 'type']),
+
+  /**
+   * Meal Plan Templates (Public/Shared)
+   * Optimization: Reusable plans to reduce AI costs
+   */
+  mealPlanTemplates: defineTable({
+    name: v.string(), // e.g. "High Protein Standard", "Baby Weaning Week 1"
+    plan: v.string(), // JSON string
+    type: v.union(v.literal('standard'), v.literal('baby')),
+    tags: v.array(v.string()), // ['vegetarian', 'keto', '6-months']
+    usageCount: v.number(),
+    createdAt: v.number(),
+  }).index('by_type', ['type']),
+
+  /**
+   * Baby Profiles table
+   * Tracks individual baby profiles for multiple children
+   */
+  babyProfiles: defineTable({
+    userId: v.id('users'),
+    name: v.string(),
+    birthDate: v.number(), // Timestamp
+    allergies: v.array(v.string()), // e.g. ['peanuts', 'eggs']
+    createdAt: v.number(),
+  }).index('by_user', ['userId']),
+
+  /**
+   * Baby Tried Foods table
+   * History of introduced foods and reactions
+   */
+  babyTriedFoods: defineTable({
+    babyId: v.id('babyProfiles'),
+    foodName: v.string(), // Lowercase, normalized
+    dateTried: v.number(),
+    reaction: v.union(
+      v.literal('liked'),
+      v.literal('neutral'),
+      v.literal('disliked'),
+      v.literal('allergic')
+    ),
+    notes: v.optional(v.string()),
+  })
+    .index('by_baby', ['babyId'])
+    .index('by_baby_and_food', ['babyId', 'foodName']),
+
+  /**
+   * Translations table
+   * Stores cached translations for dynamic content (e.g. recipes)
+   */
+  translations: defineTable({
+    relatedId: v.string(), // ID of the object being translated (e.g. recipeId)
+    language: v.string(), // Target language code (e.g. 'es', 'fr')
+    field: v.string(), // Field being translated (e.g. 'instructions', 'overview' or 'full')
+    content: v.any(), // The translated content (string or object)
+    createdAt: v.number(),
+  })
+    .index('by_relatedId_language', ['relatedId', 'language'])
+    .index('by_relatedId_language_field', ['relatedId', 'language', 'field']),
 });

@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { FlatList, Pressable, Alert, TextInput } from 'react-native';
+import { FlatList, Pressable, TextInput } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -18,14 +18,21 @@ import {
 } from 'tamagui';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { usePantryStore } from '@/store/pantryStore';
+// import { usePantryStore } from '@/store/pantryStore'; // Removed local store
 import { haptics } from '@/utils/haptics';
 import { useAuth } from '@/hooks/useAuth';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import {
   useShoppingList,
   UnifiedShoppingListItem,
 } from '@/hooks/useShoppingList';
 import { ShoppingListItem } from '@/components/ShoppingListItem';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ActionBar } from '@/components/shared/ActionBar';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useLanguage } from '@/context/LanguageContext';
 
 import { StaggeredListItem } from '@/components/StaggeredList';
 
@@ -34,6 +41,9 @@ const AnimatedYStack = Animated.createAnimatedComponent(YStack);
 export default function ShoppingListScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { confirmDelete, confirmClear, showConfirm, showSuccess, showError } =
+    useAlertDialog();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
@@ -50,8 +60,8 @@ export default function ShoppingListScreen() {
     isLoading,
   } = useShoppingList();
 
-  // Pantry store
-  const addToPantry = usePantryStore((state) => state.addItem);
+  // Pantry mutation
+  const addPantryItem = useMutation(api.pantry.addPantryItem);
 
   const [filter, setFilter] = useState<'all' | 'checked' | 'unchecked'>('all');
   const [showConversions, setShowConversions] = useState(false);
@@ -73,75 +83,31 @@ export default function ShoppingListScreen() {
 
   const handleClearCompleted = () => {
     if (checkedCount === 0) {
-      haptics.warning();
-      Alert.alert('No Items', 'There are no completed items to clear.');
+      showError(t('shopping_list_clear_empty_error'));
       return;
     }
 
-    haptics.light();
-    Alert.alert(
-      'Clear Completed',
-      `Remove ${checkedCount} completed ${checkedCount === 1 ? 'item' : 'items'}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            await clearCheckedItems();
-            haptics.success();
-          },
-        },
-      ]
-    );
+    confirmClear(t('common_completed_items'), checkedCount, async () => {
+      await clearCheckedItems();
+    });
   };
 
   const handleClearAll = () => {
     if ((items || []).length === 0) {
-      haptics.warning();
-      Alert.alert('Empty List', 'Your shopping list is already empty.');
+      showError(t('shopping_list_already_empty'));
       return;
     }
 
-    haptics.light();
-    Alert.alert(
-      'Clear All',
-      `Remove all ${(items || []).length} ${(items || []).length === 1 ? 'item' : 'items'}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: async () => {
-            await clearAllItems();
-            // Also clear AsyncStorage to remove old corrupt data
-            try {
-              const AsyncStorage =
-                require('@react-native-async-storage/async-storage').default;
-              await AsyncStorage.removeItem('shopping-list-storage');
-            } catch (e) {
-              console.error('Error clearing storage:', e);
-            }
-            haptics.success();
-          },
-        },
-      ]
-    );
+    confirmClear(t('common_items'), (items || []).length, async () => {
+      await clearAllItems();
+      showSuccess(t('shopping_list_cleared_success'));
+    });
   };
 
   const handleDeleteItem = (item: UnifiedShoppingListItem) => {
-    haptics.light();
-    Alert.alert('Remove Item', `Remove "${item.name}" from shopping list?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await removeItem(item._id);
-          haptics.success();
-        },
-      },
-    ]);
+    confirmDelete(item.name, async () => {
+      await removeItem(item._id);
+    });
   };
 
   const onToggleItem = async (id: string) => {
@@ -150,28 +116,64 @@ export default function ShoppingListScreen() {
   };
 
   const handleMoveToPantry = (item: UnifiedShoppingListItem) => {
-    haptics.light();
-    Alert.alert(
-      'Move to Pantry',
-      `Move "${item.name}" (${item.measure}) to your pantry?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Move',
-          onPress: async () => {
-            addToPantry(item.name, item.measure);
-            await removeItem(item._id);
-            haptics.success();
-          },
-        },
-      ]
+    showConfirm(
+      {
+        title: t('shopping_list_move_confirm_title'),
+        message: t('shopping_list_move_confirm_msg', {
+          name: item.name,
+          measure: item.measure,
+        }),
+        confirmText: t('shopping_list_move_button'),
+      },
+      async () => {
+        if (user?._id) {
+          await addPantryItem({
+            userId: user._id as Id<'users'>,
+            name: item.name,
+            displayName: item.name,
+            measure: item.measure,
+          });
+        }
+        await removeItem(item._id);
+      }
     );
   };
 
+  const handleMoveAllCompletedToPantry = () => {
+    const completedItems = (items || []).filter((item) => item.checked);
+
+    if (completedItems.length === 0) {
+      showError(t('shopping_list_move_empty_error'));
+      return;
+    }
+
+    showConfirm(
+      {
+        title: t('shopping_list_move_confirm_title'),
+        message: t('shopping_list_move_all_confirm_msg', {
+          count: completedItems.length,
+        }),
+        confirmText: t('shopping_list_move_all_button'),
+      },
+      async () => {
+        // Add all completed items to pantry with their quantities
+        for (const item of completedItems) {
+          if (user?._id) {
+            await addPantryItem({
+              userId: user._id as Id<'users'>,
+              name: item.name,
+              displayName: item.name,
+              measure: item.measure,
+            });
+          }
+          await removeItem(item._id);
+        }
+      }
+    );
+  };
   const handleAddCustomItem = async () => {
     if (!newItemName.trim()) {
-      haptics.warning();
-      Alert.alert('Empty Name', 'Please enter an item name.');
+      showError(t('shopping_list_add_error_name'));
       return;
     }
 
@@ -179,45 +181,13 @@ export default function ShoppingListScreen() {
       name: newItemName.trim(),
       measure: newItemMeasure.trim() || 'as needed',
       recipeId: 'custom',
-      recipeName: 'Custom Item',
+      recipeName: t('shopping_list_custom_item'),
     });
 
     setNewItemName('');
     setNewItemMeasure('');
     setShowAddInput(false);
-    haptics.success();
-  };
-
-  const handleMoveAllCompletedToPantry = () => {
-    const completedItems = (items || []).filter((item) => item.checked);
-
-    if (completedItems.length === 0) {
-      haptics.warning();
-      Alert.alert('No Items', 'There are no completed items to move.');
-      return;
-    }
-
-    haptics.light();
-    Alert.alert(
-      'Move to Pantry',
-      `Move ${completedItems.length} completed ${completedItems.length === 1 ? 'item' : 'items'} to pantry?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Move All',
-          onPress: async () => {
-            // Add all completed items to pantry with their quantities
-            // Note: This is a bit inefficient as it does sequential deletes,
-            // but fine for small lists. Ideally we'd have a batch delete mutation.
-            for (const item of completedItems) {
-              addToPantry(item.name, item.measure);
-              await removeItem(item._id);
-            }
-            haptics.success();
-          },
-        },
-      ]
-    );
+    showSuccess(t('shopping_list_add_success'));
   };
 
   return (
@@ -245,7 +215,7 @@ export default function ShoppingListScreen() {
               style={{ marginRight: 8 }}
             />
             <Paragraph color="white" fontWeight="600" size="$3">
-              Sign in to sync your list across devices
+              {t('shopping_list_signin_sync')}
             </Paragraph>
             <FontAwesome5
               name="chevron-right"
@@ -261,76 +231,67 @@ export default function ShoppingListScreen() {
           entering={FadeInDown.delay(100).springify()}
           style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}
         >
-          <XStack alignItems="center" justifyContent="space-between">
-            <YStack flex={1}>
+          <YStack gap="$4" alignItems="center">
+            <YStack alignItems="center">
               <Heading
                 size="$9"
                 fontWeight="800"
                 color="$color"
                 letterSpacing={-1}
+                textAlign="center"
               >
-                Shopping List
+                {t('shopping_list')}
               </Heading>
-              <Paragraph size="$3" color="$color" opacity={0.6}>
-                {items?.length || 0}{' '}
-                {(items?.length || 0) === 1 ? 'item' : 'items'} • {checkedCount}{' '}
-                completed
+              <Paragraph
+                size="$3"
+                color="$color"
+                opacity={0.6}
+                textAlign="center"
+              >
+                {t(
+                  items?.length === 1
+                    ? 'shopping_list_items_count_single'
+                    : 'shopping_list_items_count',
+                  { count: items?.length || 0, completed: checkedCount }
+                )}
               </Paragraph>
             </YStack>
 
             {/* Actions */}
             {(items?.length || 0) > 0 && (
-              <XStack gap="$2">
-                <Button
-                  size="$3"
-                  circular
-                  icon={
-                    <FontAwesome5
-                      name="exchange-alt"
-                      size={12}
-                      color={showConversions ? 'white' : colors.tint}
-                    />
-                  }
-                  backgroundColor={
-                    showConversions ? colors.tint : `${colors.tint}15`
-                  }
-                  onPress={() => {
-                    haptics.light();
-                    setShowConversions(!showConversions);
-                  }}
+              <YStack width="100%">
+                <ActionBar
+                  columns={2}
+                  actions={[
+                    {
+                      label: t('shopping_list_convert'),
+                      icon: 'exchange-alt',
+                      onPress: () => setShowConversions(!showConversions),
+                      variant: showConversions ? 'primary' : 'secondary',
+                    },
+                    {
+                      label: t('shopping_list_move_all'),
+                      icon: 'box',
+                      onPress: handleMoveAllCompletedToPantry,
+                      variant: 'secondary',
+                    },
+                    {
+                      label: t('shopping_list_clear_done'),
+                      icon: 'check-circle',
+                      onPress: handleClearCompleted,
+                      variant: 'secondary',
+                    },
+                    {
+                      label: t('shopping_list_clear_all'),
+                      icon: 'trash-alt',
+                      onPress: handleClearAll,
+                      variant: 'danger',
+                    },
+                  ]}
                 />
-                <Button
-                  size="$3"
-                  circular
-                  icon={<FontAwesome5 name="box" size={12} color="#f59e0b" />}
-                  backgroundColor="#f59e0b15"
-                  onPress={handleMoveAllCompletedToPantry}
-                />
-                <Button
-                  size="$3"
-                  circular
-                  icon={
-                    <FontAwesome5
-                      name="check-circle"
-                      size={14}
-                      color={colors.tint}
-                    />
-                  }
-                  backgroundColor={`${colors.tint}15`}
-                  onPress={handleClearCompleted}
-                />
-                <Button
-                  size="$3"
-                  circular
-                  icon={
-                    <FontAwesome5 name="trash-alt" size={12} color="#ef4444" />
-                  }
-                  backgroundColor="#ef444415"
-                  onPress={handleClearAll}
-                />
-              </XStack>
+              </YStack>
             )}
-          </XStack>
+          </YStack>
         </Animated.View>
 
         {/* Add Custom Item Section */}
@@ -348,7 +309,7 @@ export default function ShoppingListScreen() {
               pressStyle={{ opacity: 0.9, scale: 0.98 }}
             >
               <Paragraph color="white" fontWeight="700" size="$4">
-                Add Custom Item
+                {t('shopping_list_custom_item')}
               </Paragraph>
             </Button>
           ) : (
@@ -364,7 +325,7 @@ export default function ShoppingListScreen() {
               <Input
                 value={newItemName}
                 onChangeText={setNewItemName}
-                placeholder="Item name (e.g., Milk, Eggs)..."
+                placeholder={t('pantry_placeholder_name')}
                 autoFocus
                 size="$4"
                 marginBottom="$3"
@@ -373,7 +334,7 @@ export default function ShoppingListScreen() {
               <Input
                 value={newItemMeasure}
                 onChangeText={setNewItemMeasure}
-                placeholder="Amount (optional, e.g., 2 liters)..."
+                placeholder={t('pantry_placeholder_amount')}
                 size="$4"
                 marginBottom="$3"
                 backgroundColor="$background"
@@ -393,7 +354,7 @@ export default function ShoppingListScreen() {
                     setNewItemMeasure('');
                   }}
                 >
-                  <Paragraph>Cancel</Paragraph>
+                  <Paragraph>{t('shopping_list_cancel')}</Paragraph>
                 </Button>
                 <Button
                   flex={1}
@@ -402,7 +363,7 @@ export default function ShoppingListScreen() {
                   onPress={handleAddCustomItem}
                 >
                   <Paragraph color="white" fontWeight="700">
-                    Add
+                    {t('shopping_list_add')}
                   </Paragraph>
                 </Button>
               </XStack>
@@ -435,10 +396,10 @@ export default function ShoppingListScreen() {
                     size="$3"
                   >
                     {filterType === 'unchecked'
-                      ? 'Active'
+                      ? t('shopping_list_filter_active')
                       : filterType === 'checked'
-                        ? 'Completed'
-                        : 'All'}
+                        ? t('shopping_list_filter_completed')
+                        : t('shopping_list_filter_all')}
                   </Paragraph>
                 </Button>
               ))}
@@ -455,58 +416,22 @@ export default function ShoppingListScreen() {
             padding="$8"
           >
             <Paragraph size="$5" color="$color11">
-              Loading...
+              {t('shopping_list_loading')}
             </Paragraph>
           </YStack>
         ) : (items || []).length === 0 ? (
           // Empty State
-          <YStack
-            flex={1}
-            ai="center"
-            jc="center"
-            paddingHorizontal="$8"
-            paddingBottom="$10"
-          >
-            <YStack
-              width={120}
-              height={120}
-              borderRadius="$10"
-              backgroundColor={`${colors.tint}10`}
-              ai="center"
-              jc="center"
-              marginBottom="$5"
-            >
-              <FontAwesome5
-                name="shopping-basket"
-                size={48}
-                color={colors.tint}
-              />
-            </YStack>
-            <Heading
-              size="$6"
-              fontWeight="800"
-              marginBottom="$2"
-              textAlign="center"
-            >
-              Your Shopping List is Empty
-            </Heading>
-            <Paragraph
-              size="$3"
-              color="$color"
-              opacity={0.6}
-              textAlign="center"
-              lineHeight={22}
-            >
-              Browse recipes and add ingredients to your shopping list. They'll
-              appear here!
-            </Paragraph>
-          </YStack>
+          <EmptyState
+            icon="shopping-basket"
+            title={t('shopping_list_empty_title')}
+            description={t('shopping_list_empty_desc')}
+          />
         ) : (
           <FlatList
             data={filteredItems}
             keyExtractor={(item) => item._id}
             contentContainerStyle={{
-              paddingHorizontal: 16,
+              paddingHorizontal: 10,
               paddingBottom: bottomPadding,
             }}
             showsVerticalScrollIndicator={false}
@@ -525,10 +450,9 @@ export default function ShoppingListScreen() {
                   onNavigateToRecipe={() => {
                     if (item.recipeId && item.recipeId !== 'custom') {
                       haptics.light();
-                      router.push(`/recipe/${item.recipeId}` as any);
+                      router.push(`/recipe/${item.recipeId}`);
                     }
                   }}
-                  colors={colors}
                 />
               </StaggeredListItem>
             )}
@@ -541,7 +465,7 @@ export default function ShoppingListScreen() {
                   style={{ opacity: 0.2 }}
                 />
                 <Paragraph size="$4" marginTop="$4" opacity={0.6}>
-                  No {filter} items
+                  {t('shopping_list_no_filter_items', { filter })}
                 </Paragraph>
               </YStack>
             }

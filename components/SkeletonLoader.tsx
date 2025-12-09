@@ -184,6 +184,57 @@ export const CountryCardSkeleton = () => {
 };
 
 /**
+ * Recipe Card Skeleton
+ * Matches the RecipeCard layout
+ */
+export const RecipeCardSkeleton = () => {
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 20,
+        overflow: 'hidden',
+        backgroundColor: 'white',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+      }}
+    >
+      {/* Image Area */}
+      <View style={{ height: 180, position: 'relative' }}>
+        <Skeleton width="100%" height={180} borderRadius={0} />
+
+        {/* Title Overlay Placeholder */}
+        <View style={{ position: 'absolute', bottom: 12, left: 12, right: 12 }}>
+          <Skeleton
+            width="80%"
+            height={20}
+            borderRadius={4}
+            style={{ marginBottom: 4 }}
+          />
+          <Skeleton width="50%" height={20} borderRadius={4} />
+        </View>
+
+        {/* Category Badge Placeholder */}
+        <View style={{ position: 'absolute', top: 12, right: 12 }}>
+          <Skeleton width={60} height={24} borderRadius={12} />
+        </View>
+      </View>
+
+      {/* Bottom Info Area */}
+      <View style={{ padding: 12, backgroundColor: 'white' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Skeleton width={80} height={24} borderRadius={8} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+/**
  * Grid of skeleton cards
  * Must match FlatList columnWrapperStyle exactly to prevent layout shift
  */
@@ -209,6 +260,39 @@ export const SkeletonGrid = ({ count = 6 }: { count?: number }) => {
           {rowIndex * 2 + 1 < count && (
             <View style={{ flex: 1 }}>
               <CountryCardSkeleton />
+            </View>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+/**
+ * Grid of recipe skeleton cards
+ */
+export const RecipeSkeletonGrid = ({ count = 6 }: { count?: number }) => {
+  return (
+    <View
+      style={{
+        paddingHorizontal: CONTAINER_PADDING,
+      }}
+    >
+      {Array.from({ length: Math.ceil(count / 2) }).map((_, rowIndex) => (
+        <View
+          key={rowIndex}
+          style={{
+            flexDirection: 'row',
+            gap: CARD_GAP,
+            marginBottom: 0,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <RecipeCardSkeleton />
+          </View>
+          {rowIndex * 2 + 1 < count && (
+            <View style={{ flex: 1 }}>
+              <RecipeCardSkeleton />
             </View>
           )}
         </View>

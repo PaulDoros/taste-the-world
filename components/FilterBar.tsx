@@ -1,13 +1,15 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-} from "react-native-reanimated";
-import { Colors } from "@/constants/Colors";
-import { haptics } from "@/utils/haptics";
+} from 'react-native-reanimated';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { haptics } from '@/utils/haptics';
+import { useLanguage } from '@/context/LanguageContext';
 
 /**
  * FilterBar Component
@@ -16,13 +18,13 @@ import { haptics } from "@/utils/haptics";
  */
 
 type RegionFilter =
-  | "All"
-  | "Africa"
-  | "Americas"
-  | "Asia"
-  | "Europe"
-  | "Oceania";
-type PremiumFilter = "All" | "Free" | "Premium";
+  | 'All'
+  | 'Africa'
+  | 'Americas'
+  | 'Asia'
+  | 'Europe'
+  | 'Oceania';
+type PremiumFilter = 'All' | 'Free' | 'Premium';
 
 interface FilterBarProps {
   selectedRegion: RegionFilter;
@@ -30,17 +32,16 @@ interface FilterBarProps {
   onRegionChange: (region: RegionFilter) => void;
   onPremiumChange: (premium: PremiumFilter) => void;
   onClearAll: () => void;
-  colors: typeof Colors.light;
 }
 
 // Region color palette (vibrant, distinct colors)
 const REGION_COLORS = {
-  All: "#64748b", // Slate gray
-  Africa: "#f97316", // Vibrant orange
-  Americas: "#16a34a", // Emerald green
-  Asia: "#dc2626", // Red
-  Europe: "#2563eb", // Blue
-  Oceania: "#0891b2", // Cyan/Teal
+  All: '#64748b', // Slate gray
+  Africa: '#f97316', // Vibrant orange
+  Americas: '#16a34a', // Emerald green
+  Asia: '#dc2626', // Red
+  Europe: '#2563eb', // Blue
+  Oceania: '#0891b2', // Cyan/Teal
 };
 
 // Animated Filter Chip Component - SUPER SMOOTH ANIMATIONS! ⚡✨
@@ -75,7 +76,7 @@ const AnimatedFilterChip = ({
   }));
 
   const handlePressIn = () => {
-    "worklet";
+    'worklet';
     // 💥 PRESS DOWN - Instant response!
     scale.value = withSpring(0.92, {
       damping: 15,
@@ -89,7 +90,7 @@ const AnimatedFilterChip = ({
   };
 
   const handlePressOut = () => {
-    "worklet";
+    'worklet';
     // 🚀 RELEASE - Bounce back!
     scale.value = withSpring(1, {
       damping: 12,
@@ -117,15 +118,15 @@ const AnimatedFilterChip = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={{
-          flexDirection: "row",
-          alignItems: "center",
+          flexDirection: 'row',
+          alignItems: 'center',
           paddingHorizontal: 10,
           paddingVertical: 6,
           borderRadius: 16,
           backgroundColor: bgColor,
           borderWidth: isActive ? 0 : 1.5,
-          borderColor: isActive ? "transparent" : `${bgColor}40`,
-          shadowColor: isActive ? bgColor : "#000",
+          borderColor: isActive ? 'transparent' : `${bgColor}40`,
+          shadowColor: isActive ? bgColor : '#000',
           shadowOffset: { width: 0, height: isActive ? 4 : 1 },
           shadowOpacity: isActive ? 0.35 : 0.05,
           shadowRadius: isActive ? 8 : 2,
@@ -142,10 +143,10 @@ const AnimatedFilterChip = ({
               height: 16,
               borderRadius: 8,
               backgroundColor: isActive
-                ? "rgba(255, 255, 255, 0.25)"
-                : "transparent",
-              alignItems: "center",
-              justifyContent: "center",
+                ? 'rgba(255, 255, 255, 0.25)'
+                : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
               marginRight: 5, // Reduced spacing
             },
             iconAnimatedStyle,
@@ -162,7 +163,7 @@ const AnimatedFilterChip = ({
           style={{
             color: textColor,
             fontSize: 11, // Smaller text
-            fontWeight: isActive ? "700" : "600",
+            fontWeight: isActive ? '700' : '600',
             letterSpacing: 0.2,
           }}
         >
@@ -179,10 +180,12 @@ export const FilterBar = ({
   onRegionChange,
   onPremiumChange,
   onClearAll,
-  colors,
 }: FilterBarProps) => {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
   const hasActiveFilters =
-    selectedRegion !== "All" || selectedPremium !== "All";
+    selectedRegion !== 'All' || selectedPremium !== 'All';
 
   const regions: {
     label: string;
@@ -191,39 +194,39 @@ export const FilterBar = ({
     color: string;
   }[] = [
     {
-      label: "All Regions",
-      value: "All",
-      icon: "globe",
+      label: t('filter_region_all'),
+      value: 'All',
+      icon: 'globe',
       color: REGION_COLORS.All,
     },
     {
-      label: "Africa",
-      value: "Africa",
-      icon: "sun",
+      label: t('filter_region_africa'),
+      value: 'Africa',
+      icon: 'sun',
       color: REGION_COLORS.Africa,
     },
     {
-      label: "Americas",
-      value: "Americas",
-      icon: "flag-usa",
+      label: t('filter_region_americas'),
+      value: 'Americas',
+      icon: 'flag-usa',
       color: REGION_COLORS.Americas,
     },
     {
-      label: "Asia",
-      value: "Asia",
-      icon: "yin-yang",
+      label: t('filter_region_asia'),
+      value: 'Asia',
+      icon: 'yin-yang',
       color: REGION_COLORS.Asia,
     },
     {
-      label: "Europe",
-      value: "Europe",
-      icon: "landmark",
+      label: t('filter_region_europe'),
+      value: 'Europe',
+      icon: 'landmark',
       color: REGION_COLORS.Europe,
     },
     {
-      label: "Oceania",
-      value: "Oceania",
-      icon: "water",
+      label: t('filter_region_oceania'),
+      value: 'Oceania',
+      icon: 'water',
       color: REGION_COLORS.Oceania,
     },
   ];
@@ -234,9 +237,24 @@ export const FilterBar = ({
     icon: string;
     color: string;
   }[] = [
-    { label: "All", value: "All", icon: "star", color: colors.tint },
-    { label: "Free", value: "Free", icon: "gift", color: "#10b981" },
-    { label: "Premium", value: "Premium", icon: "crown", color: "#9333ea" },
+    {
+      label: t('filter_premium_all'),
+      value: 'All',
+      icon: 'star',
+      color: colors.tint,
+    },
+    {
+      label: t('filter_premium_free'),
+      value: 'Free',
+      icon: 'gift',
+      color: '#10b981',
+    },
+    {
+      label: t('filter_premium_premium'),
+      value: 'Premium',
+      icon: 'crown',
+      color: '#9333ea',
+    },
   ];
 
   return (
@@ -245,9 +263,9 @@ export const FilterBar = ({
       {hasActiveFilters && (
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             paddingHorizontal: 16,
             marginBottom: 8,
           }}
@@ -256,17 +274,17 @@ export const FilterBar = ({
             style={{
               color: colors.text,
               fontSize: 13,
-              fontWeight: "600",
+              fontWeight: '600',
               opacity: 0.7,
             }}
           >
-            Active Filters
+            {t('filter_active')}
           </Text>
           <Pressable onPress={onClearAll}>
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                flexDirection: 'row',
+                alignItems: 'center',
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 backgroundColor: `${colors.tint}15`,
@@ -278,11 +296,11 @@ export const FilterBar = ({
                 style={{
                   color: colors.tint,
                   fontSize: 12,
-                  fontWeight: "600",
+                  fontWeight: '600',
                   marginLeft: 6,
                 }}
               >
-                Clear All
+                {t('filter_clear_all')}
               </Text>
             </View>
           </Pressable>
@@ -310,7 +328,7 @@ export const FilterBar = ({
               isActive={isActive}
               onPress={() => onRegionChange(region.value)}
               bgColor={isActive ? region.color : `${region.color}15`}
-              textColor={isActive ? "white" : region.color}
+              textColor={isActive ? 'white' : region.color}
             />
           );
         })}
@@ -337,7 +355,7 @@ export const FilterBar = ({
               isActive={isActive}
               onPress={() => onPremiumChange(filter.value)}
               bgColor={isActive ? filter.color : `${filter.color}15`}
-              textColor={isActive ? "white" : filter.color}
+              textColor={isActive ? 'white' : filter.color}
             />
           );
         })}

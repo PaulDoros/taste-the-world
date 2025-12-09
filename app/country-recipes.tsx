@@ -3,11 +3,10 @@ import {
   View,
   Text,
   ScrollView,
-  ActivityIndicator,
   Pressable,
-  FlatList,
   Dimensions,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -15,7 +14,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { Recipe } from '@/types';
 import { getRecipesByArea, getRecipeById } from '@/services/recipesApi';
@@ -24,9 +23,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { RecipeCard } from '@/components/RecipeCard';
 import { haptics } from '@/utils/haptics';
 import { SearchBar } from '@/components/SearchBar';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { RecipeSkeletonGrid } from '@/components/SkeletonLoader';
+import { useLanguage } from '@/context/LanguageContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2; // 2 columns with padding
 
 // Spicy keywords to detect spicy recipes
 const SPICY_KEYWORDS = [
@@ -63,6 +64,7 @@ export default function CountryRecipesScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
 
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [recipesWithDetails, setRecipesWithDetails] = useState<
@@ -118,7 +120,7 @@ export default function CountryRecipesScreen() {
       setAllRecipes(fetchedRecipes);
     } catch (err) {
       console.error('Error fetching recipes:', err);
-      setError('Failed to load recipes');
+      setError(t('recipes_error_message'));
     } finally {
       setLoading(false);
     }
@@ -187,7 +189,8 @@ export default function CountryRecipesScreen() {
         let ingredientCount = 0;
         for (let i = 1; i <= 20; i++) {
           const key = `strIngredient${i}` as keyof Recipe;
-          if (fullRecipe[key] && fullRecipe[key]?.trim()) {
+          const value = fullRecipe[key];
+          if (typeof value === 'string' && value.trim()) {
             ingredientCount++;
           }
         }
@@ -219,22 +222,12 @@ export default function CountryRecipesScreen() {
     router.back();
   };
 
-  const handleRecipePress = (recipeId: string) => {
-    haptics.light();
-    router.push(`/recipe/${recipeId}`);
-  };
-
   const clearFilters = () => {
     haptics.light();
     setSearchQuery('');
     setFilterType('all');
     setSelectedCategory('all');
   };
-
-  const hasActiveFilters =
-    searchQuery.trim() !== '' ||
-    filterType !== 'all' ||
-    selectedCategory !== 'all';
 
   // Loading state
   if (loading) {
@@ -245,18 +238,52 @@ export default function CountryRecipesScreen() {
           backgroundColor: colors.background,
         }}
       >
+        {/* Header Skeleton */}
         <View
           style={{
-            flex: 1,
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
           }}
         >
-          <ActivityIndicator size="large" color={colors.tint} />
-          <Text style={{ color: colors.text, marginTop: 16, fontSize: 16 }}>
-            Loading recipes...
-          </Text>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: `${colors.tint}15`,
+              marginRight: 12,
+            }}
+          />
+          <View
+            style={{
+              height: 24,
+              width: 150,
+              backgroundColor: `${colors.tint}15`,
+              borderRadius: 4,
+            }}
+          />
         </View>
+
+        {/* Search Bar Skeleton */}
+        <View
+          style={{ paddingHorizontal: 16, paddingTop: 16, marginBottom: 12 }}
+        >
+          <View
+            style={{
+              height: 50,
+              backgroundColor: `${colors.tint}10`,
+              borderRadius: 16,
+            }}
+          />
+        </View>
+
+        {/* Grid Skeleton */}
+        <RecipeSkeletonGrid count={6} />
       </SafeAreaView>
     );
   }
@@ -304,48 +331,21 @@ export default function CountryRecipesScreen() {
               flex: 1,
             }}
           >
-            {countryName || 'Recipes'}
+            {countryName || t('recipes_title')}
           </Text>
         </View>
 
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingHorizontal: 24,
-          }}
-        >
-          <FontAwesome5
-            name="utensils"
-            size={64}
-            color={colors.tabIconDefault}
-            style={{ opacity: 0.3 }}
-          />
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: '600',
-              color: colors.text,
-              marginTop: 16,
-              textAlign: 'center',
-            }}
-          >
-            {error || 'No recipes found'}
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: colors.tabIconDefault,
-              marginTop: 8,
-              textAlign: 'center',
-            }}
-          >
-            {error
-              ? 'Please try again later'
-              : 'No recipes available for this country'}
-          </Text>
-        </View>
+        <ErrorState
+          title={error ? t('recipes_error_title') : t('recipes_no_recipes')}
+          message={
+            error
+              ? error || t('recipes_error_message')
+              : t('recipes_no_recipes')
+          }
+          onRetry={error ? fetchAllRecipes : undefined}
+          retryText={t('explore_retry')}
+          icon={error ? 'exclamation-circle' : 'utensils'}
+        />
       </SafeAreaView>
     );
   }
@@ -391,7 +391,7 @@ export default function CountryRecipesScreen() {
               color: colors.text,
             }}
           >
-            {countryName || 'Recipes'}
+            {countryName || t('recipes_title')}
           </Text>
           <Text
             style={{
@@ -400,8 +400,11 @@ export default function CountryRecipesScreen() {
               marginTop: 2,
             }}
           >
-            {filteredRecipes.length} of {allRecipes.length}{' '}
-            {allRecipes.length === 1 ? 'recipe' : 'recipes'}
+            {t('recipes_count', {
+              count: filteredRecipes.length,
+              total: allRecipes.length,
+              unit: allRecipes.length === 1 ? 'recipe' : 'recipes',
+            })}
           </Text>
         </View>
       </View>
@@ -411,8 +414,9 @@ export default function CountryRecipesScreen() {
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder={`Search ${countryName || 'recipes'}...`}
-          colors={colors}
+          placeholder={t('recipes_search_placeholder', {
+            country: countryName || 'recipes',
+          })}
         />
       </View>
 
@@ -458,7 +462,7 @@ export default function CountryRecipesScreen() {
               marginLeft: 6,
             }}
           >
-            Spicy
+            {t('recipes_filter_spicy')}
           </Text>
         </Pressable>
 
@@ -493,7 +497,7 @@ export default function CountryRecipesScreen() {
               marginLeft: 6,
             }}
           >
-            Easy
+            {t('recipes_filter_easy')}
           </Text>
         </Pressable>
 
@@ -528,7 +532,7 @@ export default function CountryRecipesScreen() {
               marginLeft: 6,
             }}
           >
-            Medium
+            {t('recipes_filter_medium')}
           </Text>
         </Pressable>
 
@@ -563,7 +567,7 @@ export default function CountryRecipesScreen() {
               marginLeft: 6,
             }}
           >
-            Hard
+            {t('recipes_filter_hard')}
           </Text>
         </Pressable>
 
@@ -605,7 +609,7 @@ export default function CountryRecipesScreen() {
                 numberOfLines={1}
               >
                 {selectedCategory === 'all'
-                  ? 'Category'
+                  ? t('recipes_filter_category')
                   : selectedCategory.length > 10
                     ? `${selectedCategory.substring(0, 10)}...`
                     : selectedCategory}
@@ -665,7 +669,7 @@ export default function CountryRecipesScreen() {
                         color: colors.text,
                       }}
                     >
-                      Select Category
+                      {t('recipes_select_category')}
                     </Text>
                     <Pressable
                       onPress={() => setShowCategoryModal(false)}
@@ -732,7 +736,7 @@ export default function CountryRecipesScreen() {
                           marginLeft: 12,
                         }}
                       >
-                        All Categories
+                        {t('recipes_filter_all_categories')}
                       </Text>
                       {selectedCategory === 'all' && (
                         <Text
@@ -803,126 +807,40 @@ export default function CountryRecipesScreen() {
             </Modal>
           </>
         )}
-
-        {/* Clear Filters Button */}
-        {hasActiveFilters && (
-          <Pressable
-            onPress={clearFilters}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.card,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              borderWidth: 1,
-              height: 32,
-              borderColor: colors.border,
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <FontAwesome5 name="times" size={12} color={colors.text} />
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 13,
-                fontWeight: '600',
-                marginLeft: 6,
-              }}
-            >
-              Clear
-            </Text>
-          </Pressable>
-        )}
       </ScrollView>
 
-      {/* Recipes Grid */}
-      <FlatList
-        data={filteredRecipes}
-        numColumns={2}
-        keyExtractor={(item) => item.idMeal}
+      {/* Recipe List */}
+      <ScrollView
         contentContainerStyle={{
+          paddingBottom: insets.bottom + 20,
           paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 90 + insets.bottom + 32, // Account for tab bar
         }}
-        columnWrapperStyle={{
-          justifyContent: 'space-between',
-          marginBottom: 12,
-        }}
-        renderItem={({ item, index }) => (
-          <Animated.View
-            entering={FadeInDown.delay(index * 50).springify()}
-            style={{
-              width: CARD_WIDTH,
-            }}
-          >
-            <RecipeCard
-              recipe={item}
-              onPress={() => handleRecipePress(item.idMeal)}
-            />
-          </Animated.View>
-        )}
-        ListEmptyComponent={() => (
-          <View
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingVertical: 64,
-            }}
-          >
-            <FontAwesome5
-              name="search"
-              size={48}
-              color={colors.tabIconDefault}
-              style={{ opacity: 0.3 }}
-            />
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.text,
-                marginTop: 16,
-              }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
+          {filteredRecipes.map((recipe, index) => (
+            <Animated.View
+              key={recipe.idMeal}
+              entering={FadeInUp.delay(index * 50).springify()}
+              style={{ width: (SCREEN_WIDTH - 48) / 2 }}
             >
-              No recipes found
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: colors.tabIconDefault,
-                marginTop: 8,
-                textAlign: 'center',
-                paddingHorizontal: 32,
-              }}
-            >
-              Try adjusting your search or filters
-            </Text>
-            {hasActiveFilters && (
-              <Pressable
-                onPress={clearFilters}
-                style={{
-                  marginTop: 16,
-                  backgroundColor: colors.tint,
-                  paddingHorizontal: 24,
-                  paddingVertical: 12,
-                  borderRadius: 12,
+              <RecipeCard
+                recipe={recipe}
+                onPress={() => {
+                  haptics.light();
+                  router.push(`/recipe/${recipe.idMeal}` as any);
                 }}
-              >
-                <Text
-                  style={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontSize: 14,
-                  }}
-                >
-                  Clear All Filters
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-      />
+              />
+            </Animated.View>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

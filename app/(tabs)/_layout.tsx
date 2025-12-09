@@ -56,11 +56,29 @@ export default function TabLayout() {
         }}
       />
 
+      {/* Chef Tab */}
+      <Tabs.Screen
+        name="planner"
+        options={{
+          title: 'Planner',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="calendar-alt" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chef"
+        options={{
+          title: 'AI Chat',
+          tabBarIcon: ({ color }) => <TabBarIcon name="robot" color={color} />,
+        }}
+      />
+
       {/* Shopping List Tab */}
       <Tabs.Screen
         name="shopping-list"
         options={{
-          title: 'Pantry',
+          title: 'List',
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="shopping-basket" color={color} />
           ),
@@ -80,6 +98,14 @@ export default function TabLayout() {
         name="history"
         options={{
           title: 'History',
+        }}
+      />
+
+      {/* More Tab - Hub for secondary features */}
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: 'More',
         }}
       />
 

@@ -1,20 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Image,
-  ActivityIndicator,
   Pressable,
   Linking,
-  Alert,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { FontAwesome5 } from "@expo/vector-icons";
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -22,52 +17,69 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { Recipe, Ingredient } from "@/types";
-import { getRecipeById, extractIngredients } from "@/services/recipesApi";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useAuth } from "@/hooks/useAuth";
-import { useShoppingList } from "@/hooks/useShoppingList";
-import { usePantryStore } from "@/store/pantryStore";
-import { useRecipeHistoryStore } from "@/store/recipeHistoryStore";
-import { useFavoritesStore } from "@/store/favoritesStore";
-import { haptics } from "@/utils/haptics";
-import { canConvert, getConvertedDisplay } from "@/utils/measurementConverter";
-import { IngredientSelectorModal } from "@/components/IngredientSelectorModal";
-import { DetailSkeleton } from "@/components/SkeletonLoader";
-import { Id } from "@/convex/_generated/dataModel";
+import { Recipe, Ingredient } from '@/types';
+import { getRecipeById, extractIngredients } from '@/services/recipesApi';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useMutation, useQuery, useAction } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useAuth } from '@/hooks/useAuth';
+import { useShoppingList } from '@/hooks/useShoppingList';
+// import { usePantryStore } from '@/store/pantryStore';
+import { useRecipeHistoryStore } from '@/store/recipeHistoryStore';
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { haptics } from '@/utils/haptics';
+import { canConvert, getConvertedDisplay } from '@/utils/measurementConverter';
+import { DetailSkeleton } from '@/components/SkeletonLoader';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { Id } from '@/convex/_generated/dataModel';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useLanguage } from '@/context/LanguageContext';
 
 const RecipeDetailsScreen = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, language } = useLanguage();
+  const getTranslation = useAction(api.translations.getTranslation);
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [translating, setTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConversions, setShowConversions] = useState(false);
 
   // Modal states
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [showPantryModal, setShowPantryModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
 
   // Convex hooks
-  const { user, isAuthenticated } = useAuth();
-  const { addMultipleItems } = useShoppingList();
+  const { user, isAuthenticated, token } = useAuth(); // Destructure token here properly
 
-  // Pantry store
-  const hasIngredient = usePantryStore((state) => state.hasIngredient);
-  const pantryItems = usePantryStore((state) => state.items);
-  const removeFromPantry = usePantryStore((state) => state.removeItem);
+  const { addMultipleItems } = useShoppingList();
+  const { showConfirm, showSuccess, showError } = useAlertDialog();
+
+  // Pantry integration
+  const convexItems =
+    useQuery(api.pantry.getPantryItems, token ? { token } : 'skip') || [];
+  const pantryItems = convexItems.map((item: any) => ({
+    ...item,
+    id: item._id,
+  }));
+  const removePantryItem = useMutation(api.pantry.removePantryItem);
+
+  const hasIngredient = (ingredientName: string) => {
+    const normalizedName = ingredientName.toLowerCase().trim();
+    return pantryItems.some((item: any) => item.name === normalizedName);
+  };
 
   // Recipe history store
   const addToHistory = useRecipeHistoryStore((state) => state.addToHistory);
@@ -79,6 +91,58 @@ const RecipeDetailsScreen = () => {
   useEffect(() => {
     fetchRecipeDetails();
   }, [id]);
+
+  // Translate Effect
+  useEffect(() => {
+    const translateContent = async () => {
+      if (!recipe || language === 'en' || translating) return;
+
+      // Check if we already have this translation in local state?
+      // The action handles caching, so just calling it is fine.
+      try {
+        setTranslating(true);
+        const contentToTranslate = {
+          strMeal: recipe.strMeal,
+          strInstructions: recipe.strInstructions,
+          ingredients: ingredients.map((i) => ({
+            name: i.name,
+            measure: i.measure,
+          })),
+        };
+
+        const result = await getTranslation({
+          relatedId: recipe.idMeal,
+          language,
+          field: 'full_recipe_content',
+          content: contentToTranslate,
+        });
+
+        if (result && typeof result === 'object') {
+          console.log('[RecipeDetails] Translation applied:', result);
+          setRecipe((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  strMeal: result.strMeal || prev.strMeal,
+                  strInstructions:
+                    result.strInstructions || prev.strInstructions,
+                }
+              : null
+          );
+
+          if (result.ingredients && Array.isArray(result.ingredients)) {
+            setIngredients(result.ingredients);
+          }
+        }
+      } catch (e) {
+        console.error('Translation failed', e);
+      } finally {
+        setTranslating(false);
+      }
+    };
+
+    translateContent();
+  }, [recipe?.idMeal, language]); // Effect dependency simplified to avoid infinite loops if recipe object reference changes but content doesn't.
 
   // Track recipe view in history
   useEffect(() => {
@@ -92,7 +156,7 @@ const RecipeDetailsScreen = () => {
         timestamp: Date.now(),
       });
     }
-  }, [recipe]);
+  }, [recipe?.idMeal]); // Changed to idMeal to avoid re-triggering on translation updates causing history spam
 
   const fetchRecipeDetails = async () => {
     try {
@@ -106,8 +170,8 @@ const RecipeDetailsScreen = () => {
       const extractedIngredients = extractIngredients(fetchedRecipe);
       setIngredients(extractedIngredients);
     } catch (err) {
-      console.error("Error fetching recipe details:", err);
-      setError("Failed to load recipe details");
+      console.error('Error fetching recipe details:', err);
+      setError(t('recipe_error_failed'));
     } finally {
       setLoading(false);
     }
@@ -121,15 +185,19 @@ const RecipeDetailsScreen = () => {
   const handleAddToShoppingList = () => {
     if (!recipe || ingredients.length === 0) {
       haptics.warning();
-      alert("No ingredients to add!");
+      showError(t('recipe_no_ingredients_error'));
       return;
     }
 
     haptics.light();
-    setShowShoppingModal(true);
+    // Directly add all items for now as per simplified logic, or show modal if implemented
+    // For now assuming direct add or pre-confirmation logic
+    handleConfirmAddToShopping(ingredients);
   };
 
-  const handleConfirmAddToShopping = async (selectedIngredients: Ingredient[]) => {
+  const handleConfirmAddToShopping = async (
+    selectedIngredients: Ingredient[]
+  ) => {
     if (!recipe || selectedIngredients.length === 0) {
       return;
     }
@@ -145,13 +213,10 @@ const RecipeDetailsScreen = () => {
       await addMultipleItems(itemsToAdd);
       haptics.success();
 
-      Alert.alert(
-        "Added to Shopping List! 🛒",
-        `${itemsToAdd.length} ${itemsToAdd.length === 1 ? "ingredient" : "ingredients"} added to your shopping list.`
-      );
+      showSuccess(t('recipe_shopping_success', { count: itemsToAdd.length }));
     } catch (error) {
-      console.error("Error adding items:", error);
-      Alert.alert("Error", "Failed to add items to shopping list.");
+      console.error('Error adding items:', error);
+      showError(t('recipe_shopping_error'));
     }
   };
 
@@ -165,26 +230,35 @@ const RecipeDetailsScreen = () => {
   const handleUseFromPantry = () => {
     if (!recipe || ingredients.length === 0) {
       haptics.warning();
-      Alert.alert("No Ingredients", "This recipe has no ingredients.");
+      showError(t('recipe_no_ingredients_recipe_error'));
       return;
     }
 
     // Find ingredients that are in pantry
     const ingredientsInPantry = ingredients.filter((ingredient) =>
-      hasIngredient(ingredient.name),
+      hasIngredient(ingredient.name)
     );
 
     if (ingredientsInPantry.length === 0) {
       haptics.warning();
-      Alert.alert(
-        "No Items in Pantry",
-        "None of the ingredients for this recipe are in your pantry.",
-      );
+      showError(t('recipe_pantry_missing_error'));
       return;
     }
 
     haptics.light();
-    setShowPantryModal(true);
+    // Assuming we want to consume them directly or show a modal.
+    // Implementing direct consumption for now to match logic flow or show a confirmation.
+    // For safety, let's ask for confirmation via alert since we removed the modal logic
+    showConfirm(
+      {
+        title: t('recipe_use_pantry', { count: ingredientsInPantry.length }),
+        message: t('recipe_pantry_success', {
+          count: ingredientsInPantry.length,
+        }).replace('removed', 'will be removed'),
+        confirmText: 'Use Items',
+      },
+      () => handleConfirmUseFromPantry(ingredientsInPantry)
+    );
   };
 
   const handleConfirmUseFromPantry = (selectedIngredients: Ingredient[]) => {
@@ -196,17 +270,16 @@ const RecipeDetailsScreen = () => {
     selectedIngredients.forEach((ingredient) => {
       // Find the pantry item by name
       const pantryItem = pantryItems.find(
-        (item) => item.name === ingredient.name.toLowerCase().trim(),
+        (item) => item.name === ingredient.name.toLowerCase().trim()
       );
       if (pantryItem) {
-        removeFromPantry(pantryItem.id);
+        removePantryItem({ itemId: pantryItem.id as Id<'pantry'> });
       }
     });
 
     haptics.success();
-    Alert.alert(
-      "Used from Pantry! 🎉",
-      `${selectedIngredients.length} ${selectedIngredients.length === 1 ? "ingredient" : "ingredients"} removed from your pantry. Enjoy your meal!`,
+    showSuccess(
+      t('recipe_pantry_success', { count: selectedIngredients.length })
     );
   };
 
@@ -218,52 +291,12 @@ const RecipeDetailsScreen = () => {
   // Error state
   if (error || !recipe) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-          paddingHorizontal: 24,
-        }}
-      >
-        <FontAwesome5
-          name="exclamation-circle"
-          size={48}
-          color={colors.error}
-        />
-        <Text
-          style={{
-            color: colors.error,
-            fontSize: 18,
-            fontWeight: "700",
-            marginTop: 16,
-          }}
-        >
-          Oops!
-        </Text>
-        <Text
-          style={{
-            color: colors.text,
-            textAlign: "center",
-            marginTop: 8,
-          }}
-        >
-          {error || "Recipe not found"}
-        </Text>
-        <Pressable
-          onPress={handleBack}
-          style={{
-            marginTop: 24,
-            backgroundColor: colors.tint,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 12,
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "600" }}>Go Back</Text>
-        </Pressable>
-      </View>
+      <ErrorState
+        title={t('recipes_error_title')}
+        message={error || t('recipe_error_not_found')}
+        onRetry={handleBack}
+        retryText={t('country_retry')}
+      />
     );
   }
 
@@ -272,18 +305,23 @@ const RecipeDetailsScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Recipe Image Header */}
         <Animated.View entering={FadeIn.duration(400)}>
-          <View style={{ height: 300, position: "relative" }}>
+          <View style={{ height: 300, position: 'relative' }}>
             <Image
-              source={{ uri: recipe.strMealThumb }}
-              style={{ width: "100%", height: "100%" }}
+              source={
+                !imageError && recipe.strMealThumb
+                  ? { uri: recipe.strMealThumb }
+                  : require('@/assets/images/recipe_placeholder.png')
+              }
+              style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
+              onError={() => setImageError(true)}
             />
 
             {/* Gradient Overlays */}
             <LinearGradient
-              colors={["rgba(0,0,0,0.6)", "transparent"]}
+              colors={['rgba(0,0,0,0.6)', 'transparent']}
               style={{
-                position: "absolute",
+                position: 'absolute',
                 top: 0,
                 left: 0,
                 right: 0,
@@ -291,9 +329,9 @@ const RecipeDetailsScreen = () => {
               }}
             />
             <LinearGradient
-              colors={["transparent", colors.background]}
+              colors={['transparent', colors.background]}
               style={{
-                position: "absolute",
+                position: 'absolute',
                 bottom: 0,
                 left: 0,
                 right: 0,
@@ -307,7 +345,7 @@ const RecipeDetailsScreen = () => {
             {/* Category & Area Badges */}
             <View
               style={{
-                position: "absolute",
+                position: 'absolute',
                 top: insets.top + 60,
                 right: 20,
                 gap: 8,
@@ -317,20 +355,20 @@ const RecipeDetailsScreen = () => {
                 <Animated.View entering={FadeInDown.delay(100).springify()}>
                   <View
                     style={{
-                      backgroundColor: "rgba(0,0,0,0.7)",
+                      backgroundColor: 'rgba(0,0,0,0.7)',
                       borderRadius: 16,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
-                      flexDirection: "row",
-                      alignItems: "center",
+                      flexDirection: 'row',
+                      alignItems: 'center',
                     }}
                   >
                     <FontAwesome5 name="tag" size={10} color="#fbbf24" />
                     <Text
                       style={{
-                        color: "white",
+                        color: 'white',
                         fontSize: 12,
-                        fontWeight: "600",
+                        fontWeight: '600',
                         marginLeft: 6,
                       }}
                     >
@@ -344,20 +382,20 @@ const RecipeDetailsScreen = () => {
                 <Animated.View entering={FadeInDown.delay(150).springify()}>
                   <View
                     style={{
-                      backgroundColor: "rgba(0,0,0,0.7)",
+                      backgroundColor: 'rgba(0,0,0,0.7)',
                       borderRadius: 16,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
-                      flexDirection: "row",
-                      alignItems: "center",
+                      flexDirection: 'row',
+                      alignItems: 'center',
                     }}
                   >
                     <FontAwesome5 name="globe" size={10} color="#10b981" />
                     <Text
                       style={{
-                        color: "white",
+                        color: 'white',
                         fontSize: 12,
-                        fontWeight: "600",
+                        fontWeight: '600',
                         marginLeft: 6,
                       }}
                     >
@@ -369,7 +407,6 @@ const RecipeDetailsScreen = () => {
             </View>
           </View>
         </Animated.View>
-
         {/* Recipe Content */}
         <View style={{ paddingHorizontal: 20, marginTop: -20 }}>
           {/* Recipe Name Card */}
@@ -380,7 +417,7 @@ const RecipeDetailsScreen = () => {
               borderRadius: 24,
               padding: 24,
               marginBottom: 20,
-              shadowColor: "#000",
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 12,
@@ -390,7 +427,7 @@ const RecipeDetailsScreen = () => {
             <Text
               style={{
                 fontSize: 28,
-                fontWeight: "700",
+                fontWeight: '700',
                 color: colors.text,
                 letterSpacing: -0.5,
                 marginBottom: 8,
@@ -402,15 +439,15 @@ const RecipeDetailsScreen = () => {
             {/* Action Buttons Row */}
             <View style={{ marginTop: 16, gap: 12 }}>
               {/* First Row - Primary Actions */}
-              <View style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 {/* Add to Shopping List Button */}
                 <Pressable
                   onPress={handleAddToShoppingList}
                   style={({ pressed }) => ({
                     flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     backgroundColor: colors.tint,
                     paddingVertical: 14,
                     borderRadius: 16,
@@ -425,13 +462,13 @@ const RecipeDetailsScreen = () => {
                   />
                   <Text
                     style={{
-                      color: "white",
-                      fontWeight: "700",
+                      color: 'white',
+                      fontWeight: '700',
                       fontSize: 15,
                       marginLeft: 8,
                     }}
                   >
-                    Add to List
+                    {t('recipe_add_to_list')}
                   </Text>
                 </Pressable>
 
@@ -452,11 +489,11 @@ const RecipeDetailsScreen = () => {
                   }}
                   style={({ pressed }) => ({
                     width: 50,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     backgroundColor: isFavorite(recipe.idMeal)
-                      ? "#ec4899"
+                      ? '#ec4899'
                       : `${colors.text}15`,
                     paddingVertical: 14,
                     borderRadius: 16,
@@ -467,7 +504,7 @@ const RecipeDetailsScreen = () => {
                   <FontAwesome5
                     name="heart"
                     size={16}
-                    color={isFavorite(recipe.idMeal) ? "white" : colors.text}
+                    color={isFavorite(recipe.idMeal) ? 'white' : colors.text}
                     solid={isFavorite(recipe.idMeal)}
                   />
                 </Pressable>
@@ -477,10 +514,10 @@ const RecipeDetailsScreen = () => {
                   <Pressable
                     onPress={handleWatchVideo}
                     style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "#ff0000",
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#ff0000',
                       paddingHorizontal: 20,
                       paddingVertical: 14,
                       borderRadius: 16,
@@ -491,13 +528,13 @@ const RecipeDetailsScreen = () => {
                     <FontAwesome5 name="youtube" size={16} color="white" />
                     <Text
                       style={{
-                        color: "white",
-                        fontWeight: "700",
+                        color: 'white',
+                        fontWeight: '700',
                         fontSize: 15,
                         marginLeft: 8,
                       }}
                     >
-                      Watch
+                      {t('recipe_watch_video')}
                     </Text>
                   </Pressable>
                 )}
@@ -508,10 +545,10 @@ const RecipeDetailsScreen = () => {
                 <Pressable
                   onPress={handleUseFromPantry}
                   style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#f59e0b",
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#f59e0b',
                     paddingVertical: 14,
                     borderRadius: 16,
                     opacity: pressed ? 0.8 : 1,
@@ -521,18 +558,17 @@ const RecipeDetailsScreen = () => {
                   <FontAwesome5 name="box" size={16} color="white" />
                   <Text
                     style={{
-                      color: "white",
-                      fontWeight: "700",
+                      color: 'white',
+                      fontWeight: '700',
                       fontSize: 15,
                       marginLeft: 8,
                     }}
                   >
-                    Use from Pantry (
-                    {
-                      ingredients.filter((ing) => hasIngredient(ing.name))
-                        .length
-                    }
-                    )
+                    {t('recipe_use_pantry', {
+                      count: ingredients.filter((ing) =>
+                        hasIngredient(ing.name)
+                      ).length,
+                    })}
                   </Text>
                 </Pressable>
               )}
@@ -547,7 +583,7 @@ const RecipeDetailsScreen = () => {
                 borderRadius: 20,
                 padding: 20,
                 marginBottom: 20,
-                shadowColor: "#000",
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.08,
                 shadowRadius: 8,
@@ -557,16 +593,16 @@ const RecipeDetailsScreen = () => {
               {/* Section Header */}
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   marginBottom: 16,
                 }}
               >
                 <View
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     flex: 1,
                   }}
                 >
@@ -576,8 +612,8 @@ const RecipeDetailsScreen = () => {
                       height: 40,
                       borderRadius: 12,
                       backgroundColor: `${colors.tint}20`,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       marginRight: 12,
                     }}
                   >
@@ -587,11 +623,11 @@ const RecipeDetailsScreen = () => {
                     <Text
                       style={{
                         fontSize: 20,
-                        fontWeight: "700",
+                        fontWeight: '700',
                         color: colors.text,
                       }}
                     >
-                      Ingredients
+                      {t('recipe_ingredients_title')}
                     </Text>
                     <Text
                       style={{
@@ -601,7 +637,9 @@ const RecipeDetailsScreen = () => {
                         marginTop: 2,
                       }}
                     >
-                      {ingredients.length} items
+                      {t('recipe_ingredients_count', {
+                        count: ingredients.length,
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -613,8 +651,8 @@ const RecipeDetailsScreen = () => {
                     setShowConversions(!showConversions);
                   }}
                   style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     backgroundColor: showConversions
                       ? colors.tint
                       : `${colors.tint}15`,
@@ -627,17 +665,17 @@ const RecipeDetailsScreen = () => {
                   <FontAwesome5
                     name="exchange-alt"
                     size={12}
-                    color={showConversions ? "white" : colors.tint}
+                    color={showConversions ? 'white' : colors.tint}
                   />
                   <Text
                     style={{
-                      color: showConversions ? "white" : colors.tint,
+                      color: showConversions ? 'white' : colors.tint,
                       fontSize: 11,
-                      fontWeight: "600",
+                      fontWeight: '600',
                       marginLeft: 6,
                     }}
                   >
-                    Convert
+                    {t('recipe_convert')}
                   </Text>
                 </Pressable>
               </View>
@@ -651,17 +689,17 @@ const RecipeDetailsScreen = () => {
                   >
                     <View
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
+                        flexDirection: 'row',
+                        alignItems: 'center',
                         backgroundColor: hasIngredient(ingredient.name)
-                          ? "#f59e0b10"
+                          ? '#f59e0b10'
                           : colors.background,
                         padding: 12,
                         borderRadius: 12,
                         borderWidth: hasIngredient(ingredient.name) ? 1 : 0,
                         borderColor: hasIngredient(ingredient.name)
-                          ? "#f59e0b30"
-                          : "transparent",
+                          ? '#f59e0b30'
+                          : 'transparent',
                       }}
                     >
                       {/* Availability Indicator */}
@@ -671,9 +709,9 @@ const RecipeDetailsScreen = () => {
                             width: 24,
                             height: 24,
                             borderRadius: 12,
-                            backgroundColor: "#f59e0b",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            backgroundColor: '#f59e0b',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             marginRight: 12,
                           }}
                         >
@@ -696,31 +734,30 @@ const RecipeDetailsScreen = () => {
                           flex: 1,
                           color: colors.text,
                           fontSize: 15,
-                          fontWeight: "500",
+                          fontWeight: '500',
                         }}
                       >
                         {ingredient.name}
-                        {hasIngredient(ingredient.name) && (
+                        {hasIngredient(ingredient.name) ? (
                           <Text
                             style={{
-                              color: "#f59e0b",
+                              color: '#f59e0b',
                               fontSize: 12,
-                              fontWeight: "600",
+                              fontWeight: '600',
                               marginLeft: 6,
                             }}
                           >
-                            {" "}
-                            • In Pantry
+                            {t('recipe_in_pantry')}
                           </Text>
-                        )}
+                        ) : null}
                       </Text>
 
-                      <View style={{ alignItems: "flex-end" }}>
+                      <View style={{ alignItems: 'flex-end' }}>
                         <Text
                           style={{
                             color: colors.text,
                             fontSize: 14,
-                            fontWeight: "600",
+                            fontWeight: '600',
                             opacity: 0.7,
                           }}
                         >
@@ -731,7 +768,7 @@ const RecipeDetailsScreen = () => {
                             style={{
                               color: colors.tint,
                               fontSize: 12,
-                              fontWeight: "600",
+                              fontWeight: '600',
                               marginTop: 2,
                             }}
                           >
@@ -755,7 +792,7 @@ const RecipeDetailsScreen = () => {
                   borderRadius: 20,
                   padding: 20,
                   marginBottom: 20,
-                  shadowColor: "#000",
+                  shadowColor: '#000',
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.08,
                   shadowRadius: 8,
@@ -765,8 +802,8 @@ const RecipeDetailsScreen = () => {
                 {/* Section Header */}
                 <View
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     marginBottom: 16,
                   }}
                 >
@@ -776,8 +813,8 @@ const RecipeDetailsScreen = () => {
                       height: 40,
                       borderRadius: 12,
                       backgroundColor: `#10b98120`,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       marginRight: 12,
                     }}
                   >
@@ -786,11 +823,11 @@ const RecipeDetailsScreen = () => {
                   <Text
                     style={{
                       fontSize: 20,
-                      fontWeight: "700",
+                      fontWeight: '700',
                       color: colors.text,
                     }}
                   >
-                    Instructions
+                    {t('recipe_instructions_title')}
                   </Text>
                 </View>
 
@@ -822,78 +859,60 @@ const RecipeDetailsScreen = () => {
                   borderRadius: 16,
                   padding: 16,
                   marginBottom: 20,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <FontAwesome5
-                  name="external-link-alt"
-                  size={14}
-                  color={colors.tint}
-                />
+                <FontAwesome5 name="link" size={14} color={colors.tint} />
                 <Text
                   style={{
                     color: colors.tint,
-                    fontSize: 14,
-                    fontWeight: "600",
-                    marginLeft: 10,
-                    flex: 1,
+                    fontWeight: '600',
+                    marginLeft: 8,
                   }}
                 >
-                  View Original Recipe Source
+                  {t('recipe_source_link')}
                 </Text>
-                <FontAwesome5
-                  name="chevron-right"
-                  size={14}
-                  color={colors.tint}
-                />
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* YouTube Link (Secondary) */}
+          {recipe.strYoutube && !recipe.strSource && (
+            <Animated.View entering={FadeInUp.delay(350).springify()}>
+              <Pressable
+                onPress={() => {
+                  haptics.light();
+                  Linking.openURL(recipe.strYoutube!);
+                }}
+                style={({ pressed }) => ({
+                  backgroundColor: `#ff000015`,
+                  borderRadius: 16,
+                  padding: 16,
+                  marginBottom: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <FontAwesome5 name="youtube" size={14} color="#ff0000" />
+                <Text
+                  style={{
+                    color: '#ff0000',
+                    fontWeight: '600',
+                    marginLeft: 8,
+                  }}
+                >
+                  {t('recipe_video_link')}
+                </Text>
               </Pressable>
             </Animated.View>
           )}
         </View>
-
-        {/* Bottom Spacing */}
-        <View style={{ height: 90 + insets.bottom + 30 }} /> {/* Tab bar (90px) + safe area + extra space */}
       </ScrollView>
-
-      {/* Shopping List Modal */}
-      <IngredientSelectorModal
-        visible={showShoppingModal}
-        onClose={() => setShowShoppingModal(false)}
-        onConfirm={handleConfirmAddToShopping}
-        ingredients={ingredients}
-        title="Add to Shopping List"
-        description="Select ingredients to add to your shopping list"
-        confirmText="Add to List"
-        confirmColor={colors.tint}
-        icon="shopping-basket"
-        iconColor={colors.tint}
-        showPantryIndicator={true}
-        pantryIngredients={
-          new Set(
-            ingredients
-              .filter((ing) => hasIngredient(ing.name))
-              .map((ing) => ing.name),
-          )
-        }
-        showConversions={showConversions}
-      />
-
-      {/* Use from Pantry Modal */}
-      <IngredientSelectorModal
-        visible={showPantryModal}
-        onClose={() => setShowPantryModal(false)}
-        onConfirm={handleConfirmUseFromPantry}
-        ingredients={ingredients.filter((ing) => hasIngredient(ing.name))}
-        title="Use from Pantry"
-        description="Select ingredients to remove from your pantry"
-        confirmText="Use"
-        confirmColor="#f59e0b"
-        icon="box"
-        iconColor="#f59e0b"
-        showConversions={showConversions}
-      />
     </View>
   );
 };
@@ -914,12 +933,7 @@ const AnimatedBackButton = ({
     transform: [{ scale: scale.value }],
   }));
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.9, {
-      damping: 15,
-      stiffness: 600,
-    });
-  };
+  const handlePressIn = () => {};
 
   const handlePressOut = () => {
     scale.value = withSpring(1, {
@@ -933,7 +947,7 @@ const AnimatedBackButton = ({
       entering={FadeIn.delay(200)}
       style={[
         {
-          position: "absolute",
+          position: 'absolute',
           top: 48,
           left: 20,
         },
@@ -945,24 +959,20 @@ const AnimatedBackButton = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={{
-          backgroundColor: "rgba(0,0,0,0.7)",
-          borderRadius: 24,
-          padding: 12,
-          flexDirection: "row",
-          alignItems: "center",
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: 16,
+          width: 48,
+          height: 48,
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 8,
         }}
       >
-        <FontAwesome5 name="arrow-left" size={16} color="white" />
-        <Text
-          style={{
-            color: "white",
-            marginLeft: 8,
-            fontWeight: "600",
-            fontSize: 15,
-          }}
-        >
-          Back
-        </Text>
+        <FontAwesome5 name="arrow-left" size={20} color={colors.text} />
       </Pressable>
     </Animated.View>
   );

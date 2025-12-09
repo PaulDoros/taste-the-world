@@ -15,6 +15,7 @@ export interface User {
   subscriptionStartDate?: number;
   subscriptionEndDate?: number;
   createdAt: number;
+  aiMessagesUsed?: number;
 }
 
 interface AuthState {
@@ -27,7 +28,7 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   verifySession: () => Promise<void>;
-  updateUser: (user: User) => void;
+  updateUser: (user: User | null) => void;
 }
 
 /**
@@ -88,14 +89,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      updateUser: (user: User) => {
+      updateUser: (user: User | null) => {
         set({ user });
       },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ token: state.token }), // Only persist token, not user
+      partialize: (state) => ({ token: state.token, user: state.user }), // Persist both token and user
     }
   )
 );
