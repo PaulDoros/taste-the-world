@@ -3,7 +3,13 @@ import { api } from '@/convex/_generated/api';
 import { APP_CONFIG, isFreeCountry } from '@/constants/Config';
 import { useAuthStore } from '@/store/authStore';
 
-type FeatureType = 'nutrition' | 'offline' | 'travel' | 'baby';
+type FeatureType =
+  | 'nutrition'
+  | 'offline'
+  | 'travel'
+  | 'baby'
+  | 'wallet'
+  | 'planner';
 
 export const useTierLimit = () => {
   const usageStatus = useQuery(api.monetization.getUsageStatus);
@@ -30,6 +36,12 @@ export const useTierLimit = () => {
         return tier === 'pro';
       case 'travel':
         // Personal (limited) and PRO (unlimited)
+        return tier === 'personal' || tier === 'pro';
+      case 'wallet':
+        // PRO only
+        return tier === 'pro';
+      case 'planner':
+        // Personal and PRO
         return tier === 'personal' || tier === 'pro';
       default:
         return false;

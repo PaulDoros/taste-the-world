@@ -12,7 +12,7 @@ export const REGION_CONFIG = [
 ] as const;
 
 export const HOME_STATS = {
-  RECIPES: '1000+',
+  RECIPES: '2000+',
   REGIONS: 5,
 } as const;
 
@@ -20,4 +20,3 @@ export const CARD_DIMENSIONS = {
   FEATURED_COUNTRY_WIDTH: 0.7, // 70% of screen width
   FEATURED_RECIPE_WIDTH: 0.6, // 60% of screen width
 } as const;
-

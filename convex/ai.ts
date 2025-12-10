@@ -176,16 +176,14 @@ export const sendMessage = action({
 
     // Define quotas based on tier
     let maxQuota: number;
-    if (
-      subscriptionType === 'monthly' ||
-      subscriptionType === 'yearly' ||
-      tier === 'premium'
-    ) {
-      maxQuota = Infinity; // Premium users have unlimited prompts
+    if (tier === 'pro') {
+      maxQuota = Infinity; // Pro users have unlimited prompts
+    } else if (tier === 'personal') {
+      maxQuota = 20; // Personal users get 20 prompts
     } else if (tier === 'guest') {
-      maxQuota = 10; // Guests get 1 prompt
+      maxQuota = 1; // Guests get 1 prompt
     } else {
-      maxQuota = 30; // Free users get 3 prompts
+      maxQuota = 3; // Free users get 3 prompts
     }
 
     if (aiMessagesUsed >= maxQuota) {
@@ -772,6 +770,69 @@ export const generateShoppingListFromPlan = action({
     } catch (error) {
       console.error('Shopping List Generation Error:', error);
       throw new Error('Failed to generate shopping list');
+    }
+  },
+});
+
+/**
+ * Generate a trip itinerary
+ */
+export const generateTripItinerary = action({
+  args: {
+    destination: v.string(),
+    startDate: v.optional(v.string()), // String for clearer prompting (e.g. "2024-05-20")
+    duration: v.optional(v.number()),
+    preferences: v.optional(v.string()),
+    language: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    const identity = await ctx.auth.getUserIdentity();
+    // Allow both authenticated and guest users, though frontend restricts to Pro
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return `## Mock Itinerary to ${args.destination}
+      
+**Day 1: Arrival**
+- Explore downtown
+- Dinner at local spot
+
+**Day 2: Culture**
+- Visit museum
+- Walk in the park
+
+**Day 3: Departure**
+- Souvenir shopping
+- Flight home`;
+    }
+
+    const duration = args.duration || 3;
+    const languageInstruction = args.language
+      ? `Output MUST be in ${args.language} language.`
+      : '';
+
+    const prompt = `Create a ${duration}-day trip itinerary for ${args.destination}.
+    ${args.startDate ? `The trip starts on ${args.startDate}.` : ''}
+    ${args.preferences ? `Preferences: ${args.preferences}` : ''}
+    
+    ${languageInstruction}
+    
+    Format the response as clear Markdown with headers for each day.
+    Include specific recommendations for food and sights.
+    Keep it practical and realistic.`;
+
+    try {
+      const responseText = await callGemini(
+        apiKey,
+        [{ role: 'user', parts: [{ text: prompt }] }],
+        TRAVEL_AGENT_PROMPT,
+        'text/plain'
+      );
+
+      return responseText;
+    } catch (error) {
+      console.error('Itinerary Generation Error:', error);
+      throw new Error('Failed to generate itinerary');
     }
   },
 });

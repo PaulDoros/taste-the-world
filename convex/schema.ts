@@ -273,4 +273,20 @@ export default defineSchema({
   })
     .index('by_relatedId_language', ['relatedId', 'language'])
     .index('by_relatedId_language_field', ['relatedId', 'language', 'field']),
+
+  /**
+   * Trips table
+   * Stores user travel plans and ticket images
+   */
+  trips: defineTable({
+    userId: v.id('users'),
+    destination: v.string(), // e.g. "Paris, France"
+    startDate: v.number(), // Timestamp
+    flightNumber: v.optional(v.string()), // e.g. "RO341"
+    ticketStorageId: v.optional(v.string()), // Convex Storage ID for image
+    notes: v.optional(v.string()), // "Gate closes at 10:00"
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_date', ['userId', 'startDate']),
 });

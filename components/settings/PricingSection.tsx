@@ -1,16 +1,16 @@
-import { View } from 'react-native';
-import { useState } from 'react';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Card,
-  Separator,
-  AnimatePresence,
-} from 'tamagui';
+import { View, LayoutChangeEvent } from 'react-native';
+import { useState, useMemo, useEffect } from 'react';
+import { YStack, XStack, Text, Button, Card, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import { SUBSCRIPTION_PRICES, PREMIUM_BENEFITS } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
 import { gradients } from '@/theme/gradients';
@@ -42,11 +42,95 @@ export const PricingSection = ({
   const isPro = selectedTier === 'pro';
   const currentPrices = SUBSCRIPTION_PRICES[selectedTier];
 
-  const filteredBenefits = PREMIUM_BENEFITS.filter((benefit) => {
-    if (selectedTier === 'personal' && benefit.includes('offline'))
-      return false;
-    return true;
+  // Memoize benefits filtering to avoid re-calculation on every render
+  const filteredBenefits = useMemo(() => {
+    return PREMIUM_BENEFITS.filter((benefit) => {
+      if (selectedTier === 'personal' && benefit.includes('offline'))
+        return false;
+      return true;
+    });
+  }, [selectedTier]);
+
+  // New PRO color (Indigo/Violet) instead of Yellow
+  const PRO_COLOR = '#6366f1';
+  const PRO_ICON_COLOR = '#4f46e5';
+
+  // Pulse Animation for CTA
+  const pulseScale = useSharedValue(1);
+
+  // Savings Badge Animation
+  const badgeScale = useSharedValue(1);
+  const badgeRotate = useSharedValue(0);
+
+  // Tab Switcher Animation
+  const [tabWidth, setTabWidth] = useState(0);
+  const tabPosition = useSharedValue(0);
+
+  // Tab Switcher Logic
+  useEffect(() => {
+    // 0 = Personal, 1 = Pro
+    // Smoother spring config: Snappy but not too stiff
+    tabPosition.value = withSpring(selectedTier === 'pro' ? 1 : 0, {
+      damping: 150,
+      stiffness: 150,
+      mass: 1,
+    });
+  }, [selectedTier]);
+
+  const animatedTabStyle = useAnimatedStyle(() => {
+    const translateX = tabWidth * tabPosition.value;
+    return {
+      transform: [{ translateX }],
+      width: tabWidth,
+    };
   });
+
+  // Badge Animation Loop (Heartbeat-like)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Gentle pop
+      badgeScale.value = withSequence(
+        withSpring(1.2, { damping: 10, stiffness: 200 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      // Subtle wiggle
+      badgeRotate.value = withSequence(
+        withTiming(-5, { duration: 100 }),
+        withTiming(5, { duration: 100 }),
+        withTiming(0, { duration: 100 })
+      );
+    }, 4000); // Every 4 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const animatedBadgeStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: badgeScale.value },
+      { rotateZ: `${badgeRotate.value}deg` },
+    ],
+  }));
+
+  // CTA Pulse Loop
+  useState(() => {
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.02, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
+      ),
+      -1, // Infinite
+      true // Reverse
+    );
+  });
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    if (e.nativeEvent.layout.width > 0 && tabWidth === 0) {
+      setTabWidth((e.nativeEvent.layout.width - 8) / 2); // 8 is padding compensation
+    }
+  };
 
   return (
     <YStack gap="$5" marginBottom="$6">
@@ -59,13 +143,9 @@ export const PricingSection = ({
         backgroundColor="$background"
         borderColor="$borderColor"
         padding={0}
-        animation="medium"
-        scale={0.98}
-        hoverStyle={{ scale: 1 }}
-        pressStyle={{ scale: 0.97 }}
       >
         <LinearGradient
-          colors={isPro ? gradients.gold : gradients.primaryDark}
+          colors={isPro ? [PRO_COLOR, '#4338ca'] : gradients.primaryDark}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -80,10 +160,10 @@ export const PricingSection = ({
           <XStack alignItems="center" gap="$3">
             <View
               style={{
-                backgroundColor: isPro ? '#fbbf24' : colors.tint,
+                backgroundColor: isPro ? PRO_COLOR : colors.tint,
                 padding: 12,
                 borderRadius: 25,
-                shadowColor: isPro ? '#fbbf24' : colors.tint,
+                shadowColor: isPro ? PRO_COLOR : colors.tint,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
@@ -110,22 +190,60 @@ export const PricingSection = ({
 
           <Separator borderColor="$borderColor" opacity={0.5} />
 
-          {/* Tier Toggle */}
-          <XStack backgroundColor="$bg2" padding="$1" borderRadius="$4">
+          {/* Animated Tier Toggle */}
+          <View
+            onLayout={handleLayout}
+            style={{
+              backgroundColor: colorScheme === 'dark' ? '#1e293b' : '#f1f5f9',
+              borderRadius: 12, // More rounded for modern feel
+              padding: 4,
+              flexDirection: 'row',
+              position: 'relative',
+              height: 48,
+            }}
+          >
+            {/* Sliding Indicator */}
+            {tabWidth > 0 && (
+              <Animated.View
+                style={[
+                  {
+                    position: 'absolute',
+                    top: 4,
+                    left: 4,
+                    height: 40,
+                    borderRadius: 10,
+                    backgroundColor: isPro ? PRO_COLOR : 'white',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  },
+                  animatedTabStyle,
+                ]}
+              />
+            )}
+
+            {/* Touch Targets */}
             <Button
               flex={1}
               size="$3"
-              chromeless={isPro}
-              backgroundColor={!isPro ? '$background' : 'transparent'}
+              chromeless
+              backgroundColor="transparent"
               onPress={() => {
                 haptics.selection();
                 onSelectTier('personal');
               }}
-              animation="quick"
             >
               <Text
-                fontWeight={!isPro ? '700' : '500'}
-                color="$color"
+                fontWeight={!isPro ? '800' : '600'}
+                color={
+                  !isPro
+                    ? colorScheme === 'dark'
+                      ? 'black'
+                      : 'black'
+                    : '$gray10'
+                }
                 fontSize="$3"
               >
                 Personal
@@ -134,61 +252,51 @@ export const PricingSection = ({
             <Button
               flex={1}
               size="$3"
-              chromeless={!isPro}
-              backgroundColor={isPro ? '$background' : 'transparent'}
+              chromeless
+              backgroundColor="transparent"
               onPress={() => {
                 haptics.selection();
                 onSelectTier('pro');
               }}
-              animation="quick"
             >
               <Text
-                fontWeight={isPro ? '700' : '500'}
-                color="$color"
+                fontWeight={isPro ? '800' : '600'}
+                color={isPro ? 'white' : '$gray10'}
                 fontSize="$3"
               >
                 PRO
               </Text>
             </Button>
-          </XStack>
+          </View>
 
-          {/* Benefits List - Enhanced */}
-          <YStack gap="$3">
-            <AnimatePresence>
-              {filteredBenefits
-                .slice(0, showAllBenefits ? undefined : 4)
-                .map((benefit, index) => (
-                  <XStack
-                    key={benefit} // Use benefit string as key for better animation tracking
-                    alignItems="center"
-                    gap="$3"
-                    animation="quick"
-                    enterStyle={{ opacity: 0, scale: 0.9, y: -5 }}
-                    exitStyle={{ opacity: 0, scale: 0.9, y: -5 }}
-                    opacity={1}
-                    scale={1}
-                    y={0}
+          {/* Benefits List */}
+          <YStack gap="$3" marginTop="$2">
+            {filteredBenefits
+              .slice(0, showAllBenefits ? undefined : 4)
+              .map((benefit, index) => (
+                <XStack key={benefit} alignItems="center" gap="$3">
+                  <View
+                    style={{
+                      backgroundColor: (isPro ? PRO_COLOR : colors.tint) + '20',
+                      padding: 6,
+                      borderRadius: 15,
+                    }}
                   >
-                    <View
-                      style={{
-                        backgroundColor:
-                          (isPro ? '#fbbf24' : colors.tint) + '20',
-                        padding: 6,
-                        borderRadius: 15,
-                      }}
-                    >
-                      <FontAwesome5
-                        name="check"
-                        size={10}
-                        color={isPro ? '#d97706' : colors.tint}
-                      />
-                    </View>
-                    <Text fontSize="$3" color="$color" opacity={0.9} flex={1}>
-                      {t(benefit as any)}
-                    </Text>
-                  </XStack>
-                ))}
-            </AnimatePresence>
+                    <FontAwesome5
+                      name="check"
+                      size={10}
+                      color={isPro ? PRO_ICON_COLOR : colors.tint}
+                    />
+                  </View>
+                  <Text fontSize="$3" color="$color" opacity={0.9} flex={1}>
+                    {benefit === 'premium_benefit_ai' && !isPro
+                      ? t('premium_benefit_ai_personal' as any)
+                      : benefit === 'premium_benefit_planner' && !isPro
+                        ? t('premium_benefit_planner_personal' as any)
+                        : t(benefit as any)}
+                  </Text>
+                </XStack>
+              ))}
 
             {/* Show More / Show Less Toggle */}
             <Button
@@ -207,7 +315,6 @@ export const PricingSection = ({
                   color={colors.text}
                 />
               }
-              animation="quick"
               chromeless
             >
               <Text fontSize="$2" fontStyle="italic" color="$color">
@@ -222,20 +329,20 @@ export const PricingSection = ({
             <Card
               flex={1}
               bordered
-              animation="quick"
               pressStyle={{ scale: 0.95 }}
               onPress={() => {
                 haptics.light();
                 onSelectSubscription('monthly');
               }}
               backgroundColor={
-                !isYearly ? (isPro ? '#fbbf24' : colors.tint) : '$background'
+                !isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$background'
               }
               borderColor={
-                !isYearly ? (isPro ? '#fbbf24' : colors.tint) : '$borderColor'
+                !isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$borderColor'
               }
               padding="$3"
               borderWidth={!isYearly ? 2 : 1}
+              animation="quick"
             >
               <YStack alignItems="center" gap="$1">
                 <Text
@@ -251,7 +358,7 @@ export const PricingSection = ({
                   fontWeight="800"
                   color={!isYearly ? 'white' : '$color'}
                 >
-                  €{currentPrices.monthly}
+                  ${currentPrices.monthly}
                 </Text>
               </YStack>
             </Card>
@@ -260,34 +367,31 @@ export const PricingSection = ({
             <Card
               flex={1}
               bordered
-              animation="quick"
               pressStyle={{ scale: 0.95 }}
               onPress={() => {
                 haptics.light();
                 onSelectSubscription('yearly');
               }}
               backgroundColor={
-                isYearly ? (isPro ? '#fbbf24' : colors.tint) : '$background'
+                isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$background'
               }
               borderColor={
-                isYearly ? (isPro ? '#fbbf24' : colors.tint) : '$borderColor'
+                isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$borderColor'
               }
               padding="$3"
               borderWidth={isYearly ? 2 : 1}
               position="relative"
               overflow="visible"
+              animation="quick"
             >
               {/* Savings Badge Animation */}
-              <AnimatePresence>
-                <YStack
-                  position="absolute"
-                  top={-12}
-                  right={-10}
-                  zIndex={10}
-                  animation="bouncy"
-                  enterStyle={{ opacity: 0, scale: 0.5, y: 10 }}
-                  exitStyle={{ opacity: 0, scale: 0.5, y: 10 }}
-                >
+              <Animated.View
+                style={[
+                  { position: 'absolute', top: -12, right: -10, zIndex: 10 },
+                  animatedBadgeStyle,
+                ]}
+              >
+                <YStack>
                   <LinearGradient
                     colors={['#22c55e', '#16a34a']}
                     start={[0, 0]}
@@ -308,7 +412,7 @@ export const PricingSection = ({
                     </Text>
                   </LinearGradient>
                 </YStack>
-              </AnimatePresence>
+              </Animated.View>
 
               <YStack alignItems="center" gap="$1">
                 <Text
@@ -324,46 +428,47 @@ export const PricingSection = ({
                   fontWeight="800"
                   color={isYearly ? 'white' : '$color'}
                 >
-                  €{currentPrices.yearly}
+                  ${currentPrices.yearly}
                 </Text>
                 <Text
                   fontSize={10}
                   color={isYearly ? 'white' : '$gray9'}
                   opacity={0.8}
                 >
-                  (€{(currentPrices.yearly / 12).toFixed(2)}/mo)
+                  (${(currentPrices.yearly / 12).toFixed(2)}/mo)
                 </Text>
               </YStack>
             </Card>
           </XStack>
 
           {/* Upgrade Button - CTA */}
-          <Button
-            size="$5"
-            themeInverse
-            backgroundColor={isPro ? '#fbbf24' : colors.tint}
-            hoverStyle={{ opacity: 0.9, scale: 1.02 }}
-            pressStyle={{ opacity: 0.9, scale: 0.98 }}
-            onPress={() => {
-              haptics.success();
-              onUpgrade();
-            }}
-            icon={<FontAwesome5 name="star" size={14} color="white" />}
-            marginTop="$2"
-            elevate
-            bordered
-            borderColor="white"
-            animation="quick"
-          >
-            <Text
-              color="white"
-              fontWeight="800"
-              fontSize="$4"
-              letterSpacing={0.5}
+          <Animated.View style={animatedButtonStyle}>
+            <Button
+              size="$5"
+              themeInverse
+              backgroundColor={isPro ? PRO_COLOR : colors.tint}
+              hoverStyle={{ opacity: 0.9 }}
+              pressStyle={{ opacity: 0.9 }}
+              onPress={() => {
+                haptics.success();
+                onUpgrade();
+              }}
+              icon={<FontAwesome5 name="star" size={14} color="white" />}
+              marginTop="$2"
+              elevate
+              bordered
+              borderColor="white"
             >
-              {t('pricing_get_premium').toUpperCase()}
-            </Text>
-          </Button>
+              <Text
+                color="white"
+                fontWeight="800"
+                fontSize="$4"
+                letterSpacing={0.5}
+              >
+                {t('pricing_get_premium').toUpperCase()}
+              </Text>
+            </Button>
+          </Animated.View>
 
           <Text textAlign="center" fontSize="$2" opacity={0.5} marginTop="$1">
             {t('pricing_cancel_anytime')}

@@ -13,7 +13,7 @@ import {
   RewardedAdEventType,
   AdEventType,
   TestIds,
-} from 'react-native-google-mobile-ads';
+} from '@/utils/admob';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';

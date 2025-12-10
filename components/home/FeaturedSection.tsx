@@ -15,7 +15,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { CountryCard } from '@/components/CountryCard';
 import { RecipeCard } from '@/components/RecipeCard';
-import { isPremiumCountry } from '@/constants/Config';
+import { isFreeCountry } from '@/constants/Config';
 import { CARD_DIMENSIONS } from '@/constants/HomeConfig';
 import { haptics } from '@/utils/haptics';
 
@@ -143,7 +143,7 @@ export const FeaturedSection = React.memo<FeaturedSectionProps>(
             >
               <CountryCard
                 country={country}
-                isPremium={isPremiumCountry(country.name.common)}
+                isPremium={!isFreeCountry(country.name.common)}
                 onPress={() => onCountryPress(country)}
               />
             </Animated.View>

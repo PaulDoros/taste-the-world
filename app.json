@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/android-icon-192x192.png",
         "backgroundColor": "#0F172A"
       },
       "edgeToEdgeEnabled": true,
@@ -57,6 +57,13 @@
         {
           "calendarPermission": "The app needs to access your calendar to save meal plans."
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
       ]
     ],
     "experiments": {
@@ -68,6 +75,12 @@
         "projectId": "0a14f844-5ab1-46f3-9b70-d770e9733f57"
       }
     },
-    "owner": "dorospaul"
+    "owner": "dorospaul",
+    "updates": {
+      "url": "https://u.expo.dev/0a14f844-5ab1-46f3-9b70-d770e9733f57"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
   }
 }

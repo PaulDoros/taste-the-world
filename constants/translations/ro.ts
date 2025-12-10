@@ -251,6 +251,8 @@ export const ro = {
   more_menu_pantry_desc: 'Urmărește ingredientele',
   more_menu_history: 'Istoric',
   more_menu_history_desc: 'Rețete vizualizate recent',
+  more_menu_wallet: 'Travel Wallet',
+  more_menu_wallet_desc: 'Călătoriile și biletele mele',
 
   // Country Details
   country_error_title: 'Ooops!',
@@ -581,7 +583,9 @@ export const ro = {
   premium_benefit_countries:
     'Deblochează TOATE cele 195+ țări inclusiv Italia, Franța, Japonia și altele!',
   premium_benefit_ai: 'Chef AI și Travel Chef nelimitat',
+  premium_benefit_ai_personal: '20 de prompt-uri Chef AI & Travel zilnic',
   premium_benefit_planner: 'Planificator de mese Săptămânal și pentru Bebeluși',
+  premium_benefit_planner_personal: 'Planificator de mese Săptămânal',
   premium_benefit_recipes: 'Rețete nelimitate din fiecare țară',
 
   premium_benefit_favorites: 'Salvează rețete favorite nelimitate',
@@ -596,5 +600,26 @@ export const ro = {
   pricing_personal_title: 'Personal',
   pricing_personal_subtitle: 'Unlock everything + more limits',
   pricing_pro_title: 'PRO',
-  pricing_pro_subtitle: 'Ultimate experience + offline',
+  pricing_pro_subtitle: 'Experiență supremă + offline',
+
+  // Wallet
+  wallet_title: 'Portofel Călătorii',
+  wallet_add: 'Adaugă Călătorie',
+  wallet_empty_title: 'Nicio călătorie viitoare.',
+  wallet_empty_desc: 'Adaugă prima ta aventură!',
+  wallet_delete_title: 'Ștergi Călătoria?',
+  wallet_delete_msg: 'Această acțiune este ireversibilă.',
+  wallet_delete_confirm: 'Șterge',
+  wallet_boarding_pass: 'Bilet de Îmbarcare Atașat',
+  wallet_no_ticket: 'Fără bilet atașat',
+  wallet_new_trip: 'Călătorie Nouă',
+  wallet_label_dest: 'Destinație',
+  wallet_ph_dest: 'ex. Roma, Italia',
+  wallet_label_flight: 'Zbor #',
+  wallet_ph_flight: 'ex. RO341',
+  wallet_label_date: 'Data',
+  wallet_upload_btn: 'Încarcă Bilet / Captură',
+  wallet_save_btn: 'Salvează',
+  wallet_error_missing: 'Te rugăm introdu o destinație.',
+  wallet_error_save: 'Salvarea a eșuat.',
 };

@@ -43,6 +43,9 @@ import BabyProfile from '@/components/BabyProfile';
 import { COUNTRY_TO_AREA_MAP } from '@/constants/Config';
 import { useLanguage } from '@/context/LanguageContext';
 import { Translations } from '@/constants/Translations';
+import { useTierLimit } from '@/hooks/useTierLimit';
+import { useFocusEffect } from 'expo-router';
+import { PremiumLockModal } from '@/components/PremiumLockModal';
 
 // Extract keys for selection list
 const AVAILABLE_CUISINES = Object.keys(COUNTRY_TO_AREA_MAP).sort();
@@ -305,9 +308,77 @@ export default function PlannerScreen() {
       haptics.success();
     } catch (e) {
       console.error('Failed to parse historical plan', e);
-      Alert.alert(t('common_error'), t('planner_error_generate'));
     }
   };
+
+  const { canAccessFeature } = useTierLimit();
+  const isUnlocked = canAccessFeature('planner');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isUnlocked === false) {
+        const timer = setTimeout(() => setShowPremiumModal(true), 100);
+        return () => clearTimeout(timer);
+      }
+    }, [isUnlocked])
+  );
+
+  if (isUnlocked === false) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <YStack
+          flex={1}
+          alignItems="center"
+          justifyContent="center"
+          padding="$6"
+          gap="$4"
+        >
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: `${colors.tint}20`,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 8,
+            }}
+          >
+            <FontAwesome5 name="lock" size={32} color={colors.tint} />
+          </View>
+          <Text fontSize="$6" fontWeight="800" textAlign="center">
+            {t('meal_planner')}
+          </Text>
+          <Text fontSize="$4" color="$gray10" textAlign="center" opacity={0.8}>
+            {t('premium_feature_desc')}
+          </Text>
+          <Button
+            marginTop="$4"
+            size="$5"
+            themeInverse
+            backgroundColor={colors.tint}
+            onPress={() => router.push('/(tabs)/settings')}
+          >
+            {t('pricing_get_premium')}
+          </Button>
+
+          <PremiumLockModal
+            isVisible={showPremiumModal}
+            onClose={() => {
+              setShowPremiumModal(false);
+              router.back();
+            }}
+            onUpgrade={() => {
+              setShowPremiumModal(false);
+              router.push('/(tabs)/settings');
+            }}
+            featureTitle={t('meal_planner')}
+          />
+        </YStack>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -840,111 +911,6 @@ export default function PlannerScreen() {
     </SafeAreaView>
   );
 }
-
-/**
- * Animated Mode Switcher Component
- * Extracted to ensure proper hook usage and avoid crashes
- */
-const AnimatedModeSwitcher = ({ mode, setMode, colors, t }: any) => {
-  const [layoutWidth, setLayoutWidth] = useState(0);
-
-  // Animated styles defined at component top level
-  // Using direct state in useAnimatedStyle as requested
-  const sliderStyle = useAnimatedStyle(() => {
-    // If layout hasn't been measured yet, avoid jumping
-    if (layoutWidth === 0) return {};
-
-    return {
-      transform: [
-        {
-          translateX: withSpring(mode === 'standard' ? 0 : layoutWidth * 0.49, {
-            damping: 15,
-            stiffness: 150,
-            mass: 0.8,
-          }),
-        },
-      ],
-    };
-  });
-
-  const standardTextStyle = useAnimatedStyle(() => ({
-    color: withSpring(mode === 'standard' ? '#ffffff' : colors.text),
-  }));
-
-  const babyTextStyle = useAnimatedStyle(() => ({
-    color: withSpring(mode === 'baby' ? '#ffffff' : colors.text),
-  }));
-
-  return (
-    <View
-      onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
-      style={{
-        backgroundColor: colors.card,
-        flexDirection: 'row',
-        borderRadius: 16,
-        padding: 4,
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
-        height: 54,
-        position: 'relative',
-      }}
-    >
-      {/* Animated Slider Background */}
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: 4,
-            left: 4,
-            bottom: 4,
-            width: '50%',
-            borderRadius: 12,
-            backgroundColor: mode === 'baby' ? '#FFB6C1' : colors.tint,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 3,
-            elevation: 2,
-          },
-          sliderStyle,
-        ]}
-      />
-
-      <Pressable
-        onPress={() => {
-          haptics.selection();
-          setMode('standard');
-        }}
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
-        }}
-      >
-        <Animated.Text style={[{ fontWeight: '700' }, standardTextStyle]}>
-          {t('planner_mode_standard')}
-        </Animated.Text>
-      </Pressable>
-      <Pressable
-        onPress={() => {
-          haptics.selection();
-          setMode('baby');
-        }}
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
-        }}
-      >
-        <Animated.Text style={[{ fontWeight: '700' }, babyTextStyle]}>
-          {t('planner_mode_baby')}
-        </Animated.Text>
-      </Pressable>
-    </View>
-  );
-};
 
 /**
  * Planner Day Item Component

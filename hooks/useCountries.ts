@@ -20,7 +20,7 @@ export const useCountries = () => {
       const premiumCountries: Country[] = [];
 
       allCountries.forEach((country) => {
-        if (APP_CONFIG.FEATURED_COUNTRIES.includes(country.name.common)) {
+        if (APP_CONFIG.FREE_COUNTRIES.includes(country.name.common)) {
           freeCountries.push(country);
         } else {
           premiumCountries.push(country);

@@ -24,6 +24,7 @@ import type * as recipeHistory from "../recipeHistory.js";
 import type * as recipes from "../recipes.js";
 import type * as shoppingList from "../shoppingList.js";
 import type * as translations from "../translations.js";
+import type * as trips from "../trips.js";
 import type * as users from "../users.js";
 
 import type {
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   recipes: typeof recipes;
   shoppingList: typeof shoppingList;
   translations: typeof translations;
+  trips: typeof trips;
   users: typeof users;
 }>;
 

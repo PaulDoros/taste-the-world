@@ -55,7 +55,13 @@ const TRAVEL_AVATAR = require('@/assets/images/travel-avatar.png');
 export default function ChefScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { user: currentUser, token, signOut, tier } = useAuth();
+  const {
+    user: currentUser,
+    token,
+    signOut,
+    tier,
+    subscriptionType,
+  } = useAuth();
   const { t, language } = useLanguage();
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -923,10 +929,11 @@ export default function ChefScreen() {
               horizontal
               showsHorizontalScrollIndicator={false}
               style={{ marginBottom: 12 }}
-              contentContainerStyle={{ paddingHorizontal: 4, gap: 8 }}
+              contentContainerStyle={{ paddingHorizontal: 4, gap: 2 }}
             >
               <QuickActionButton
                 index={0}
+                icon="dice"
                 activeQuickAction={activeQuickAction}
                 quickActionAnim={quickActionAnim}
                 onPress={() => handleQuickAction('random')}
@@ -936,6 +943,7 @@ export default function ChefScreen() {
 
               <QuickActionButton
                 index={1}
+                icon="carrot"
                 activeQuickAction={activeQuickAction}
                 quickActionAnim={quickActionAnim}
                 onPress={() => handleQuickAction('pantry')}
@@ -945,6 +953,7 @@ export default function ChefScreen() {
 
               <QuickActionButton
                 index={2}
+                icon="magic"
                 activeQuickAction={activeQuickAction}
                 quickActionAnim={quickActionAnim}
                 onPress={() => handleQuickAction('surprise')}
@@ -1103,27 +1112,30 @@ const ActionButtons = ({
 
 const QuickActionButton = ({
   index,
+  icon,
   activeQuickAction,
   quickActionAnim,
   onPress,
   children,
 }: {
   index: number;
+  icon: string;
   activeQuickAction: SharedValue<number | null>;
   quickActionAnim: SharedValue<number>;
   onPress: () => void;
   children: React.ReactNode;
 }) => {
-  const style = useAnimatedStyle(() => {
+  // Animate ONLY the icon
+  const iconStyle = useAnimatedStyle(() => {
     if (activeQuickAction.value !== index) return {};
 
     return {
       transform: [
-        { rotateZ: `${quickActionAnim.value}deg` },
+        { rotateZ: `${quickActionAnim.value * 2}deg` }, // Rotate
         {
           scale: withSpring(
             activeQuickAction.value === index && quickActionAnim.value !== 0
-              ? 1.1
+              ? 1.2
               : 1
           ),
         },
@@ -1132,16 +1144,20 @@ const QuickActionButton = ({
   });
 
   return (
-    <Animated.View style={style}>
-      <Button
-        size="$2"
-        theme="active"
-        variant="outlined"
-        onPress={onPress}
-        borderRadius="$10"
-      >
-        {children}
-      </Button>
-    </Animated.View>
+    <Button
+      size="$3"
+      theme="active"
+      variant="outlined"
+      onPress={onPress}
+      borderRadius="$10"
+      paddingHorizontal="$3"
+      icon={
+        <Animated.View style={iconStyle}>
+          <FontAwesome5 name={icon} size={14} color={Colors.light.tint} />
+        </Animated.View>
+      }
+    >
+      {children}
+    </Button>
   );
 };

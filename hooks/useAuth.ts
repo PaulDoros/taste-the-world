@@ -246,6 +246,7 @@ export function useAuth() {
     error,
     isAuthenticated,
     tier: user?.tier || 'guest',
+    subscriptionType: user?.subscriptionType || 'free',
     isPremium,
     signUp,
     signIn,

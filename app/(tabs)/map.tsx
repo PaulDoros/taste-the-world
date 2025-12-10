@@ -70,8 +70,12 @@ export default function MapScreen() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+      } catch (e) {
+        console.warn('Location unavailable:', e);
+      }
     })();
   }, []);
 

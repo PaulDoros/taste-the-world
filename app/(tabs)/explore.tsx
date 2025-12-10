@@ -15,7 +15,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from 'tamagui';
-import { isPremiumCountry } from '@/constants/Config';
+import { isFreeCountry } from '@/constants/Config';
 import { useCountries } from '@/hooks/useCountries';
 import { useUserStore } from '@/store/useUserStore';
 import { canAccessCountry, TIER_LIMITS } from '@/utils/userTiers';
@@ -102,7 +102,7 @@ export default function ExploreScreen() {
 
       // Premium filter
       if (selectedPremium !== 'All') {
-        const isCountryPremium = isPremiumCountry(country.name.common);
+        const isCountryPremium = !isFreeCountry(country.name.common);
         if (selectedPremium === 'Free' && isCountryPremium) return false;
         if (selectedPremium === 'Premium' && !isCountryPremium) return false;
       }
@@ -120,7 +120,7 @@ export default function ExploreScreen() {
         <StaggeredListItem index={index} staggerDelay={50}>
           <CountryCard
             country={item}
-            isPremium={isPremiumCountry(item.name.common)}
+            isPremium={!isFreeCountry(item.name.common)}
             isLocked={isLocked}
             onPress={() => {
               if (isLocked) {

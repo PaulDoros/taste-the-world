@@ -40,6 +40,7 @@ import { DetailSkeleton } from '@/components/SkeletonLoader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useLanguage } from '@/context/LanguageContext';
+import { TripPlannerModal } from '@/components/TripPlannerModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_KEY;
@@ -66,6 +67,7 @@ const CountryDetailsScreen = () => {
     humidity: number;
     windSpeed: number;
   } | null>(null);
+  const [showTripModal, setShowTripModal] = useState(false);
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -242,7 +244,11 @@ const CountryDetailsScreen = () => {
             <Pressable
               onPress={() => {
                 haptics.selection();
+                const isAdding = !bucketList.includes(country.cca2);
                 toggleBucketList(country.cca2);
+                if (isAdding) {
+                  setShowTripModal(true);
+                }
               }}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -753,6 +759,17 @@ const CountryDetailsScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Trip Planner Modal */}
+      {country && (
+        <TripPlannerModal
+          visible={showTripModal}
+          onClose={() => setShowTripModal(false)}
+          countryName={country.name.common}
+          countryLat={country.latlng?.[0]}
+          countryLng={country.latlng?.[1]}
+        />
+      )}
     </View>
   );
 };

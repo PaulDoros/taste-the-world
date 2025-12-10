@@ -212,6 +212,10 @@ export default function SettingsScreen() {
   const { user, isAuthenticated, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
+  // Determine if the user is a "Guest" (even if technically authenticated with a guest token)
+  const isGuest = !isAuthenticated || user?.email?.includes('@guest.local');
+  const showProfile = isAuthenticated && !isGuest;
+
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   const [selectedSubscription, setSelectedSubscription] = useState<
@@ -249,7 +253,7 @@ export default function SettingsScreen() {
 
   const handleManageAccount = () => {
     haptics.light();
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isGuest) {
       router.push('/auth/login');
     } else {
       showError(t('settings_manage_account_soon'));
@@ -293,80 +297,107 @@ export default function SettingsScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Animated.View
-          entering={FadeInDown.delay(50).springify()}
-          style={{ marginBottom: 20 }}
-        >
-          <XStack alignItems="center" gap="$4">
-            <Avatar circular size="$6">
-              <Avatar.Image src={user?.image} />
-              <Avatar.Fallback
-                backgroundColor="$gray5"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <FontAwesome5 name="user" size={24} color={colors.text} />
-              </Avatar.Fallback>
-            </Avatar>
-
-            <YStack flex={1}>
-              <Text fontSize="$8" fontWeight="800" color="$color">
-                {t('settings_title')}
-              </Text>
-              <Text fontSize="$4" color="$color" opacity={0.6}>
-                {isAuthenticated
-                  ? user?.name || user?.email || t('settings_signed_in')
-                  : t('settings_signed_out')}
-              </Text>
-            </YStack>
-
-            {isPremium && (
-              <YStack
-                backgroundColor="#8B5CF6"
-                paddingHorizontal="$3"
-                paddingVertical="$1.5"
-                borderRadius="$4"
-              >
-                <Text
-                  color="white"
-                  fontSize={12}
-                  fontWeight="800"
-                  textTransform="uppercase"
+        {/* Header - Only show for fully authenticated (non-guest) users */}
+        {showProfile && (
+          <Animated.View
+            entering={FadeInDown.delay(50).springify()}
+            style={{ marginBottom: 20 }}
+          >
+            <XStack alignItems="center" gap="$4">
+              <Avatar circular size="$6">
+                <Avatar.Image src={user?.image} />
+                <Avatar.Fallback
+                  backgroundColor="$gray5"
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  {t('settings_premium_badge')}
+                  <FontAwesome5 name="user" size={24} color={colors.text} />
+                </Avatar.Fallback>
+              </Avatar>
+
+              <YStack flex={1}>
+                <Text fontSize="$8" fontWeight="800" color="$color">
+                  {t('settings_title')}
+                </Text>
+                <Text fontSize="$4" color="$color" opacity={0.6}>
+                  {user?.name || user?.email || t('settings_signed_in')}
                 </Text>
               </YStack>
-            )}
-          </XStack>
-        </Animated.View>
+
+              {isPremium && (
+                <YStack
+                  backgroundColor="#8B5CF6"
+                  paddingHorizontal="$3"
+                  paddingVertical="$1.5"
+                  borderRadius="$4"
+                >
+                  <Text
+                    color="white"
+                    fontSize={12}
+                    fontWeight="800"
+                    textTransform="uppercase"
+                  >
+                    {t('settings_premium_badge')}
+                  </Text>
+                </YStack>
+              )}
+            </XStack>
+          </Animated.View>
+        )}
 
         {/* Authentication Section */}
-        {!isAuthenticated ? (
+        {isGuest ? (
           <Animated.View
             entering={FadeInDown.delay(100).springify()}
             style={{ marginBottom: 24 }}
           >
-            <Card bordered padding="$4" backgroundColor="$card">
+            <Card
+              bordered
+              padding="$4"
+              backgroundColor="$card"
+              elevation={4}
+              shadowColor="$shadowColor"
+              shadowRadius={10}
+              shadowOpacity={0.1}
+            >
               <XStack alignItems="center" gap="$3" marginBottom="$3">
-                <FontAwesome5
-                  name="user-circle"
-                  size={24}
-                  color={colors.text}
-                />
-                <Text fontSize="$5" fontWeight="700">
-                  {t('settings_signin_title')}
-                </Text>
+                {/* Themed Icon Container */}
+                <YStack
+                  width={44}
+                  height={44}
+                  borderRadius={22}
+                  backgroundColor={`${colors.tint}15`}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <FontAwesome5
+                    name="user-circle"
+                    size={20}
+                    color={colors.tint}
+                  />
+                </YStack>
+                <YStack flex={1}>
+                  <Text fontSize="$5" fontWeight="700" color="$color">
+                    {t('settings_signin_title')}
+                  </Text>
+                  <Text fontSize="$3" opacity={0.6} color="$color">
+                    {/* Short subtitle for better layout */}
+                    {t('settings_signin_subtitle')}
+                  </Text>
+                </YStack>
               </XStack>
-              <Text fontSize="$3" opacity={0.7} marginBottom="$4">
-                {t('settings_signin_subtitle')}
-              </Text>
+
               <Button
-                themeInverse
+                size="$4"
+                backgroundColor={colors.tint}
+                pressStyle={{ opacity: 0.9 }}
                 onPress={handleLogin}
-                icon={<FontAwesome5 name="sign-in-alt" />}
+                icon={<FontAwesome5 name="sign-in-alt" color="white" />}
+                elevate
               >
-                {t('settings_signin_button')}
+                <Text color="white" fontWeight="700">
+                  {t('settings_signin_button')}
+                </Text>
               </Button>
             </Card>
           </Animated.View>
@@ -422,7 +453,7 @@ export default function SettingsScreen() {
         )}
 
         {/* Premium Status (if subscribed) */}
-        {isPremium && isAuthenticated && (
+        {isPremium && showProfile && (
           <Animated.View
             entering={FadeInDown.delay(150).springify()}
             style={{ marginBottom: 24 }}
@@ -494,7 +525,7 @@ export default function SettingsScreen() {
               </Text>
             }
           />
-          {isAuthenticated ? (
+          {showProfile ? (
             <SettingsItem
               icon="user-cog"
               title={t('settings_manage_account')}
