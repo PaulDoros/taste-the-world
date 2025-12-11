@@ -269,6 +269,16 @@ export const sendMessage = action({
         userId: user._id,
       });
 
+      // LOG GAMIFICATION ACTIVITY
+      try {
+        await ctx.runMutation(api.gamification.logActivity, {
+          actionType: 'chat',
+        });
+      } catch (err) {
+        // failed to log activity, ignore
+        console.error('Failed to log game activity', err);
+      }
+
       return { content: responseText, chatId };
     } catch (error) {
       console.error('AI Error:', error);

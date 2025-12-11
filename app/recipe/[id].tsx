@@ -6,7 +6,9 @@ import {
   Image,
   Pressable,
   Linking,
+  Alert,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -281,6 +283,148 @@ const RecipeDetailsScreen = () => {
     haptics.success();
     showSuccess(
       t('recipe_pantry_success', { count: selectedIngredients.length })
+    );
+  };
+
+  const logActivity = useMutation(api.gamification.logActivity);
+  const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
+  const savePhoto = useMutation(api.photos.savePhoto);
+
+  const handleUploadPhoto = async (uri: string) => {
+    try {
+      console.log('[RecipeDetails] Starting upload for:', uri);
+
+      // 1. Get upload URL
+      const postUrl = await generateUploadUrl();
+      console.log('[RecipeDetails] Got upload URL');
+
+      // 2. Upload file
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      console.log('[RecipeDetails] Created blob size:', blob.size);
+
+      const result = await fetch(postUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': response.headers.get('Content-Type') || 'image/jpeg',
+        },
+        body: blob,
+      });
+
+      if (!result.ok) {
+        console.error('[RecipeDetails] Upload failed status:', result.status);
+        throw new Error('Upload failed');
+      }
+
+      const { storageId } = await result.json();
+      console.log('[RecipeDetails] Upload success, ID:', storageId);
+
+      // 3. Save metadata
+      if (recipe) {
+        await savePhoto({
+          storageId,
+          recipeId: recipe.idMeal,
+          recipeName: recipe.strMeal,
+          token: token || undefined, // Pass token if valid
+        });
+        console.log('[RecipeDetails] Saved photo metadata');
+      }
+
+      // 4. Log Action (Photo Bonus)
+      const stats = await logActivity({
+        actionType: 'photo',
+        token: token || undefined, // Pass token if valid
+        recipeCategory: recipe?.strCategory,
+      });
+      console.log('[RecipeDetails] Activity logged, stats:', stats);
+
+      if (stats) {
+        showSuccess(
+          `Awesome photo! You earned 20 XP! 🔥 Streak: ${stats.currentStreak}`
+        );
+      }
+    } catch (e) {
+      console.error('[RecipeDetails] Upload error', e);
+      showError('Failed to upload photo. Check logs.');
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    if (!isAuthenticated) {
+      showError('Please sign in to earn XP with photos!');
+      return;
+    }
+
+    try {
+      console.log('[RecipeDetails] Launching camera...');
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.5,
+      });
+
+      console.log(
+        '[RecipeDetails] Camera result:',
+        result.canceled ? 'Canceled' : 'Captured'
+      );
+
+      if (!result.canceled) {
+        haptics.success();
+        await handleUploadPhoto(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.error('[RecipeDetails] Camera error', e);
+      showError('Could not launch camera');
+    }
+  };
+
+  const handleCookedThis = () => {
+    haptics.light();
+    Alert.alert(
+      'Show off your dish!',
+      'Upload a photo to earn 20 XP, or just log it for 10 XP.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Just Log (+10 XP)',
+          onPress: async () => {
+            console.log('[RecipeDetails] Just Log pressed');
+            if (!isAuthenticated) {
+              showError('Please sign in to earn XP and track streaks!');
+              return;
+            }
+            try {
+              const result = await logActivity({
+                actionType: 'cook',
+                token: token || undefined,
+                recipeCategory: recipe?.strCategory,
+              });
+              console.log('[RecipeDetails] Log Activity Result:', result);
+
+              if (result) {
+                showSuccess(
+                  `Yum! You earned 10 XP! 🔥 Streak: ${result.currentStreak}`
+                );
+              } else {
+                // Result null usually means user not found or auth issue despite isAuthenticated=true
+                console.error('[RecipeDetails] logActivity returned null');
+                showError('Could not update stats. Please try again.');
+              }
+            } catch (e) {
+              console.error('[RecipeDetails] Log Activity Failed:', e);
+              showError('Something went wrong logging your cook.');
+            }
+          },
+        },
+        {
+          text: 'Take Photo (+20 XP)',
+          onPress: handleTakePhoto,
+        },
+      ]
     );
   };
 
@@ -573,6 +717,31 @@ const RecipeDetailsScreen = () => {
                   </Text>
                 </Pressable>
               )}
+              <Pressable
+                onPress={handleCookedThis}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#8b5cf6', // Violet
+                  paddingVertical: 14,
+                  borderRadius: 16,
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                })}
+              >
+                <FontAwesome5 name="fire-alt" size={16} color="white" />
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: '700',
+                    fontSize: 15,
+                    marginLeft: 8,
+                  }}
+                >
+                  I Cooked This!
+                </Text>
+              </Pressable>
             </View>
           </Animated.View>
 

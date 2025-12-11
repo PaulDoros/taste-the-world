@@ -57,7 +57,7 @@ export const RegionGrid = React.memo<RegionGridProps>(
 
     return (
       <Animated.View entering={FadeInUp.delay(delay).springify()}>
-        <YStack paddingHorizontal="$6" marginTop="$4" paddingBottom="$4">
+        <YStack paddingHorizontal="$2" marginTop="$4" paddingBottom="$4">
           <XStack alignItems="center" space="$3" marginBottom="$4">
             <YStack
               width={4}
@@ -79,7 +79,13 @@ export const RegionGrid = React.memo<RegionGridProps>(
             {t('home_region_subtitle')}
           </Paragraph>
 
-          <XStack flexWrap="wrap" gap="$3">
+          <XStack
+            flexWrap="wrap"
+            gap="$3"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
             {regionCards.map((region, index) => (
               <Animated.View
                 key={region.name}
@@ -115,16 +121,14 @@ export const RegionGrid = React.memo<RegionGridProps>(
                         : 'rgba(255, 255, 255, 0.8)',
                   }}
                   animation="quick"
-                  overflow="hidden" // Required for BlurView borderRadius
+                  overflow="hidden"
                 >
-                  {/* Native Blur View */}
                   <BlurView
                     intensity={20}
                     tint={colorScheme === 'dark' ? 'dark' : 'light'}
                     style={StyleSheet.absoluteFill}
                   />
 
-                  {/* Icon Container */}
                   <YStack
                     width={40}
                     height={40}
@@ -132,7 +136,7 @@ export const RegionGrid = React.memo<RegionGridProps>(
                     alignItems="center"
                     justifyContent="center"
                     marginBottom="$3"
-                    backgroundColor={region.color + '25'} // Increased opacity for richer pastel
+                    backgroundColor={region.color + '25'}
                   >
                     <FontAwesome5
                       name={region.icon as any}
@@ -141,7 +145,6 @@ export const RegionGrid = React.memo<RegionGridProps>(
                     />
                   </YStack>
 
-                  {/* Region Name */}
                   <Heading
                     size="$3"
                     fontWeight="800"
@@ -153,7 +156,6 @@ export const RegionGrid = React.memo<RegionGridProps>(
                     {region.name}
                   </Heading>
 
-                  {/* Count */}
                   <XStack alignItems="center" space="$1.5">
                     <Paragraph size="$2" fontWeight="700" color={region.color}>
                       {region.count}

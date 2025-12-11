@@ -12,8 +12,9 @@ import Animated, {
 import { YStack, XStack, Heading, Paragraph, Button, Card } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 import { Colors } from '@/constants/Colors';
+import { StreakCounter } from '@/components/gamification/StreakCounter';
 import { useColorScheme } from '@/components/useColorScheme';
 import { HOME_STATS } from '@/constants/HomeConfig';
 import { haptics } from '@/utils/haptics';
@@ -188,6 +189,14 @@ export const HomeHero = React.memo<HomeHeroProps>(
               tint={colorScheme === 'dark' ? 'dark' : 'light'}
               style={StyleSheet.absoluteFill}
             />
+          )}
+
+          {isAuthenticated && (
+            <View
+              style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}
+            >
+              <StreakCounter />
+            </View>
           )}
 
           {/* Header Section */}

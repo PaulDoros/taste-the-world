@@ -1,4 +1,5 @@
 import React from 'react';
+import { XStack } from 'tamagui';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,6 +10,7 @@ import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTierLimit } from '@/hooks/useTierLimit';
 import { PremiumLockModal } from '@/components/PremiumLockModal';
+import { XPProgress } from '@/components/gamification/XPProgress';
 import { useState } from 'react';
 
 export default function MoreScreen() {
@@ -111,10 +113,71 @@ export default function MoreScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingBottom: 120, // Space for tab bar
+          paddingBottom: 120,
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Gamification Stats */}
+        <View style={{ marginBottom: 24 }}>
+          <XStack
+            justifyContent="space-between"
+            alignItems="center"
+            marginBottom={12}
+            paddingHorizontal={4}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: colors.text,
+              }}
+            >
+              Your Journey
+            </Text>
+            <Pressable
+              onPress={() => router.push('/gamification/achievements' as any)}
+            >
+              <Text
+                style={{ color: colors.tint, fontSize: 14, fontWeight: '600' }}
+              >
+                View All
+              </Text>
+            </Pressable>
+          </XStack>
+
+          {/* XP Card - Now Clickable */}
+          <Pressable
+            onPress={() => {
+              haptics.light();
+              router.push('/gamification/achievements' as any);
+            }}
+            style={({ pressed }) => ({
+              padding: 16,
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.border,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              opacity: pressed ? 0.8 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
+          >
+            <XPProgress />
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
+              <FontAwesome5 name="medal" size={24} color={colors.tint} />
+              <FontAwesome5
+                name="chevron-right"
+                size={16}
+                color={colors.text}
+                opacity={0.3}
+              />
+            </View>
+          </Pressable>
+        </View>
         {/* Menu Grid */}
         <View style={{ gap: 12 }}>
           {menuItems.map((item, index) => (
@@ -205,7 +268,6 @@ export default function MoreScreen() {
             </Pressable>
           ))}
         </View>
-
         {/* Footer Section */}
         <View
           style={{

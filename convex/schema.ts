@@ -42,6 +42,21 @@ export default defineSchema({
     lastAiReset: v.optional(v.number()), // Timestamp of last usage reset
     aiMessagesUsed: v.optional(v.number()), // Total lifetime usage (legacy/analytics)
     language: v.optional(v.string()), // User's preferred language (en, ro, fr, etc.)
+    // Gamification
+    gamification: v.optional(
+      v.object({
+        xp: v.number(),
+        level: v.number(),
+        currentStreak: v.number(),
+        lastActivityDate: v.number(),
+        badges: v.array(v.string()),
+        photosUploaded: v.optional(v.number()),
+        recipesCooked: v.optional(v.number()),
+        uniqueRegions: v.optional(v.array(v.string())),
+        categoryCounts: v.optional(v.any()), // Record<string, number>
+        aiMessagesSent: v.optional(v.number()),
+      })
+    ),
   })
     .index('by_email', ['email'])
     .index('by_tier', ['tier'])
@@ -273,6 +288,20 @@ export default defineSchema({
   })
     .index('by_relatedId_language', ['relatedId', 'language'])
     .index('by_relatedId_language_field', ['relatedId', 'language', 'field']),
+
+  /**
+   * Recipe Photos table
+   * Stores user uploaded photos of cooked recipes
+   */
+  recipePhotos: defineTable({
+    storageId: v.string(),
+    userId: v.id('users'),
+    recipeId: v.string(), // External ID (themealdb)
+    recipeName: v.string(),
+    timestamp: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_recipe', ['recipeId']),
 
   /**
    * Trips table
