@@ -142,14 +142,13 @@ export const BadgeTile = ({
             numberOfLines={2}
             opacity={isUnlocked ? 1 : 0.6}
             marginBottom={4}
-            marginTop="auto" // Push to bottom part if needed, or rely on flex center
           >
             {badge.title}
           </Text>
 
           {/* Progress Bar for Locked Items */}
           {!isUnlocked && (
-            <View style={{ width: '100%', marginTop: 'auto' }}>
+            <View style={{ width: '100%', marginTop: 8 }}>
               <Text
                 fontSize={9}
                 color={colors.text}
