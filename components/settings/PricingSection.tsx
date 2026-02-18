@@ -1,5 +1,5 @@
 import { View, LayoutChangeEvent, StyleSheet } from 'react-native';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { YStack, XStack, Text, Button, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -129,77 +129,78 @@ export const PricingSection = ({
   const isYearly = selectedSubscription === 'yearly';
   const isPro = selectedTier === 'pro';
 
-  // Find the correct RevenueCat package
-  const currentPackage = useMemo(() => {
-    if (!offerings.length) return null;
-
-    const term = selectedSubscription.toLowerCase();
-    const tier = selectedTier.toLowerCase();
-
-    // 1. Try exact matches first (personal_monthly, personal-monthly, pro_yearly, etc.)
-    const compoundId = `${tier}_${term}`;
-    const compoundIdAlt = `${tier}-${term}`;
-
-    const match = offerings.find((o) => {
-      const id = o.product.identifier.toLowerCase();
-      return (
-        id === compoundId ||
-        id === compoundIdAlt ||
-        id.startsWith(compoundId) ||
-        id.startsWith(compoundIdAlt)
+  // Debug: What packages are ACTUALLY available?
+  useEffect(() => {
+    if (offerings.length > 0) {
+      console.log(
+        '[PricingSection] Available Packages:',
+        offerings.map((o) => o.product.identifier)
       );
-    });
+    } else {
+      console.log('[PricingSection] No offerings loaded yet.');
+    }
+  }, [offerings]);
 
-    if (match) return match;
+  // Robust helper to find a package by tier + period — computed fresh every render
+  const findPackage = (tier: string, period: string) => {
+    const term = period.toLowerCase();
+    const tierName = tier.toLowerCase();
+    const compoundId = `${tierName}_${term}`;
+    const compoundIdAlt = `${tierName}-${term}`;
 
-    // 2. Fallback for simple identifiers if only one set exists
-    // If we are looking for 'pro' and see 'pro_monthly', that's handled above.
-    // If we are looking for 'personal' and only 'monthly' exists, pick it.
-    if (tier === 'personal' || tier === 'free') {
+    // 1. Explicit known formats based on RevenueCat setup
+    const knownIds: string[] = [];
+
+    // Personal tier has "-base" suffix for monthly/yearly
+    if (tierName === 'personal') {
+      if (term === 'monthly') knownIds.push('personal-monthly-base');
+      if (term === 'yearly') knownIds.push('personal-yearly-base');
+      if (term === 'weekly') knownIds.push('personal-weekly'); // no base suffix for weekly
+    }
+
+    // Pro tier uses standard dash format
+    if (tierName === 'pro') {
+      knownIds.push(`${tierName}-${term}`);
+    }
+
+    // Also fallback to standard formats just in case
+    knownIds.push(`${tierName}_${term}`);
+    knownIds.push(`${tierName}-${term}`);
+
+    const exact = offerings.find((o) =>
+      knownIds.includes(o.product.identifier.toLowerCase())
+    );
+    if (exact) return exact;
+
+    // 2. Simple identifier fallback
+    if (tierName === 'personal' || tierName === 'free') {
       const simpleMatch = offerings.find(
         (o) => o.product.identifier.toLowerCase() === term
       );
       if (simpleMatch) return simpleMatch;
     }
 
-    // 3. Last resort: fuzzy match
+    // 3. Robust Fuzzy
     return (
       offerings.find((o) => {
         const id = o.product.identifier.toLowerCase();
-        return id.includes(tier) && id.includes(term);
+        return id.includes(tierName) && id.includes(term);
       }) ||
       offerings.find((o) => o.product.identifier.toLowerCase().includes(term))
     );
-  }, [offerings, selectedTier, selectedSubscription]);
+  };
+
+  // Derive current package directly
+  const currentPackage = findPackage(selectedTier, selectedSubscription);
 
   // Fallback prices from config
   const fallbackPrices = SUBSCRIPTION_PRICES[selectedTier];
 
-  // Use exact matching for price lookups too
-  const findByExactId = (tier: string, period: string) => {
-    const term = period.toLowerCase();
-    const tierName = tier.toLowerCase();
-    const compoundId = `${tierName}_${term}`;
-    const compoundIdAlt = `${tierName}-${term}`;
-
-    return (
-      offerings.find((o) => {
-        const id = o.product.identifier.toLowerCase();
-        return (
-          id === compoundId ||
-          id === compoundIdAlt ||
-          id.startsWith(compoundId) ||
-          id.startsWith(compoundIdAlt)
-        );
-      }) || offerings.find((o) => o.product.identifier.toLowerCase() === term)
-    );
-  };
-
   const monthlyPrice =
-    findByExactId(selectedTier, 'monthly')?.product.priceString ??
+    findPackage(selectedTier, 'monthly')?.product.priceString ??
     `$${fallbackPrices.monthly.toFixed(2)}`;
   const yearlyPrice =
-    findByExactId(selectedTier, 'yearly')?.product.priceString ??
+    findPackage(selectedTier, 'yearly')?.product.priceString ??
     `$${fallbackPrices.yearly.toFixed(2)}`;
 
   // Memoize benefits filtering

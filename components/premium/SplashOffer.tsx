@@ -52,6 +52,18 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
   );
   const isPro = selectedTier === 'pro';
 
+  // Debug: What packages are ACTUALLY available to SplashOffer?
+  useEffect(() => {
+    if (offerings.length > 0) {
+      console.log(
+        '[SplashOffer] Available Packages:',
+        offerings.map((o) => o.product.identifier)
+      );
+    } else {
+      console.log('[SplashOffer] No offerings loaded yet.');
+    }
+  }, [offerings]);
+
   // Find a package by tier + period — computed fresh every render
   const findPackage = (
     tier: 'personal' | 'pro',
@@ -60,26 +72,34 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
     const compoundId = `${tier}_${period}`;
     const compoundIdAlt = `${tier}-${period}`;
 
-    // 1. Exact compound match
-    const exact = offerings.find((o) => {
-      const id = o.product.identifier.toLowerCase();
-      return (
-        id === compoundId ||
-        id === compoundIdAlt ||
-        id.startsWith(compoundId) ||
-        id.startsWith(compoundIdAlt)
-      );
-    });
+    // 1. Explicit known formats based on RevenueCat setup
+    const knownIds: string[] = [];
+
+    // Personal tier special cases
+    if (tier === 'personal') {
+      if (period === 'yearly') knownIds.push('personal-yearly-base');
+      if (period === 'weekly') knownIds.push('personal-weekly'); // no base matching screenshot
+    }
+
+    // Pro tier uses standard dash format
+    if (tier === 'pro') {
+      knownIds.push(`${tier}-${period}`);
+    }
+
+    // Universal fallbacks
+    knownIds.push(`${tier}_${period}`);
+    knownIds.push(`${tier}-${period}`);
+
+    const exact = offerings.find((o) =>
+      knownIds.includes(o.product.identifier.toLowerCase())
+    );
     if (exact) return exact;
 
     // 2. Fuzzy: contains both the tier and period
-    const fuzzy = offerings.find((o) => {
+    return offerings.find((o) => {
       const id = o.product.identifier.toLowerCase();
       return id.includes(tier) && id.includes(period);
     });
-    if (fuzzy) return fuzzy;
-
-    return null;
   };
 
   // Derive current packages directly (no memoization — always fresh)
