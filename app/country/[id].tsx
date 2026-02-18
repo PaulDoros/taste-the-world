@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,10 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth'; // [NEW] Import useAuth
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -20,10 +23,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
-  withDelay,
   FadeIn,
-  FadeInDown,
   FadeInUp,
 } from 'react-native-reanimated';
 
@@ -36,11 +36,14 @@ import { COUNTRY_TO_AREA_MAP } from '@/constants/Config';
 import { useColorScheme } from '@/components/useColorScheme';
 import { RecipeCard } from '@/components/RecipeCard';
 import { haptics } from '@/utils/haptics';
+import { playSound } from '@/utils/sounds';
 import { DetailSkeleton } from '@/components/SkeletonLoader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useLanguage } from '@/context/LanguageContext';
 import { TripPlannerModal } from '@/components/TripPlannerModal';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_KEY;
@@ -50,6 +53,8 @@ const CountryDetailsScreen = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useLanguage();
+  const { token } = useAuth(); // [NEW] Get token
+  const logActivity = useMutation(api.gamification.logActivity);
 
   // State
   const [country, setCountry] = useState<Country | null>(null);
@@ -114,9 +119,42 @@ const CountryDetailsScreen = () => {
       console.error('Error fetching country details:', err);
       setError(t('country_error_failed'));
     } finally {
+      // Cleanup or other final logic
       setLoading(false);
     }
   };
+
+  // Track if we've logged this country view to prevent duplicates
+  // We use a ref so it doesn't cause re-renders, but we need to reset it when ID changes.
+  const loggedCountryRef = useRef<string | null>(null);
+
+  // Reset log ref when ID changes
+  useEffect(() => {
+    loggedCountryRef.current = null;
+  }, [id]);
+
+  useEffect(() => {
+    // Only log if:
+    // 1. We have the country data
+    // 2. We have the user token (Auth is ready)
+    // 3. We haven't logged this country yet
+    if (country && token && loggedCountryRef.current !== country.name.common) {
+      console.log(
+        '[COUNTRY] Logging view_country (Authorized) for:',
+        country.name.common
+      );
+
+      logActivity({
+        actionType: 'view_country',
+        recipeArea: country.name.common,
+        token: token,
+      })
+        .then(() => {
+          loggedCountryRef.current = country.name.common;
+        })
+        .catch((err) => console.error('Failed to log country view:', err));
+    }
+  }, [country, token]);
 
   const fetchRecipes = async (countryName: string) => {
     try {
@@ -226,22 +264,32 @@ const CountryDetailsScreen = () => {
             }}
           />
 
-          {/* Back Button - Animated */}
-          <AnimatedBackButton onPress={handleBack} colors={colors} />
+          {/* Back Button - Glass */}
+          <View style={{ position: 'absolute', top: 70, left: 20 }}>
+            <GlassButton
+              icon="arrow-left"
+              onPress={handleBack}
+              size="medium"
+              backgroundColor="white"
+              backgroundOpacity={0.9}
+              textColor={colors.text}
+            />
+          </View>
 
           {/* Travel Status Buttons */}
           <Animated.View
             entering={FadeIn.delay(300)}
             style={{
               position: 'absolute',
-              top: 48,
+              top: 70,
               right: 20,
               flexDirection: 'row',
               gap: 12,
             }}
           >
             {/* Bucket List Button */}
-            <Pressable
+            <GlassButton
+              icon="heart"
               onPress={() => {
                 haptics.selection();
                 const isAdding = !bucketList.includes(country.cca2);
@@ -250,115 +298,84 @@ const CountryDetailsScreen = () => {
                   setShowTripModal(true);
                 }
               }}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 16,
-                width: 48,
-                height: 48,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
-              <FontAwesome5
-                name="heart"
-                size={20}
-                color={
-                  bucketList.includes(country.cca2) ? '#ef4444' : '#9ca3af'
-                }
-                solid={bucketList.includes(country.cca2)}
-              />
-            </Pressable>
+              size="medium"
+              backgroundColor="white"
+              backgroundOpacity={0.9}
+              textColor={
+                bucketList.includes(country.cca2) ? '#ef4444' : '#9ca3af'
+              }
+              solid={bucketList.includes(country.cca2)}
+              label=""
+            />
 
             {/* Visited Button */}
-            <Pressable
+            <GlassButton
+              icon="check-circle"
               onPress={() => {
                 haptics.success();
+                playSound('achievement');
                 toggleVisited(country.cca2);
               }}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 16,
-                width: 48,
-                height: 48,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
-              <FontAwesome5
-                name="check-circle"
-                size={20}
-                color={
-                  visitedCountries.includes(country.cca2)
-                    ? '#10b981'
-                    : '#9ca3af'
-                }
-                solid={visitedCountries.includes(country.cca2)}
-              />
-            </Pressable>
+              size="medium"
+              backgroundColor="white"
+              backgroundOpacity={0.9}
+              textColor={
+                visitedCountries.includes(country.cca2) ? '#10b981' : '#9ca3af'
+              }
+              label=""
+            />
           </Animated.View>
         </View>
 
         {/* Country Info */}
-        <View style={{ paddingHorizontal: 20, marginTop: -20 }}>
+        <View style={{ paddingHorizontal: 20 }}>
           {/* Country Name Card */}
-          <Animated.View
-            entering={FadeInUp.delay(100).springify()}
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              padding: 24,
-              marginBottom: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 5,
-            }}
-          >
-            <View
+          <Animated.View entering={FadeInUp.delay(100).springify()}>
+            <GlassCard
+              borderRadiusInside={0}
+              borderRadius={24}
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 8,
+                padding: 24,
+                marginBottom: 20,
               }}
             >
-              <FontAwesome5
-                name="globe"
-                size={32}
-                color={colors.tint}
-                style={{ marginRight: 16 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 28,
-                    fontWeight: '700',
-                    color: colors.text,
-                    letterSpacing: -0.5,
-                  }}
-                  numberOfLines={2}
-                >
-                  {country.name.common}
-                </Text>
+              <View
+                style={{
+                  padding: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                }}
+              >
+                <FontAwesome5
+                  name="globe"
+                  size={32}
+                  color={colors.tint}
+                  style={{ marginRight: 16 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 28,
+                      fontWeight: '700',
+                      color: colors.text,
+                      letterSpacing: -0.5,
+                    }}
+                    numberOfLines={2}
+                  >
+                    {country.name.common}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <Text style={{ fontSize: 14, color: colors.text, opacity: 0.6 }}>
-              {country.name.official}
-            </Text>
+              <Text style={{ fontSize: 14, color: colors.text, opacity: 0.6 }}>
+                {country.name.official}
+              </Text>
+            </GlassCard>
           </Animated.View>
 
           {/* Info Cards Grid */}
           <View style={{ gap: 12 }}>
+            {/* ... Info Cards are already refactored via AnimatedInfoCard ... */}
             {/* Capital */}
             {country.capital && (
               <AnimatedInfoCard
@@ -465,52 +482,24 @@ const CountryDetailsScreen = () => {
                 </View>
 
                 {/* View All Button */}
-                <Pressable
+                <GlassButton
+                  size="small"
+                  label={t('country_view_all_recipes')}
+                  icon="arrow-right"
                   onPress={() => {
                     haptics.light();
-                    if (!country) {
-                      console.log('No country data available');
-                      return;
-                    }
-
-                    // Use country name as fallback for area
+                    if (!country) return;
                     const area =
                       COUNTRY_TO_AREA_MAP[country.name.common] ||
                       country.name.common;
-
-                    console.log(
-                      `Navigating to recipes for ${country.name.common} (${area})`
-                    );
-                    // Build query string manually
                     const params = `countryName=${encodeURIComponent(country.name.common)}&area=${encodeURIComponent(area)}&countryCode=${encodeURIComponent(country.cca2)}`;
                     router.push(`/country-recipes?${params}` as any);
                   }}
-                  style={({ pressed }) => ({
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: `${colors.tint}15`,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 12,
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      color: colors.tint,
-                      fontSize: 13,
-                      fontWeight: '600',
-                      marginRight: 6,
-                    }}
-                  >
-                    {t('country_view_all_recipes')}
-                  </Text>
-                  <FontAwesome5
-                    name="arrow-right"
-                    size={12}
-                    color={colors.tint}
-                  />
-                </Pressable>
+                  backgroundColor={colors.tint}
+                  backgroundOpacity={0.15}
+                  textColor={colors.tint}
+                  shadowRadius={4}
+                />
               </Animated.View>
 
               {/* Recipe Cards - Horizontal Scroll */}
@@ -545,27 +534,27 @@ const CountryDetailsScreen = () => {
 
           {/* Loading Recipes */}
           {loadingRecipes && (
-            <Animated.View
-              entering={FadeInUp.delay(400).springify()}
-              style={{
-                marginTop: 24,
-                padding: 20,
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                alignItems: 'center',
-              }}
-            >
-              <ActivityIndicator size="large" color={colors.tint} />
-              <Text
+            <Animated.View entering={FadeInUp.delay(400).springify()}>
+              <GlassCard
+                borderRadius={14}
                 style={{
-                  color: colors.text,
-                  marginTop: 12,
-                  fontSize: 14,
-                  opacity: 0.7,
+                  marginTop: 24,
+                  padding: 20,
+                  alignItems: 'center',
                 }}
               >
-                {t('country_loading_recipes')}
-              </Text>
+                <ActivityIndicator size="large" color={colors.tint} />
+                <Text
+                  style={{
+                    color: colors.text,
+                    marginTop: 12,
+                    fontSize: 14,
+                    opacity: 0.7,
+                  }}
+                >
+                  {t('country_loading_recipes')}
+                </Text>
+              </GlassCard>
             </Animated.View>
           )}
 
@@ -587,174 +576,174 @@ const CountryDetailsScreen = () => {
 
           {/* Weather Section */}
           {weather ? (
-            <Animated.View
-              entering={FadeInUp.delay(600).springify()}
-              style={{
-                marginTop: 24,
-                padding: 24,
-                borderRadius: 20,
-                backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.border,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 5,
-              }}
-            >
-              <View
+            <Animated.View entering={FadeInUp.delay(600).springify()}>
+              <GlassCard
+                borderRadiusInside={0}
+                borderRadius={20}
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: 16,
+                  marginTop: 24,
+                  padding: 24,
                 }}
               >
                 <View
                   style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: '#3b82f620',
+                    flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 16,
+                    marginBottom: 16,
                   }}
                 >
-                  <Image
-                    source={{
-                      uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      backgroundColor: '#3b82f620',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 16,
                     }}
-                    style={{ width: 40, height: 40 }}
-                  />
+                  >
+                    <Image
+                      source={{
+                        uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
+                      }}
+                      style={{ width: 40, height: 40 }}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '700',
+                        color: colors.text,
+                      }}
+                    >
+                      {t('country_weather_title')}
+                    </Text>
+                    <Text
+                      style={{ color: colors.text, opacity: 0.6, fontSize: 13 }}
+                    >
+                      {t('country_weather_in', {
+                        city: country.capital?.[0] || '',
+                      })}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 32,
+                      fontWeight: '700',
+                      color: colors.text,
+                    }}
+                  >
+                    {weather.temp}°
+                  </Text>
                 </View>
-                <View style={{ flex: 1 }}>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {weather.description}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 16 }}>
+                    <View
+                      style={{ flexDirection: 'row', alignItems: 'center' }}
+                    >
+                      <FontAwesome5
+                        name="tint"
+                        size={14}
+                        color="#3b82f6"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={{ color: colors.text, opacity: 0.8 }}>
+                        {weather.humidity}%
+                      </Text>
+                    </View>
+                    <View
+                      style={{ flexDirection: 'row', alignItems: 'center' }}
+                    >
+                      <FontAwesome5
+                        name="wind"
+                        size={14}
+                        color="#9ca3af"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={{ color: colors.text, opacity: 0.8 }}>
+                        {weather.windSpeed}m/s
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </GlassCard>
+            </Animated.View>
+          ) : (
+            /* Weather Coming Soon / Loading */
+            /* Weather Coming Soon / Loading */
+            <Animated.View entering={FadeInUp.delay(600).springify()}>
+              <GlassCard
+                borderRadius={20}
+                backgroundColor={`${colors.tint}15`}
+                style={{
+                  marginTop: 24,
+                  padding: 24,
+                  borderWidth: 2,
+                  borderColor: `${colors.tint}30`,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      backgroundColor: `${colors.tint}25`,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 16,
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>🌤️</Text>
+                  </View>
                   <Text
                     style={{
                       fontSize: 20,
                       fontWeight: '700',
                       color: colors.text,
+                      flex: 1,
                     }}
                   >
-                    {t('country_weather_title')}
-                  </Text>
-                  <Text
-                    style={{ color: colors.text, opacity: 0.6, fontSize: 13 }}
-                  >
-                    {t('country_weather_in', {
-                      city: country.capital?.[0] || '',
-                    })}
+                    {t('country_weather_live')}
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontSize: 32,
-                    fontWeight: '700',
                     color: colors.text,
+                    fontSize: 15,
+                    lineHeight: 22,
+                    opacity: 0.8,
                   }}
                 >
-                  {weather.temp}°
+                  {API_KEY
+                    ? t('country_weather_loading')
+                    : t('country_weather_api_key')}
                 </Text>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: 16,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {weather.description}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 16 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <FontAwesome5
-                      name="tint"
-                      size={14}
-                      color="#3b82f6"
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text style={{ color: colors.text, opacity: 0.8 }}>
-                      {weather.humidity}%
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <FontAwesome5
-                      name="wind"
-                      size={14}
-                      color="#9ca3af"
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text style={{ color: colors.text, opacity: 0.8 }}>
-                      {weather.windSpeed}m/s
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </Animated.View>
-          ) : (
-            /* Weather Coming Soon / Loading */
-            <Animated.View
-              entering={FadeInUp.delay(600).springify()}
-              style={{
-                marginTop: 24,
-                padding: 24,
-                borderRadius: 20,
-                backgroundColor: `${colors.tint}15`,
-                borderWidth: 2,
-                borderColor: `${colors.tint}30`,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: `${colors.tint}25`,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 16,
-                  }}
-                >
-                  <Text style={{ fontSize: 24 }}>🌤️</Text>
-                </View>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: colors.text,
-                    flex: 1,
-                  }}
-                >
-                  {t('country_weather_live')}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: colors.text,
-                  fontSize: 15,
-                  lineHeight: 22,
-                  opacity: 0.8,
-                }}
-              >
-                {API_KEY
-                  ? t('country_weather_loading')
-                  : t('country_weather_api_key')}
-              </Text>
+              </GlassCard>
             </Animated.View>
           )}
         </View>
@@ -775,72 +764,6 @@ const CountryDetailsScreen = () => {
 };
 
 /**
- * Animated Back Button Component
- */
-const AnimatedBackButton = ({
-  onPress,
-  colors,
-}: {
-  onPress: () => void;
-  colors: typeof Colors.light;
-}) => {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.9, {
-      damping: 15,
-      stiffness: 600,
-    });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, {
-      damping: 15,
-      stiffness: 600,
-    });
-  };
-
-  return (
-    <Animated.View
-      entering={FadeIn.delay(200)}
-      style={[
-        {
-          position: 'absolute',
-          top: 48,
-          left: 20,
-        },
-        animatedStyle,
-      ]}
-    >
-      <Pressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: 16,
-          width: 48,
-          height: 48,
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-      >
-        <FontAwesome5 name="arrow-left" size={20} color={colors.text} />
-      </Pressable>
-    </Animated.View>
-  );
-};
-
-/**
  * Animated Info Card Component
  * Reusable component for country details
  */
@@ -848,7 +771,7 @@ interface AnimatedInfoCardProps {
   icon: string;
   label: string;
   value: string;
-  colors: any;
+  colors: typeof Colors.light | typeof Colors.dark;
   delay: number;
   color: string;
 }
@@ -862,45 +785,41 @@ const AnimatedInfoCard = ({
   color,
 }: AnimatedInfoCardProps) => {
   return (
-    <Animated.View
-      entering={FadeInUp.delay(delay).springify()}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.card,
-        padding: 16,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-      }}
-    >
-      <View
+    <Animated.View entering={FadeInUp.delay(delay).springify()}>
+      <GlassCard
+        borderRadiusInside={0}
+        borderRadius={16}
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          backgroundColor: `${color}15`,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: 16,
+          padding: 16,
         }}
       >
-        <FontAwesome5 name={icon} size={18} color={color} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 13, color: colors.text, opacity: 0.6 }}>
-          {label}
-        </Text>
-        <Text
-          style={{ fontSize: 16, fontWeight: '600', color: colors.text }}
-          numberOfLines={1}
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: `${color}15`,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 16,
+          }}
         >
-          {value}
-        </Text>
-      </View>
+          <FontAwesome5 name={icon} size={18} color={color} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 13, color: colors.text, opacity: 0.6 }}>
+            {label}
+          </Text>
+          <Text
+            style={{ fontSize: 16, fontWeight: '600', color: colors.text }}
+            numberOfLines={1}
+          >
+            {value}
+          </Text>
+        </View>
+      </GlassCard>
     </Animated.View>
   );
 };

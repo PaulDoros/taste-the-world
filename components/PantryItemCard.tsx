@@ -1,14 +1,11 @@
-import { View, Text, Pressable } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  FadeInUp,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { XStack, YStack, Paragraph, useTheme } from 'tamagui';
 import { PantryItem } from '@/store/pantryStore';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface PantryItemCardProps {
   item: PantryItem;
@@ -21,113 +18,65 @@ export const PantryItemCard = ({
   index,
   onDelete,
 }: PantryItemCardProps) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.97, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, {
-      damping: 15,
-      stiffness: 300,
-    });
-  };
+  const theme = useTheme();
 
   return (
     <Animated.View
       entering={FadeInUp.delay(index * 30).springify()}
-      style={[
-        {
-          marginBottom: 12,
-        },
-        animatedStyle,
-      ]}
+      style={{ marginBottom: 12 }}
     >
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
-      >
-        {/* Icon */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.tint + '15',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 12,
-          }}
-        >
-          <FontAwesome5
-            name="check-circle"
-            size={18}
-            color={colors.tint}
-            solid
+      <GlassCard borderRadius={16} shadowRadius={6}>
+        <XStack padding="$4" alignItems="center" justifyContent="space-between">
+          <XStack alignItems="center" gap="$3" flex={1}>
+            {/* Icon Circle */}
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: theme.tint.get() + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FontAwesome5
+                name="check-circle"
+                size={18}
+                color={theme.tint.get()}
+                solid
+              />
+            </View>
+
+            {/* Item Info */}
+            <YStack flex={1}>
+              <Paragraph size="$4" fontWeight="600" color="$color">
+                {item.displayName}
+              </Paragraph>
+              <Paragraph size="$3" color="$tint" fontWeight="600" opacity={0.8}>
+                {item.measure}
+              </Paragraph>
+            </YStack>
+          </XStack>
+
+          {/* Delete Button */}
+          <GlassButton
+            shadowRadius={2}
+            icon="trash-alt"
+            onPress={onDelete}
+            size="small"
+            backgroundColor={theme.red10?.get()}
+            backgroundOpacity={0.1}
+            label="" // Icon only
+            iconComponent={
+              <FontAwesome5
+                name="trash-alt"
+                size={14}
+                color={theme.red10?.get()}
+              />
+            }
           />
-        </View>
-
-        {/* Item Info */}
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: '600',
-            }}
-          >
-            {item.displayName}
-          </Text>
-          <Text
-            style={{
-              color: colors.tint,
-              fontSize: 13,
-              fontWeight: '600',
-              marginTop: 2,
-            }}
-          >
-            {item.measure}
-          </Text>
-        </View>
-
-        {/* Delete Button */}
-        <Pressable
-          onPress={onDelete}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: colors.error + '15',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <FontAwesome5 name="trash-alt" size={14} color={colors.error} />
-        </Pressable>
-      </View>
+        </XStack>
+      </GlassCard>
     </Animated.View>
   );
 };

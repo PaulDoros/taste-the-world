@@ -1,9 +1,7 @@
-import { XStack, Card, Text } from 'tamagui';
+import { XStack, Card, Text, useTheme } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { haptics } from '@/utils/haptics';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
 
 export interface FilterChip {
   id: string;
@@ -30,9 +28,9 @@ export function FilterChipGroup({
   accentColor,
   multiSelect = true,
 }: FilterChipGroupProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const finalAccentColor = accentColor || colors.tint;
+  const theme = useTheme();
+  // If accentColor is provided, use it, otherwise use theme tint
+  const finalAccentColor = accentColor || theme.tint.val;
   const isSelected = (filterId: string) => selectedFilters.includes(filterId);
 
   return (
@@ -49,7 +47,7 @@ export function FilterChipGroup({
               bordered
               padding="$2.5"
               paddingHorizontal="$3.5"
-              backgroundColor={selected ? finalAccentColor : '$card'}
+              backgroundColor={selected ? finalAccentColor : '$surface'}
               borderColor={selected ? finalAccentColor : '$borderColor'}
               pressStyle={{ scale: 0.95 }}
               animation="quick"

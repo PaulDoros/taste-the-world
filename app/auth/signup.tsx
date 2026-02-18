@@ -191,7 +191,9 @@ export default function SignUpScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: colors.background }}
+      style={{
+        backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+      }}
       edges={['top']}
     >
       {/* iOS-style background */}
@@ -201,7 +203,7 @@ export default function SignUpScreen() {
         left={0}
         right={0}
         bottom={0}
-        backgroundColor={colors.background}
+        backgroundColor={colorScheme === 'dark' ? '#000000' : '#FFFFFF'}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -215,59 +217,6 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Modern Back Button */}
-          <Animated.View
-            entering={FadeInLeft.delay(50)}
-            style={{ paddingHorizontal: 16, marginBottom: 12 }}
-          >
-            <Pressable
-              onPress={handleGoBack}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 12,
-                backgroundColor: pressed
-                  ? colorScheme === 'dark'
-                    ? 'rgba(255,255,255,0.15)'
-                    : 'rgba(0,0,0,0.08)'
-                  : colorScheme === 'dark'
-                    ? 'rgba(255,255,255,0.1)'
-                    : 'rgba(0,0,0,0.04)',
-                borderWidth: 1,
-                borderColor:
-                  colorScheme === 'dark'
-                    ? 'rgba(255,255,255,0.1)'
-                    : 'rgba(0,0,0,0.06)',
-                alignSelf: 'flex-start',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-                elevation: 2,
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <FontAwesome5
-                name="chevron-left"
-                size={16}
-                color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
-                style={{ marginRight: 6 }}
-              />
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: '600',
-                  color: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
-                }}
-              >
-                {t('auth_back')}
-              </Text>
-            </Pressable>
-          </Animated.View>
-
           {/* Header + Card */}
           <YStack flex={1} px="$4" mt="$1">
             {/* iOS-style Header */}

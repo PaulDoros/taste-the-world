@@ -13,9 +13,13 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useAuth } from '@/hooks/useAuth';
 
 export const StreakCounter = () => {
-  const stats = useQuery(api.gamification.getStats);
+  const { token } = useAuth();
+  const stats = useQuery(api.gamification.getStats, {
+    token: token || undefined,
+  });
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 

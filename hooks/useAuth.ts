@@ -7,6 +7,7 @@ import { useShoppingListStore } from '@/store/shoppingListStore';
 import { Id } from '@/convex/_generated/dataModel';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
+import { useUserStore } from '@/store/useUserStore';
 
 // Complete OAuth session for web
 if (Platform.OS === 'web') {
@@ -73,9 +74,20 @@ export function useAuth() {
         JSON.stringify(currentUser) !== JSON.stringify(user)
       ) {
         updateUser(currentUser);
+
+        // Sync with useUserStore used by ExploreScreen
+        if (currentUser) {
+          useUserStore
+            .getState()
+            .login(
+              { email: currentUser.email, name: currentUser.name },
+              currentUser.tier,
+              token || ''
+            );
+        }
       }
     }
-  }, [currentUser, user, updateUser]);
+  }, [currentUser, user, updateUser, token]);
 
   // Merge guest shopping list on auth
   const addMultipleShoppingListItems = useMutation(

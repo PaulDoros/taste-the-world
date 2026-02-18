@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { TextInput, TextInputProps, Pressable } from 'react-native';
+import { TextInputProps, Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { YStack, XStack, Text } from 'tamagui';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import {
+  YStack,
+  XStack,
+  Input as TamaguiInput,
+  Text,
+  styled,
+  GetProps,
+  useTheme,
+} from 'tamagui';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -12,16 +17,10 @@ interface InputProps extends TextInputProps {
   leftIcon?: keyof typeof FontAwesome5.glyphMap;
   rightIcon?: keyof typeof FontAwesome5.glyphMap;
   onRightIconPress?: () => void;
-  containerStyle?: object;
+  containerStyle?: GetProps<typeof YStack>; // Allow Tamagui style overrides
 }
 
-const AnimatedYStack = Animated.createAnimatedComponent(YStack);
-
-/**
- * iOS-style Input Component
- * Clean, modern design with proper focus states and icons
- */
-export const Input = React.forwardRef<TextInput, InputProps>(
+export const Input = React.forwardRef<any, InputProps>(
   (
     {
       label,
@@ -35,46 +34,39 @@ export const Input = React.forwardRef<TextInput, InputProps>(
     },
     ref
   ) => {
-    const colorScheme = useColorScheme();
-    const colors = Colors[colorScheme ?? 'light'];
+    const theme = useTheme();
     const [isFocused, setIsFocused] = useState(false);
 
+    // Determine border color based on state
+    const getBorderColor = () => {
+      if (error) return '$red10'; // or '$error' if defined, defaulting to a standard red token
+      if (isFocused) return '$tint';
+      return '$borderColor';
+    };
+
     return (
-      <AnimatedYStack
-        entering={FadeInDown.delay(100)}
-        space="$2"
-        style={containerStyle}
-      >
+      <YStack space="$2" {...containerStyle}>
         {label && (
           <Text
             fontSize="$3"
             fontWeight="600"
-            color={error ? colors.error : '$color'}
-            mb="$1"
+            color={error ? '$red10' : '$color'}
+            marginBottom="$1"
           >
             {label}
           </Text>
         )}
+
         <XStack
-          ai="center"
+          alignItems="center"
           borderRadius="$4"
-          borderWidth={isFocused ? 2 : 1.5}
+          borderWidth={isFocused ? 2 : 1}
+          borderColor={getBorderColor()}
+          backgroundColor="$background" // or '$surface' depending on design
+          paddingHorizontal="$3"
           minHeight={52}
-          backgroundColor={
-            colorScheme === 'dark'
-              ? 'rgba(44,44,46,0.6)'
-              : 'rgba(242,242,247,1)'
-          }
-          borderColor={
-            error
-              ? colors.error
-              : isFocused
-                ? colors.tint
-                : colorScheme === 'dark'
-                  ? 'rgba(255,255,255,0.15)'
-                  : 'rgba(0,0,0,0.12)'
-          }
-          px="$3.5"
+          // Animation for smooth focus transition
+          animation="quick"
         >
           {leftIcon && (
             <FontAwesome5
@@ -82,30 +74,29 @@ export const Input = React.forwardRef<TextInput, InputProps>(
               size={18}
               color={
                 error
-                  ? colors.error
+                  ? theme.red10.val
                   : isFocused
-                    ? colors.tint
-                    : colors.tabIconDefault
+                    ? theme.tint.val
+                    : theme.color11.val
               }
               style={{ marginRight: 12 }}
             />
           )}
-          <TextInput
+
+          <TamaguiInput
             ref={ref}
-            style={{
-              flex: 1,
-              fontSize: 17,
-              color: colors.text,
-              paddingVertical: 14,
-              fontWeight: '400',
-            }}
-            placeholderTextColor={
-              colorScheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
-            }
+            flex={1}
+            unstyled // Remove default Tamagui Input styles to let XStack handle the specific "box" look
+            backgroundColor="transparent"
+            color="$color"
+            fontSize="$4"
+            paddingVertical="$3"
+            placeholderTextColor="$color11"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             {...props}
           />
+
           {rightIcon && (
             <Pressable
               onPress={onRightIconPress}
@@ -116,28 +107,29 @@ export const Input = React.forwardRef<TextInput, InputProps>(
                 size={18}
                 color={
                   error
-                    ? colors.error
+                    ? theme.red10.val
                     : isFocused
-                      ? colors.tint
-                      : colors.tabIconDefault
+                      ? theme.tint.val
+                      : theme.color11.val
                 }
                 style={{ marginLeft: 12 }}
               />
             </Pressable>
           )}
         </XStack>
+
         {error && (
           <Text
             fontSize="$2"
-            mt="$1"
-            ml="$1"
-            color={colors.error}
+            marginTop="$1"
+            marginLeft="$1"
+            color="$red10"
             fontWeight="500"
           >
             {error}
           </Text>
         )}
-      </AnimatedYStack>
+      </YStack>
     );
   }
 );

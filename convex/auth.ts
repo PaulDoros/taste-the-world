@@ -475,6 +475,7 @@ export const updateSubscription = mutation({
     token: v.string(),
     subscriptionType: v.union(
       v.literal('free'),
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('yearly')
     ),

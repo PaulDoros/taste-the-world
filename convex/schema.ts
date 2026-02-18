@@ -23,6 +23,7 @@ export default defineSchema({
     ), // User access tier
     subscriptionType: v.union(
       v.literal('free'),
+      v.literal('weekly'),
       v.literal('monthly'),
       v.literal('yearly')
     ),
@@ -42,6 +43,11 @@ export default defineSchema({
     lastAiReset: v.optional(v.number()), // Timestamp of last usage reset
     aiMessagesUsed: v.optional(v.number()), // Total lifetime usage (legacy/analytics)
     language: v.optional(v.string()), // User's preferred language (en, ro, fr, etc.)
+    revenueCatCustomerId: v.optional(v.string()), // RevenueCat Customer ID
+
+    // Avatar System
+    currentAvatar: v.optional(v.string()),
+    unlockedAvatars: v.optional(v.array(v.string())),
     // Gamification
     gamification: v.optional(
       v.object({
@@ -55,6 +61,10 @@ export default defineSchema({
         uniqueRegions: v.optional(v.array(v.string())),
         categoryCounts: v.optional(v.any()), // Record<string, number>
         aiMessagesSent: v.optional(v.number()),
+        visitedCountries: v.optional(v.array(v.string())), // NEW
+        aiRecipesSaved: v.optional(v.number()), // NEW
+        shoppingItemsAdded: v.optional(v.number()), // NEW
+        pantryItemCount: v.optional(v.number()), // NEW for tracking badge progress
       })
     ),
   })
@@ -82,7 +92,11 @@ export default defineSchema({
    */
   purchases: defineTable({
     userId: v.id('users'),
-    subscriptionType: v.union(v.literal('monthly'), v.literal('yearly')),
+    subscriptionType: v.union(
+      v.literal('weekly'),
+      v.literal('monthly'),
+      v.literal('yearly')
+    ),
     amount: v.number(), // Purchase amount in cents
     currency: v.string(), // e.g., "USD"
     transactionId: v.optional(v.string()), // Payment processor transaction ID
@@ -104,13 +118,27 @@ export default defineSchema({
    */
   pantry: defineTable({
     userId: v.id('users'),
-    name: v.string(), // Normalized lowercase name
-    displayName: v.string(), // Original display name
-    measure: v.string(), // Quantity (e.g., "500g", "2 cups")
+    name: v.string(), // Normalized name
+    displayName: v.string(), // Display name
+    measure: v.string(),
+    isChecked: v.optional(v.boolean()), // For shopping list functionality within storage
     addedAt: v.number(),
   })
     .index('by_user', ['userId'])
     .index('by_user_and_name', ['userId', 'name']),
+
+  /**
+   * Activities Table
+   * Logs every user action for gamification history and debugging
+   */
+  activities: defineTable({
+    userId: v.id('users'),
+    actionType: v.string(), // 'pantry_add', 'cook', 'view_country', etc.
+    data: v.optional(v.any()), // Context (e.g., { country: 'France', count: 5 })
+    timestamp: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_action', ['userId', 'actionType']),
 
   /**
    * Shopping list items table
@@ -314,8 +342,39 @@ export default defineSchema({
     flightNumber: v.optional(v.string()), // e.g. "RO341"
     ticketStorageId: v.optional(v.string()), // Convex Storage ID for image
     notes: v.optional(v.string()), // "Gate closes at 10:00"
+    checklist: v.optional(
+      v.array(
+        v.object({
+          text: v.string(),
+          checked: v.boolean(),
+          notificationId: v.optional(v.string()),
+        })
+      )
+    ),
+    idDocuments: v.optional(v.array(v.string())), // Array of storage IDs
     createdAt: v.number(),
   })
     .index('by_user', ['userId'])
     .index('by_user_and_date', ['userId', 'startDate']),
+
+  /**
+   * My Recipes table
+   * Stores user-created or scanned recipes
+   */
+  myRecipes: defineTable({
+    userId: v.id('users'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    ingredients: v.array(
+      v.object({
+        name: v.string(),
+        measure: v.string(), // Keeping 'measure' to match standard schema, though plan said 'amount'
+      })
+    ),
+    instructions: v.array(v.string()),
+    imageStorageId: v.optional(v.id('_storage')),
+    originalImageStorageId: v.optional(v.id('_storage')), // Store the scanned original separate from header
+    source: v.optional(v.string()), // 'manual' | 'scan'
+    createdAt: v.number(),
+  }).index('by_user', ['userId']),
 });

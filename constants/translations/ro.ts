@@ -150,6 +150,7 @@ export const ro = {
   common_delete: 'Șterge',
   common_edit: 'Editează',
   common_back: 'Înapoi',
+  common_add: 'Adaugă',
   common_pro_badge: 'PRO',
   common_items: 'articole',
   common_completed_items: 'articole finalizate',
@@ -395,6 +396,19 @@ export const ro = {
     'Adaugă articole în cămară pentru a genera rețete',
   generator_result_title: 'Iată rețeta ta!',
 
+  // Chef Prompts
+  chef_prompt_style: 'Vreau să gătesc o masă {{style}}.',
+  chef_prompt_quick:
+    'Ar trebui să fie gata în sub 15 minute cu maxim 5 ingrediente.',
+  chef_prompt_family: 'Ar trebui să fie o cină plăcută în familie (~45 min).',
+  chef_prompt_gourmet: 'Vreau o experiență gourmet completă (1+ oră).',
+  chef_prompt_cuisine: 'Bucătăria/stilul ar trebui să fie {{cuisine}}.',
+  chef_prompt_pantry_empty:
+    'Am vrut să folosesc cămara, dar pare goală. Te rog sugerează o rețetă cu ingrediente comune.',
+  chef_prompt_pantry_ingredients:
+    'Am aceste ingrediente în cămară: {{ingredients}}. Te rog să folosești câteva dintre ele.',
+  chef_prompt_suggest_ingredients: 'Te rog sugerează ingredientele.',
+
   // Scanner
   scan_title: 'Scanner Alimente',
   scan_permission_title: 'Permisiune necesară',
@@ -578,6 +592,8 @@ export const ro = {
   pricing_save: 'ECONOMISEȘTE {{amount}}',
   pricing_get_premium: 'Obține Premium Acum',
   pricing_cancel_anytime: 'Anulează oricând.',
+  pricing_show_more: 'Arată mai mult...',
+  pricing_show_less: 'Arată mai puțin',
 
   // Premium Benefits
   premium_benefit_countries:
@@ -601,6 +617,9 @@ export const ro = {
   pricing_personal_subtitle: 'Unlock everything + more limits',
   pricing_pro_title: 'PRO',
   pricing_pro_subtitle: 'Experiență supremă + offline',
+  splash_continue_limited: 'Continuă cu Acces Limitat',
+  splash_terms:
+    'Continuând, accepți Termenii și Politica de Confidențialitate.',
 
   // Wallet
   wallet_title: 'Portofel Călătorii',
@@ -622,4 +641,227 @@ export const ro = {
   wallet_save_btn: 'Salvează',
   wallet_error_missing: 'Te rugăm introdu o destinație.',
   wallet_error_save: 'Salvarea a eșuat.',
+  // Platformă de Călătorie
+  travel_planner_title: 'Planificator de Călătorie',
+  travel_planner_my_trips: 'Călătoriile Mele Generate',
+  travel_view_full_itinerary: 'Vezi Itinerariul Complet',
+  travel_day_prefix: 'Ziua {{day}}',
+  travel_locked_pro_title: 'Funcție Pro',
+  travel_locked_pro_desc:
+    'Fă upgrade pentru a vedea itinerarii detaliate pe zile.',
+  travel_itinerary_for: 'Itinerariu pentru {{destination}}',
+  travel_add_calendar: 'Adaugă în Calendar',
+
+  // Portofel de Călătorie și Listă de Verificare
+  wallet_checklist: 'Listă de Verificare Călătorie',
+  wallet_todo_passport: 'Împachetează Pașaport / Buletin',
+  wallet_todo_checkin: 'Check-in Online (cu 24h înainte)',
+  wallet_todo_insurance: 'Asigurare de Călătorie',
+  wallet_todo_currency: 'Schimb Valutar',
+  wallet_add_task: 'Adaugă sarcină personalizată...',
+  wallet_reminders_title: 'Mementouri Inteligente',
+  wallet_reminders_enable: 'Activează Mementouri Călătorie',
+  wallet_reminders_desc: 'Primește notificare cu 24h înainte de plecare.',
+  wallet_notification_permission: 'Permisiune Necesară',
+  wallet_notification_desc:
+    'Activează notificările pentru a primi mementouri inteligente.',
+  wallet_notification_trip_soon_title: 'Călătoria se Apropie! ✈️',
+  wallet_notification_trip_soon_body:
+    'Călătoria ta spre {{destination}} începe mâine. Ai împachetat totul?',
+  wallet_documents_title: 'Documente și Bilete',
+
+  // Gamification
+  gamification_title: 'Realizări',
+  gamification_signin_view:
+    'Vă rugăm să vă conectați pentru a vedea realizările.',
+  gamification_badge_details: 'Detalii Insignă',
+  gamification_congrats: 'Felicitări! Ați stăpânit această realizare.',
+  gamification_locked_desc:
+    'Continuați să gătiți pentru a debloca această insignă!',
+  gamification_awesome: 'Grozav',
+  gamification_level: 'NIVEL',
+  gamification_xp_to_level: '{{xp}} XP până la Nivelul {{nextLevel}}',
+  gamification_day_streak: 'Zile Consecutive',
+  gamification_total_xp: 'XP Total',
+  gamification_badges: 'Insigne',
+  gamification_trophy_case: 'Vitrina cu Trofee',
+
+  // Avatar Selector
+  avatar_choose: 'Alege Avatar',
+  avatar_tab_avatars: 'Avatare',
+  avatar_tab_badges: 'Insigne ({{count}})',
+  avatar_tab_frames: 'Rame',
+  avatar_upload: 'Încarcă Poză',
+  avatar_library: 'Alege din bibliotecă',
+  avatar_unlockable: 'Avatare Deblocabile',
+  avatar_earned_badges: 'Insigne Câștigate',
+  avatar_unlockable_frames: 'Rame Deblocabile',
+  avatar_equipped: 'Echipat',
+  avatar_level_req: 'Niv {{level}}',
+
+  // Recipe Book
+  recipe_book_title: 'Cartea Mea de Rețete',
+  recipe_book_delete_title: 'Șterge Rețeta',
+  recipe_book_delete_msg: 'Sigur doriți să ștergeți această rețetă?',
+  recipe_book_no_matches: 'Nu s-au găsit rețete potrivite.',
+  recipe_book_empty: 'Cartea ta de rețete este goală.',
+  recipe_book_create_first: 'Creează Prima Rețetă',
+
+  // More Page & Settings Extra
+  more_journey_title: 'Călătoria Ta',
+  more_journey_view_all: 'Vezi Tot',
+  settings_appearance_account: 'Aspect și Cont',
+  settings_theme_title: 'Temă Aplicație',
+  settings_theme_light: 'Mod Luminos',
+  settings_theme_dark: 'Mod Întunecat',
+  settings_theme_system: 'Sistem Implicit',
+  settings_theme_auto: 'Auto',
+  settings_sound_title: 'Efecte Sonore',
+  settings_sound_subtitle: 'Activează sunete în aplicație',
+  settings_ambient_title: 'Animație Fundal',
+  settings_ambient_subtitle: 'Arată forme colorate',
+  settings_avatar_updated: 'Avatar Actualizat!',
+  settings_avatar_error: 'Actualizarea avatarului a eșuat',
+  settings_theme_alert_title: 'Alege Tema',
+  settings_theme_alert_msg: 'Selectează aspectul preferat',
+
+  // Missing Keys Backfill
+  more_menu_my_recipes: 'Cartea Mea de Rețete',
+  more_menu_my_recipes_desc: 'Creează și scanează propriile rețete',
+
+  // Countries
+  country_united_states: 'Statele Unite',
+  country_canada: 'Canada',
+  country_united_kingdom: 'Regatul Unit',
+  country_spain: 'Spania',
+  country_greece: 'Grecia',
+  country_turkey: 'Turcia',
+  country_egypt: 'Egipt',
+  country_morocco: 'Maroc',
+  country_brazil: 'Brazilia',
+  country_argentina: 'Argentina',
+  country_jamaica: 'Jamaica',
+  country_portugal: 'Portugalia',
+  country_poland: 'Polonia',
+  country_russia: 'Rusia',
+  country_kenya: 'Kenya',
+  country_philippines: 'Filipine',
+  country_malaysia: 'Malaezia',
+  country_australia: 'Australia',
+  country_ireland: 'Irlanda',
+  country_croatia: 'Croația',
+  country_netherlands: 'Olanda',
+  country_china: 'China',
+  country_france: 'Franța',
+  country_india: 'India',
+  country_italy: 'Italia',
+  country_japan: 'Japonia',
+  country_mexico: 'Mexic',
+  country_thailand: 'Thailanda',
+  country_tunisia: 'Tunisia',
+  country_ukraine: 'Ucraina',
+  country_vietnam: 'Vietnam',
+  country_south_korea: 'Coreea de Sud',
+  country_lebanon: 'Liban',
+  country_peru: 'Peru',
+
+  // Badges (Backfill)
+  badge_streak_3_title: 'On Fire',
+  badge_streak_3_desc: 'Maintained a 3-day streak',
+  badge_streak_7_title: 'Unstoppable',
+  badge_streak_7_desc: 'Maintained a 7-day streak',
+  badge_level_5_title: 'Sous Chef',
+  badge_level_5_desc: 'Reached Level 5',
+  badge_level_10_title: 'Master Chef',
+  badge_level_10_desc: 'Reached Level 10',
+  badge_first_cook_title: 'First Dish',
+  badge_first_cook_desc: 'Cooked your first recipe',
+  badge_explorer_title: 'Explorer',
+  badge_explorer_desc: 'Visited 5 different country pages',
+  badge_gordon_r_title: 'Food Stylist',
+  badge_gordon_r_desc: 'Uploaded 5 photos of your dishes',
+  badge_global_taster_title: 'Global Taster',
+  badge_global_taster_desc: 'Cooked from 3 different regions',
+  badge_early_bird_title: 'Early Bird',
+  badge_early_bird_desc: 'Cooked breakfast before 9 AM',
+  badge_sweet_tooth_title: 'Sweet Tooth',
+  badge_sweet_tooth_desc: 'Cooked 5 Dessert recipes',
+  badge_green_thumb_title: 'Green Thumb',
+  badge_green_thumb_desc: 'Cooked 5 Vegetarian/Vegan recipes',
+  badge_carnivore_title: 'Carnivore',
+  badge_carnivore_desc: 'Cooked 5 Meat recipes (Beef/Pork/Lamb)',
+  badge_chatterbox_title: 'Chatterbox',
+  badge_chatterbox_desc: 'Sent 10 messages to AI Chef',
+  badge_ocean_lover_title: 'Ocean Lover',
+  badge_ocean_lover_desc: 'Cooked 3 Seafood/Fish recipes',
+  badge_pantry_master_title: 'Pantry Master',
+  badge_pantry_master_desc: 'Stocked 20 items in your pantry',
+  badge_shopping_spree_title: 'Shopping Spree',
+  badge_shopping_spree_desc: 'Added 50 items to your shopping list',
+  badge_ai_chef_bestie_title: 'AI Chef Bestie',
+  badge_ai_chef_bestie_desc: 'Saved 5 AI-generated recipes',
+  badge_night_owl_title: 'Night Owl',
+  badge_night_owl_desc: 'Cooked a meal after 9 PM',
+  badge_weekend_warrior_title: 'Weekend Warrior',
+  badge_weekend_warrior_desc: 'Cooked on both Saturday and Sunday',
+  badge_variety_king_title: 'Variety King',
+  badge_map_explorer_title: 'World Traveler',
+  badge_map_explorer_desc: 'Explored the interactive map',
+
+  // Premium & Misc (Backfill)
+  premium_unlock_desc:
+    'Upgrade to Taste the World Pro to access this feature and unlimited travel guides.',
+  common_unlock_feature: 'Unlock {{feature}}',
+  pricing_unlock_premium: 'Unlock Premium',
+  common_maybe_later: 'Maybe Later',
+  splash_best_trips: 'Best for Trips',
+  splash_weekly_pass: 'Weekly Pass',
+  splash_weekly_price: 'Just €2.49 / week',
+  splash_weekly_cost: '€2.49',
+  splash_weekly_unit: '/ wk',
+  splash_yearly_access: 'Yearly Access',
+  splash_yearly_desc: 'Save 60% • €49.99 / year',
+  splash_yearly_cost: '€4.16',
+  splash_yearly_unit: '/ mo',
+
+  // Missing Keys Sync
+  wallet_upcoming: 'Upcoming Trips',
+  wallet_past: 'Past Adventures',
+  more_menu_travel_planner: 'Travel Planner',
+  more_menu_travel_planner_desc: 'AI-powered travel itineraries',
+  recipe_ai_scanned: 'AI SCANNED',
+  recipe_edit: 'Edit',
+  recipe_detail_shopping_list_btn: 'To Shopping List',
+  recipe_detail_pantry_btn: 'To Pantry',
+  recipe_detail_step_number: '{{number}}',
+  recipe_cooked_this: 'I Cooked This!',
+  recipe_cooked_title: 'Show off your dish!',
+  recipe_cooked_msg: 'Upload a photo to earn 20 XP, or just log it for 10 XP.',
+  recipe_cooked_just_log: 'Just Log (+10 XP)',
+  recipe_cooked_photo: 'Take Photo (+20 XP)',
+  recipe_cooked_success_log: 'Yum! You earned 10 XP! 🔥 Streak: {{streak}}',
+  recipe_cooked_success_photo:
+    'Awesome photo! You earned 20 XP! 🔥 Streak: {{streak}}',
+  recipe_cooked_done_button: 'Cooked! (+XP)',
+
+  // Generator (Meal Planner)
+  common_meal_lunch: 'Lunch',
+  common_meal_dinner: 'Dinner',
+
+  // Pricing Section
+  premium_feature_desc:
+    'Upgrade to Personal or Pro to unlock this premium feature.',
+  wallet_label_notes: 'Notes',
+  wallet_ph_notes: 'Hotel info, reservations, plans...',
+  wallet_header_upcoming: 'Upcoming Trips',
+
+  // Premium Modal
+  splash_unlock_title: 'Unlock the World',
+  splash_unlock_desc:
+    'Experience unlimited recipes, offline mode, and smart travel features.',
+  splash_feature_scanning: 'Unlimited AI Food Scanning',
+  splash_feature_offline: 'Offline Travel Mode',
+  splash_feature_recipes: 'Curated Local Recipes',
+  splash_feature_itinerary: 'Smart Itinerary Generator',
+  gamification_locked: 'Locked',
 };

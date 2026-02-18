@@ -20,6 +20,10 @@ import Animated, {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
+import { playSound } from '@/utils/sounds';
+import { BlurView } from 'expo-blur';
+import { glassTokens } from '@/theme/colors';
+import { StyleSheet } from 'react-native';
 
 /**
  * Tab Configuration - 5 Primary Tabs
@@ -76,7 +80,9 @@ export const PersistentTabBar = () => {
   const pathname = usePathname();
   const segments = useSegments();
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const colors = Colors[colorScheme ?? 'light'];
+  const glass = glassTokens[isDark ? 'dark' : 'light'];
   const { width: SCREEN_WIDTH } = useWindowDimensions(); // Dynamic width that updates on resize/rotation
 
   const tabWidth = SCREEN_WIDTH / TAB_CONFIG.length;
@@ -243,98 +249,120 @@ export const PersistentTabBar = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        flexDirection: 'row',
-        backgroundColor: colors.background,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
         height: 90,
-        paddingBottom: 28,
-        paddingTop: 8,
-        zIndex: 1000,
       }}
     >
-      {/* 💫 Pulsing Outer Ring */}
-      <Animated.View
+      {/* Glass Background Layers */}
+      <BlurView
+        intensity={100}
+        tint={isDark ? 'dark' : 'light'}
+        style={StyleSheet.absoluteFill}
+        
+      />
+      <View
         style={[
+          StyleSheet.absoluteFill,
           {
-            position: 'absolute',
-            top: 8,
-            left: 0,
-            width: 80,
-            height: 54,
-            borderRadius: 27,
-            backgroundColor: activeBgColor,
-            zIndex: 0,
+            backgroundColor: glass.overlay, // Use glass token for overlay
+            borderTopWidth: 1,
+            borderTopColor: glass.border,
           },
-          pulseStyle,
         ]}
       />
 
-      {/* 🫧 Sliding Bubble Background */}
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: 11,
-            left: 0,
-            width: 72,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: activeBgColor,
-            shadowColor: activeColor,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: Platform.select({ android: 4, default: 10 }), // Reduced elevation for Android to avoid harsh black shadow
-            zIndex: 0,
-          },
-          bubbleStyle,
-        ]}
-      />
+      {/* Content Container */}
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          paddingBottom: 28,
+          paddingTop: 8,
+          zIndex: 1000,
+        }}
+      >
+        {/* 💫 Pulsing Outer Ring */}
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: 8,
+              left: 0,
+              width: 80,
+              height: 54,
+              borderRadius: 27,
+              backgroundColor: activeBgColor,
+              zIndex: 0,
+            },
+            pulseStyle,
+          ]}
+        />
 
-      {/* Tab Icons */}
-      {TAB_CONFIG.map((tab, index) => {
-        const isActive = activeTabIndex === index;
+        {/* 🫧 Sliding Bubble Background */}
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: 11,
+              left: 0,
+              width: 72,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: activeBgColor,
+              shadowColor: activeColor,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.5,
+              shadowRadius: 12,
+              elevation: Platform.select({ android: 4, default: 10 }), // Reduced elevation for Android to avoid harsh black shadow
+              zIndex: 0,
+            },
+            bubbleStyle,
+          ]}
+        />
 
-        return (
-          <Pressable
-            key={tab.name}
-            onPress={() => handleTabPress(tab)}
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingTop: 4,
-              zIndex: 10,
-            }}
-          >
-            <View style={{ alignItems: 'center', gap: 6, zIndex: 10 }}>
-              {/* Icon */}
-              <FontAwesome5
-                name={tab.icon}
-                size={isActive ? 26 : 22}
-                color={isActive ? tab.color : colors.tabIconDefault}
-                solid={isActive}
-                style={{
-                  transform: [{ translateY: isActive ? -2 : 0 }],
-                }}
-              />
+        {/* Tab Icons */}
+        {TAB_CONFIG.map((tab, index) => {
+          const isActive = activeTabIndex === index;
 
-              {/* Label */}
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: isActive ? '700' : '600',
-                  color: isActive ? tab.color : colors.tabIconDefault,
-                  opacity: isActive ? 1 : 0.6,
-                }}
-              >
-                {tab.title}
-              </Text>
-            </View>
-          </Pressable>
-        );
-      })}
+          return (
+            <Pressable
+              key={tab.name}
+              onPress={() => handleTabPress(tab)}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingTop: 4,
+                zIndex: 10,
+              }}
+            >
+              <View style={{ alignItems: 'center', gap: 6, zIndex: 10 }}>
+                {/* Icon */}
+                <FontAwesome5
+                  name={tab.icon}
+                  size={isActive ? 26 : 22}
+                  color={isActive ? tab.color : colors.tabIconDefault}
+                  solid={isActive}
+                  style={{
+                    transform: [{ translateY: isActive ? -2 : 0 }],
+                  }}
+                />
+
+                {/* Label */}
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: isActive ? '700' : '600',
+                    color: isActive ? tab.color : colors.tabIconDefault,
+                    opacity: isActive ? 1 : 0.6,
+                  }}
+                >
+                  {tab.title}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 };

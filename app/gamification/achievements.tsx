@@ -3,6 +3,7 @@ import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { YStack, XStack, Text, Progress, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useQuery } from 'convex/react';
@@ -12,14 +13,17 @@ import { BadgeTile } from '@/components/gamification/BadgeTile';
 import { AchievementRow } from '@/components/gamification/AchievementRow';
 import { haptics } from '@/utils/haptics';
 import { useAuth } from '@/hooks/useAuth';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
-import { Pressable } from 'react-native';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AchievementsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { token } = useAuth();
+  const { t } = useLanguage();
 
   const stats = useQuery(api.gamification.getStats, {
     token: token || undefined,
@@ -36,7 +40,9 @@ export default function AchievementsScreen() {
           alignItems: 'center',
         }}
       >
-        <Stack.Screen options={{ headerShown: true, title: 'Achievements' }} />
+        <Stack.Screen
+          options={{ headerShown: true, title: t('gamification_title') }}
+        />
         <ActivityIndicator size="large" color={colors.tint} />
       </View>
     );
@@ -54,9 +60,11 @@ export default function AchievementsScreen() {
           padding: 20,
         }}
       >
-        <Stack.Screen options={{ headerShown: true, title: 'Achievements' }} />
+        <Stack.Screen
+          options={{ headerShown: true, title: t('gamification_title') }}
+        />
         <Text color={colors.text} fontSize="$5" textAlign="center">
-          Please sign in to view your achievements.
+          {t('gamification_signin_view')}
         </Text>
       </View>
     );
@@ -82,7 +90,7 @@ export default function AchievementsScreen() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.8)',
+          backgroundColor: 'rgba(0,0,0,0.6)', // Slightly lighter dim for glass effect
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1000,
@@ -90,20 +98,17 @@ export default function AchievementsScreen() {
         }}
       >
         <Stack.Screen options={{ headerShown: false }} />
-        <View
+
+        {/* Modal Container */}
+        <GlassCard
+          backgroundColor={colors.background}
+          backgroundOpacity={0.9}
+          borderRadiusInside={0}
+          borderRadius={24}
           style={{
             width: '90%',
-            backgroundColor: colors.card,
-            borderRadius: 24,
             padding: 24,
             alignItems: 'stretch',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.5,
-            shadowRadius: 20,
-            elevation: 10,
-            borderWidth: 1,
-            borderColor: colors.border,
           }}
         >
           {/* Header for Modal */}
@@ -113,16 +118,16 @@ export default function AchievementsScreen() {
             marginBottom="$4"
           >
             <Text fontSize="$6" fontWeight="800" color={colors.text}>
-              Badge Details
+              {t('gamification_badge_details')}
             </Text>
-            <Pressable onPress={() => setSelectedBadge(null)}>
-              <FontAwesome5
-                name="times"
-                size={20}
-                color={colors.text}
-                opacity={0.5}
-              />
-            </Pressable>
+            <GlassButton
+              shadowRadius={3}
+              icon="times"
+              size="small"
+              onPress={() => setSelectedBadge(null)}
+              shadowOpacity={0}
+              label=""
+            />
           </XStack>
 
           {/* Detail Content using AchievementRow reuse */}
@@ -139,27 +144,22 @@ export default function AchievementsScreen() {
             opacity={0.6}
             fontSize="$3"
             marginTop="$4"
+            marginBottom="$4"
           >
             {isUnlocked
-              ? "Congratulations! You've mastered this achievement."
-              : 'Keep cooking to unlock this badge!'}
+              ? t('gamification_congrats')
+              : t('gamification_locked_desc')}
           </Text>
 
-          <Pressable
+          <GlassButton
+            shadowRadius={2}
             onPress={() => setSelectedBadge(null)}
-            style={{
-              marginTop: 24,
-              paddingVertical: 14,
-              backgroundColor: colors.tint,
-              borderRadius: 16,
-              alignItems: 'center',
-            }}
-          >
-            <Text color="#FFF" fontWeight="700" fontSize="$4">
-              Awesome
-            </Text>
-          </Pressable>
-        </View>
+            label={t('gamification_awesome')}
+            size="medium"
+            variant="active" // Use active variant (tint color usually)
+          />
+          <View style={{ height: 16 }} />
+        </GlassCard>
       </View>
     );
   };
@@ -169,7 +169,7 @@ export default function AchievementsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Achievements',
+          title: t('gamification_title'),
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
           headerShadowVisible: false,
@@ -205,7 +205,7 @@ export default function AchievementsScreen() {
               opacity={0.6}
               fontWeight="600"
             >
-              LEVEL
+              {t('gamification_level')}
             </Text>
           </View>
 
@@ -230,7 +230,10 @@ export default function AchievementsScreen() {
               textAlign="center"
               marginTop="$1"
             >
-              {100 - xpIntoLevel} XP to Level {stats.level + 1}
+              {t('gamification_xp_to_level', {
+                xp: 100 - xpIntoLevel,
+                nextLevel: stats.level + 1,
+              })}
             </Text>
           </YStack>
         </YStack>
@@ -238,35 +241,72 @@ export default function AchievementsScreen() {
         <Separator borderColor={colors.border} marginBottom="$4" />
 
         {/* Stats Summary */}
-        <XStack justifyContent="space-around" marginBottom="$6">
-          <YStack alignItems="center" gap="$1">
-            <FontAwesome5 name="fire" size={24} color="#f59e0b" />
-            <Text fontSize="$5" fontWeight="700" color={colors.text}>
-              {stats.currentStreak}
-            </Text>
-            <Text fontSize="$2" color={colors.text} opacity={0.6}>
-              Day Streak
-            </Text>
-          </YStack>
-          <YStack alignItems="center" gap="$1">
-            <FontAwesome5 name="star" size={24} color="#fbbf24" />
-            <Text fontSize="$5" fontWeight="700" color={colors.text}>
-              {stats.xp}
-            </Text>
-            <Text fontSize="$2" color={colors.text} opacity={0.6}>
-              Total XP
-            </Text>
-          </YStack>
-          <YStack alignItems="center" gap="$1">
-            <FontAwesome5 name="medal" size={24} color="#8b5cf6" />
-            <Text fontSize="$5" fontWeight="700" color={colors.text}>
-              {unlockedIds.length}
-            </Text>
-            <Text fontSize="$2" color={colors.text} opacity={0.6}>
-              Badges
-            </Text>
-          </YStack>
-        </XStack>
+        <GlassCard
+          borderRadiusInside={0}
+          borderRadius={20}
+          style={{ marginBottom: 24, padding: 16 }}
+        >
+          <XStack justifyContent="space-around">
+            <YStack alignItems="center" gap="$1" width={80}>
+              <LottieView
+                source={require('@/assets/animations/fire.json')}
+                autoPlay
+                loop
+                style={{ width: 50, height: 50 }}
+              />
+              <Text fontSize="$5" fontWeight="700" color={colors.text}>
+                {stats.currentStreak}
+              </Text>
+              <Text
+                fontSize="$2"
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                textAlign="center"
+                color={colors.text}
+                opacity={0.6}
+              >
+                {t('gamification_day_streak')}
+              </Text>
+            </YStack>
+
+            <YStack alignItems="center" gap="$1" width={80}>
+              <LottieView
+                source={require('@/assets/animations/Star.json')}
+                autoPlay
+                loop
+                style={{ width: 50, height: 50 }}
+              />
+              <Text fontSize="$5" fontWeight="700" color={colors.text}>
+                {stats.xp}
+              </Text>
+              <Text
+                fontSize="$2"
+                justifyContent="center"
+                alignItems="center"
+                color={colors.text}
+                opacity={0.6}
+              >
+                {t('gamification_total_xp')}
+              </Text>
+            </YStack>
+
+            <YStack alignItems="center" gap="$1" width={80}>
+              <LottieView
+                source={require('@/assets/animations/Medal.json')}
+                autoPlay
+                loop
+                style={{ width: 50, height: 50 }}
+              />
+              <Text fontSize="$5" fontWeight="700" color={colors.text}>
+                {unlockedIds.length}
+              </Text>
+              <Text fontSize="$2" color={colors.text} opacity={0.6}>
+                {t('gamification_badges')}
+              </Text>
+            </YStack>
+          </XStack>
+        </GlassCard>
 
         <Text
           fontSize="$6"
@@ -274,7 +314,7 @@ export default function AchievementsScreen() {
           color={colors.text}
           marginBottom="$4"
         >
-          Trophy Case
+          {t('gamification_trophy_case')}
         </Text>
 
         {/* Badge Grid Gallery */}

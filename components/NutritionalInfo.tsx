@@ -10,6 +10,8 @@ import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'expo-router';
 import { Ingredient } from '@/types';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface NutritionalInfoProps {
   ingredients: Ingredient[];
@@ -48,83 +50,75 @@ export const NutritionalInfo: React.FC<NutritionalInfoProps> = ({
 
   return (
     <Animated.View entering={FadeInUp.delay(400).springify()}>
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: 20,
-          padding: 20,
-          marginBottom: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-          elevation: 3,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        {/* Header */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
+      <GlassCard borderRadius={20} intensity={isUnlocked ? 40 : 20}>
+        <View style={{ padding: 20 }}>
+          {/* Header */}
           <View
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: `${colors.tint}20`,
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 12,
+              marginBottom: 16,
             }}
           >
-            <FontAwesome5 name="fire" size={16} color={colors.tint} />
-          </View>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>
-            {t('premium_benefit_nutri')}
-          </Text>
-          {!isUnlocked && (
-            <View style={{ marginLeft: 'auto' }}>
-              <FontAwesome5
-                name="lock"
-                size={16}
-                color={colors.text}
-                opacity={0.5}
-              />
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: `${colors.tint}20`,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <FontAwesome5 name="fire" size={16} color={colors.tint} />
             </View>
-          )}
-        </View>
+            <Text
+              style={{ fontSize: 20, fontWeight: '700', color: colors.text }}
+            >
+              {t('premium_benefit_nutri')}
+            </Text>
+            {!isUnlocked && (
+              <View style={{ marginLeft: 'auto' }}>
+                <FontAwesome5
+                  name="lock"
+                  size={16}
+                  color={colors.text}
+                  opacity={0.5}
+                />
+              </View>
+            )}
+          </View>
 
-        {/* Content */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <NutritionItem
-            label="Calories"
-            value={`${nutrition.calories}`}
-            unit="kcal"
-            colors={colors}
-          />
-          <NutritionItem
-            label="Protein"
-            value={`${nutrition.protein}`}
-            unit="g"
-            colors={colors}
-          />
-          <NutritionItem
-            label="Carbs"
-            value={`${nutrition.carbs}`}
-            unit="g"
-            colors={colors}
-          />
-          <NutritionItem
-            label="Fat"
-            value={`${nutrition.fat}`}
-            unit="g"
-            colors={colors}
-          />
+          {/* Content */}
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-around' }}
+          >
+            <NutritionItem
+              label="Calories"
+              value={`${nutrition.calories}`}
+              unit="kcal"
+              colors={colors}
+            />
+            <NutritionItem
+              label="Protein"
+              value={`${nutrition.protein}`}
+              unit="g"
+              colors={colors}
+            />
+            <NutritionItem
+              label="Carbs"
+              value={`${nutrition.carbs}`}
+              unit="g"
+              colors={colors}
+            />
+            <NutritionItem
+              label="Fat"
+              value={`${nutrition.fat}`}
+              unit="g"
+              colors={colors}
+            />
+          </View>
         </View>
 
         {/* Lock Overlay */}
@@ -137,38 +131,24 @@ export const NutritionalInfo: React.FC<NutritionalInfoProps> = ({
                 {
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'rgba(255,255,255,0.1)', // Light overlay
+                  backgroundColor: 'rgba(255,255,255,0.05)',
                 },
               ]}
               tint={colorScheme === 'dark' ? 'dark' : 'light'}
             >
-              <View
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                  borderRadius: 24,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-              >
-                <FontAwesome5
-                  name="lock"
-                  size={16}
-                  color="white"
-                  style={{ marginRight: 8 }}
-                />
-                <Text
-                  style={{ color: 'white', fontWeight: '600' }}
-                  onPress={handlePressLocked}
-                >
-                  Upgrade to View
-                </Text>
-              </View>
+              <GlassButton
+                label="Upgrade to View"
+                icon="lock"
+                onPress={handlePressLocked}
+                size="medium"
+                backgroundColor={colors.tint}
+                textColor="#FFFFFF"
+                backgroundOpacity={0.9}
+              />
             </BlurView>
           </View>
         )}
-      </View>
+      </GlassCard>
     </Animated.View>
   );
 };

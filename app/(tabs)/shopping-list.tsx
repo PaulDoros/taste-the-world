@@ -1,5 +1,6 @@
 import { useRef, useState, useMemo } from 'react';
-import { FlatList, Pressable, TextInput } from 'react-native';
+import { FlatList, Pressable, TextInput, View } from 'react-native';
+import { playSound } from '@/utils/sounds';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -31,6 +32,7 @@ import {
 import { ShoppingListItem } from '@/components/ShoppingListItem';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ActionBar } from '@/components/shared/ActionBar';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -46,7 +48,7 @@ export default function ShoppingListScreen() {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   // Use unified hook
   const {
@@ -62,6 +64,7 @@ export default function ShoppingListScreen() {
 
   // Pantry mutation
   const addPantryItem = useMutation(api.pantry.addPantryItem);
+  const logActivity = useMutation(api.gamification.logActivity);
 
   const [filter, setFilter] = useState<'all' | 'checked' | 'unchecked'>('all');
   const [showConversions, setShowConversions] = useState(false);
@@ -133,6 +136,11 @@ export default function ShoppingListScreen() {
             displayName: item.name,
             measure: item.measure,
           });
+          // Await to ensure count is updated
+          await logActivity({
+            actionType: 'pantry_add',
+            token: token || undefined,
+          }).catch(console.error);
         }
         await removeItem(item._id);
       }
@@ -168,6 +176,12 @@ export default function ShoppingListScreen() {
           }
           await removeItem(item._id);
         }
+        // Log bulk add
+        await logActivity({
+          actionType: 'pantry_add',
+          count: completedItems.length,
+          token: token || undefined,
+        }).catch(console.error);
       }
     );
   };
@@ -183,6 +197,13 @@ export default function ShoppingListScreen() {
       recipeId: 'custom',
       recipeName: t('shopping_list_custom_item'),
     });
+
+    console.log('[SHOPPING] Logged custom item as shopping_add');
+
+    await logActivity({
+      actionType: 'shopping_add',
+      token: token || undefined,
+    }).catch(console.error);
 
     setNewItemName('');
     setNewItemMeasure('');
@@ -297,21 +318,19 @@ export default function ShoppingListScreen() {
         {/* Add Custom Item Section */}
         <YStack paddingHorizontal="$4" marginBottom="$4">
           {!showAddInput ? (
-            <Button
-              size="$5"
+            <GlassButton
+              shadowOpacity={0.5}
+              shadowRadius={5}
+              size="medium"
               backgroundColor={colors.tint}
-              borderRadius="$6"
-              icon={<FontAwesome5 name="plus" size={16} color="white" />}
+              icon="plus"
+              label={t('shopping_list_custom_item')}
+              textColor="white"
               onPress={() => {
                 haptics.light();
                 setShowAddInput(true);
               }}
-              pressStyle={{ opacity: 0.9, scale: 0.98 }}
-            >
-              <Paragraph color="white" fontWeight="700" size="$4">
-                {t('shopping_list_custom_item')}
-              </Paragraph>
-            </Button>
+            />
           ) : (
             <AnimatedYStack
               entering={FadeIn}
@@ -341,31 +360,28 @@ export default function ShoppingListScreen() {
                 onSubmitEditing={handleAddCustomItem}
               />
               <XStack gap="$3">
-                <Button
-                  flex={1}
-                  size="$4"
-                  backgroundColor="$background"
-                  borderWidth={1}
-                  borderColor="$borderColor"
+                <GlassButton
+                  shadowRadius={2}
+                  size="small"
+                  label={t('shopping_list_cancel')}
                   onPress={() => {
                     haptics.light();
                     setShowAddInput(false);
                     setNewItemName('');
                     setNewItemMeasure('');
                   }}
-                >
-                  <Paragraph>{t('shopping_list_cancel')}</Paragraph>
-                </Button>
-                <Button
-                  flex={1}
-                  size="$4"
-                  backgroundColor={colors.tint}
+                  backgroundColor={colors.background}
+                  backgroundOpacity={0.5}
+                  textColor={colors.text}
+                />
+                <GlassButton
+                  shadowRadius={2}
+                  size="small"
+                  label={t('shopping_list_add')}
                   onPress={handleAddCustomItem}
-                >
-                  <Paragraph color="white" fontWeight="700">
-                    {t('shopping_list_add')}
-                  </Paragraph>
-                </Button>
+                  backgroundColor={colors.tint}
+                  textColor="white"
+                />
               </XStack>
             </AnimatedYStack>
           )}
@@ -376,32 +392,28 @@ export default function ShoppingListScreen() {
           <Animated.View entering={FadeInDown.delay(200).springify()}>
             <XStack paddingHorizontal="$4" marginBottom="$3" gap="$2">
               {['all', 'unchecked', 'checked'].map((filterType) => (
-                <Button
-                  key={filterType}
-                  flex={1}
-                  size="$3"
-                  backgroundColor={
-                    filter === filterType ? colors.tint : `${colors.tint}15`
-                  }
-                  onPress={() => {
-                    haptics.light();
-                    setFilter(filterType as typeof filter);
-                  }}
-                  pressStyle={{ opacity: 0.8 }}
-                >
-                  <Paragraph
-                    color={filter === filterType ? 'white' : colors.tint}
-                    fontWeight="600"
-                    textTransform="capitalize"
-                    size="$3"
-                  >
-                    {filterType === 'unchecked'
-                      ? t('shopping_list_filter_active')
-                      : filterType === 'checked'
-                        ? t('shopping_list_filter_completed')
-                        : t('shopping_list_filter_all')}
-                  </Paragraph>
-                </Button>
+                <View key={filterType} style={{ flex: 1 }}>
+                  <GlassButton
+                    shadowRadius={5}
+                    size="small"
+                    backgroundColor={
+                      filter === filterType ? colors.tint : undefined
+                    }
+                    backgroundOpacity={filter === filterType ? 1 : 0.1}
+                    onPress={() => {
+                      haptics.light();
+                      setFilter(filterType as typeof filter);
+                    }}
+                    label={
+                      filterType === 'unchecked'
+                        ? t('shopping_list_filter_active')
+                        : filterType === 'checked'
+                          ? t('shopping_list_filter_completed')
+                          : t('shopping_list_filter_all')
+                    }
+                    textColor={filter === filterType ? 'white' : colors.tint}
+                  />
+                </View>
               ))}
             </XStack>
           </Animated.View>
@@ -433,6 +445,7 @@ export default function ShoppingListScreen() {
             contentContainerStyle={{
               paddingHorizontal: 10,
               paddingBottom: bottomPadding,
+              marginTop: 15,
             }}
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }) => (

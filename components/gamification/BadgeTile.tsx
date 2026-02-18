@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Pressable, Dimensions } from 'react-native';
 import { Text, Progress } from 'tamagui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import LottieView from 'lottie-react-native';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LottieAnimation } from '@/components/shared/LottieAnimation';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { BadgeDef } from '@/constants/Badges';
@@ -24,6 +24,8 @@ interface BadgeTileProps {
   onPress: (badge: BadgeDef) => void;
 }
 
+import { useLanguage } from '@/context/LanguageContext';
+
 export const BadgeTile = ({
   badge,
   isUnlocked,
@@ -32,6 +34,7 @@ export const BadgeTile = ({
 }: BadgeTileProps) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
 
   const { percent, text } = getBadgeProgress(badge, userStats, isUnlocked);
 
@@ -45,134 +48,121 @@ export const BadgeTile = ({
         transform: [{ scale: pressed ? 0.96 : 1 }],
       })}
     >
-      <View
+      <GlassCard
+        borderRadius={16}
+        intensity={isUnlocked ? 40 : 20}
+        backgroundColor={isUnlocked ? badge.color : undefined}
+        backgroundOpacity={isUnlocked ? 0.15 : 0.05}
+        shadowColor={isUnlocked ? badge.color : '#000'}
+        shadowOpacity={isUnlocked ? 0.3 : 0.1}
         style={{
           flex: 1,
-          borderRadius: 16,
-          backgroundColor: colors.card,
-          shadowColor: isUnlocked ? badge.color : '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isUnlocked ? 0.3 : 0.1,
-          shadowRadius: 4,
-          elevation: isUnlocked ? 5 : 1,
-          overflow: 'hidden',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 8,
+          borderWidth: isUnlocked ? 1 : 1,
+          borderColor: isUnlocked ? `${badge.color}40` : colors.border,
+        }}
+        contentContainerStyle={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          width: '100%',
         }}
       >
-        <LinearGradient
-          colors={
-            isUnlocked
-              ? [badge.color, `${badge.color}60`]
-              : [colors.card, colors.card]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        {/* Icon Container */}
+        <View
           style={{
-            flex: 1,
-            padding: 8,
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: isUnlocked
+              ? `${badge.color}20` // Subtle tint matching badge
+              : `${colors.text}05`,
             alignItems: 'center',
             justifyContent: 'center',
-            borderWidth: isUnlocked ? 0 : 1,
-            borderColor: isUnlocked ? 'transparent' : colors.border,
+            marginBottom: 12,
+            position: 'relative',
           }}
         >
-          {/* Icon Container */}
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: isUnlocked
-                ? 'rgba(255,255,255,0.2)'
-                : `${colors.text}05`,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 12, // Increased spacing
-              position: 'relative',
-            }}
-          >
-            {/* If unlocked and has Lottie, show animation. Else show Icon */}
-            {isUnlocked && badge.lottieSource ? (
-              <LottieView
-                autoPlay
-                loop
-                source={badge.lottieSource}
-                style={{ width: 64, height: 64 }}
-              />
-            ) : (
-              <MaterialCommunityIcons
-                name={badge.icon as any}
-                size={36}
-                color={isUnlocked ? '#FFF' : colors.text}
-                // If locked, just a bit visible under the lock
-                style={{ opacity: isUnlocked ? 1 : 0.4 }}
-              />
-            )}
+          {/* If unlocked and has Lottie, show animation. Else show Icon */}
+          {isUnlocked && badge.lottieSource ? (
+            <LottieAnimation
+              autoPlay
+              loop
+              source={badge.lottieSource}
+              style={{ width: 64, height: 64 }}
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name={badge.icon as any}
+              size={36}
+              color={isUnlocked ? badge.color : colors.text} // Use badge color for icon if unlocked
+              style={{ opacity: isUnlocked ? 1 : 0.4 }}
+            />
+          )}
 
-            {/* Lock Overlay if Locked */}
-            {!isUnlocked && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(0,0,0,0.3)', // Slight dark overlay on the circle
-                  borderRadius: 36,
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="lock"
-                  size={24}
-                  color="#FFF"
-                  style={{ opacity: 0.9 }}
-                />
-              </View>
-            )}
-          </View>
-
-          {/* Title - Ensure it pushes down or container is centered */}
-          <Text
-            fontSize={11}
-            fontWeight="700"
-            color={isUnlocked ? '#FFF' : colors.text}
-            textAlign="center"
-            numberOfLines={2}
-            opacity={isUnlocked ? 1 : 0.6}
-            marginBottom={4}
-          >
-            {badge.title}
-          </Text>
-
-          {/* Progress Bar for Locked Items */}
+          {/* Lock Overlay if Locked */}
           {!isUnlocked && (
-            <View style={{ width: '100%', marginTop: 8 }}>
-              <Text
-                fontSize={9}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                borderRadius: 36,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="lock"
+                size={24}
                 color={colors.text}
-                opacity={0.5}
-                textAlign="center"
-                marginBottom={2}
-              >
-                {percent}%
-              </Text>
-              <Progress
-                value={percent}
-                size="$1"
-                backgroundColor={`${colors.text}10`}
-                height={3}
-              >
-                <Progress.Indicator
-                  backgroundColor={badge.color}
-                  opacity={0.5}
-                />
-              </Progress>
+                style={{ opacity: 0.5 }}
+              />
             </View>
           )}
-        </LinearGradient>
-      </View>
+        </View>
+
+        {/* Title */}
+        <Text
+          fontSize={11}
+          fontWeight="700"
+          color={colors.text}
+          textAlign="center"
+          numberOfLines={2}
+          opacity={isUnlocked ? 1 : 0.6}
+          marginBottom={4}
+        >
+          {t(badge.titleKey as any)}
+        </Text>
+
+        {/* Progress Bar for Locked Items */}
+        {!isUnlocked && (
+          <View style={{ width: '100%', marginTop: 8 }}>
+            <Text
+              fontSize={9}
+              color={colors.text}
+              opacity={0.5}
+              textAlign="center"
+              marginBottom={2}
+            >
+              {percent}%
+            </Text>
+            <Progress
+              value={percent}
+              size="$1"
+              backgroundColor={`${colors.text}10`}
+              height={3}
+            >
+              <Progress.Indicator backgroundColor={badge.color} opacity={0.5} />
+            </Progress>
+          </View>
+        )}
+      </GlassCard>
     </Pressable>
   );
 };

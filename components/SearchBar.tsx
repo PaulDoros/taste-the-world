@@ -1,12 +1,7 @@
-import { View, TextInput, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { YStack, XStack, Input, useTheme, View } from 'tamagui';
 
 /**
  * SearchBar Component
@@ -25,81 +20,59 @@ export const SearchBar = ({
   onChangeText,
   placeholder = 'Search...',
 }: SearchBarProps) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const isFocused = useSharedValue(false);
+  const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
 
-  // Animation for search bar scaling
-  const searchAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withTiming(isFocused.value ? 1.01 : 1, { duration: 200 }),
-      },
-    ],
-  }));
-
-  const handleFocus = () => {
-    isFocused.value = true;
-  };
-
-  const handleBlur = () => {
-    isFocused.value = false;
-  };
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
 
   const clearSearch = () => {
     onChangeText('');
   };
 
   return (
-    <Animated.View
-      style={[
-        {
-          marginHorizontal: 16,
-          marginBottom: 16,
-        },
-        searchAnimatedStyle,
-      ]}
+    <YStack
+      marginHorizontal="$4"
+      marginBottom="$4"
+      animation="quick"
+      scale={isFocused ? 1.01 : 1}
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderWidth: 2,
-          borderColor: isFocused.value ? colors.tint : 'transparent',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isFocused.value ? 0.08 : 0.03,
-          shadowRadius: isFocused.value ? 12 : 4,
-          elevation: isFocused.value ? 4 : 2,
-        }}
+      <XStack
+        alignItems="center"
+        backgroundColor="$surface" // was colors.card
+        borderRadius="$6"
+        paddingHorizontal="$4"
+        paddingVertical="$2.5"
+        borderWidth={2}
+        borderColor={isFocused ? '$tint' : 'transparent'}
+        shadowColor="$shadow"
+        shadowOffset={{ width: 0, height: 2 }}
+        shadowOpacity={isFocused ? 0.08 : 0.03}
+        shadowRadius={isFocused ? 12 : 4}
+        elevation={isFocused ? 4 : 2} // Android elevation
       >
         {/* Search Icon */}
         <FontAwesome5
           name="search"
           size={16}
-          color={isFocused.value ? colors.tint : colors.text}
-          style={{ opacity: isFocused.value ? 1 : 0.4 }}
+          color={isFocused ? theme.tint.val : theme.color.val}
+          style={{ opacity: isFocused ? 1 : 0.4, marginRight: 12 }}
         />
 
         {/* Text Input */}
-        <TextInput
+        <Input
+          flex={1}
+          unstyled
           value={value}
           onChangeText={onChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          placeholderTextColor={`${colors.text}60`}
-          style={{
-            flex: 1,
-            marginLeft: 12,
-            fontSize: 16,
-            color: colors.text,
-            fontWeight: '500',
-          }}
+          placeholderTextColor="$color11"
+          backgroundColor="transparent"
+          fontSize="$4"
+          color="$color"
+          fontWeight="500"
           returnKeyType="search"
           autoCorrect={false}
           autoCapitalize="words"
@@ -109,17 +82,16 @@ export const SearchBar = ({
         {value.length > 0 && (
           <Pressable onPress={clearSearch} hitSlop={8}>
             <View
-              style={{
-                backgroundColor: `${colors.tint}20`,
-                borderRadius: 12,
-                padding: 6,
-              }}
+              backgroundColor="$tint"
+              opacity={0.15}
+              borderRadius="$4"
+              padding="$1.5"
             >
-              <FontAwesome5 name="times" size={12} color={colors.tint} />
+              <FontAwesome5 name="times" size={12} color={theme.tint.val} />
             </View>
           </Pressable>
         )}
-      </View>
-    </Animated.View>
+      </XStack>
+    </YStack>
   );
 };

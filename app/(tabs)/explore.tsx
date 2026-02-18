@@ -5,6 +5,9 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { ScreenLayout } from '@/components/ScreenLayout';
+import { AmbientBackground } from '@/components/ui/AmbientBackground';
 
 import { CountryCard } from '@/components/CountryCard';
 import { SearchBar } from '@/components/SearchBar';
@@ -12,6 +15,7 @@ import { FilterBar } from '@/components/FilterBar';
 import { StaggeredListItem } from '@/components/StaggeredList';
 import { SkeletonGrid } from '@/components/SkeletonLoader';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import LottieView from 'lottie-react-native';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from 'tamagui';
@@ -144,48 +148,55 @@ export default function ExploreScreen() {
   // Error state
   if (error && countries.length === 0) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
-        edges={['top', 'left', 'right']}
-      >
+      <ScreenLayout edges={['top', 'left', 'right']}>
         <ErrorState
           title={t('explore_error_title')}
           message={error || t('explore_error_message')}
           onRetry={refetch}
           retryText={t('explore_retry')}
         />
-      </SafeAreaView>
+      </ScreenLayout>
     );
   }
 
   // Loading state with header/search always visible
   if (loading && countries.length === 0) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
-        edges={['top', 'left', 'right']}
-      >
+      <ScreenLayout edges={['left', 'right']}>
         {/* Header - Always visible */}
         <Animated.View
           entering={FadeInDown.delay(50).springify()}
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
+          style={{
+            paddingHorizontal: 16,
+            paddingTop: insets.top + 16, // Use unsafe area for header
+            paddingBottom: 12,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
         >
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 32,
-              fontWeight: '700',
-              letterSpacing: -0.5,
-              marginBottom: 4,
-            }}
-          >
-            {t('explore_title')}
-          </Text>
-          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-            {t('explore_subtitle')}
-          </Text>
+          <View>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 32,
+                fontWeight: '700',
+                letterSpacing: -0.5,
+                marginBottom: 4,
+              }}
+            >
+              {t('explore_title')}
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+              {t('explore_subtitle')}
+            </Text>
+          </View>
+          <LottieView
+            source={require('@/assets/animations/travel.json')}
+            autoPlay
+            loop
+            style={{ width: 80, height: 80 }}
+          />
         </Animated.View>
 
         {/* Search Bar - Always visible */}
@@ -207,32 +218,57 @@ export default function ExploreScreen() {
 
         {/* Skeleton Loader - Only cards */}
         <SkeletonGrid count={6} />
-      </SafeAreaView>
+      </ScreenLayout>
     );
   }
 
   // Render sticky header content
   const renderStickyHeader = () => (
-    <View style={{ backgroundColor: colors.background }}>
+    <BlurView
+      intensity={90}
+      tint={colorScheme === 'dark' ? 'dark' : 'light'}
+      style={{
+        overflow: 'hidden',
+        borderBottomWidth: 1,
+        marginBottom: 20,
+        borderBottomColor:
+          colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+      }}
+    >
       {/* Header */}
       <Animated.View
         entering={FadeInDown.delay(50).springify()}
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: insets.top + 16, // Unsafe area compensation
+          paddingBottom: 12,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
       >
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 32,
-            fontWeight: '700',
-            letterSpacing: -0.5,
-            marginBottom: 4,
-          }}
-        >
-          {t('explore_title')}
-        </Text>
-        <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-          {t('explore_subtitle')}
-        </Text>
+        <View>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 32,
+              fontWeight: '700',
+              letterSpacing: -0.5,
+              marginBottom: 4,
+            }}
+          >
+            {t('explore_title')}
+          </Text>
+          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+            {t('explore_subtitle')}
+          </Text>
+        </View>
+        <LottieView
+          source={require('@/assets/animations/travel.json')}
+          autoPlay
+          loop
+          style={{ width: 80, height: 80 }}
+        />
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(150).springify()}>
@@ -266,48 +302,69 @@ export default function ExploreScreen() {
           </View>
         )}
       </Animated.View>
-    </View>
+    </BlurView>
   );
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-      edges={['top', 'left', 'right']}
-    >
+    <ScreenLayout edges={['left', 'right']} disableBackground>
+      <AmbientBackground />
       {/* Countries Grid with Sticky Header */}
-      <FlatList
-        data={filteredCountries}
-        keyExtractor={(item) => item.cca2}
-        numColumns={2}
-        ListHeaderComponent={renderStickyHeader}
-        stickyHeaderIndices={[0]}
-        contentContainerStyle={{
-          paddingBottom: bottomPadding,
-        }}
-        columnWrapperStyle={{
-          gap: 12,
-          paddingHorizontal: 16,
-        }}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.tint}
-            colors={[colors.tint]}
-          />
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="search"
-            title={t('explore_no_results_title')}
-            description={t('explore_no_results_desc')}
-          />
-        }
-      />
-    </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        {/* Background hack: Put it in a scrollview behind the list? No. 
+             For now, just putting it absolute in the screen layout for explore might be static. 
+             But user wants scrolling.
+             I will add it to ScreenLayout and let it be static for Explore IF I can't make it scroll.
+             Actually, for Explore, let's try putting it inside a "background" render item.
+          */}
+        {/* 
+             Strategy Switch: Since FlatList + Sticky Header + Scrolling BG is hard,
+             I will put it as absolute in ScreenLayout (static) but taller? No.
+             I will try to mimic Settings behavior:
+             If I wrap the FlatList in a view?
+             
+             Let's just disable global and use the updated AmbientBackground. 
+             If it's inside FlatList's scroll content, it moves.
+             I'll add it to the renderStickyHeader but with zIndex -1 and absolute positioning relative to the *header's container*?
+             If header is sticky, it stays.
+             
+             Let's just disable background for Explore for a moment to verify Home/Settings.
+             Wait, I will add it to the component tree below.
+          */}
+        <FlatList
+          data={filteredCountries}
+          keyExtractor={(item) => item.cca2}
+          numColumns={2}
+          ListHeaderComponent={() => <View>{renderStickyHeader()}</View>}
+          stickyHeaderIndices={[0]} // If I wrap, the WHOLE wrapper is sticky.
+          // So I can't separate them easily.
+
+          contentContainerStyle={{
+            paddingBottom: bottomPadding,
+          }}
+          columnWrapperStyle={{
+            gap: 12,
+            paddingHorizontal: 16,
+          }}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.tint}
+              colors={[colors.tint]}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="search"
+              title={t('explore_no_results_title')}
+              description={t('explore_no_results_desc')}
+            />
+          }
+        />
+      </View>
+    </ScreenLayout>
   );
 }

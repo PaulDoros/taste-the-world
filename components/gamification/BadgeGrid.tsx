@@ -9,11 +9,13 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useLanguage } from '@/context/LanguageContext';
 
 import { useAuth } from '@/hooks/useAuth';
 
 export const BadgeGrid = () => {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const stats = useQuery(api.gamification.getStats, {
     token: token || undefined,
   });
@@ -50,9 +52,10 @@ export const BadgeGrid = () => {
 
     showConfirm(
       {
-        title: badge.title + (isUnlocked ? ' (Unlocked)' : ' (Locked)'),
+        title:
+          t(badge.titleKey as any) + (isUnlocked ? ' (Unlocked)' : ' (Locked)'),
         message:
-          badge.description +
+          t(badge.descriptionKey as any) +
           (isUnlocked ? '\n\nGreat job!' : '\n\nKeep going to unlock!') +
           progress,
         confirmText: isUnlocked ? 'Awesome' : 'Got it',
@@ -119,7 +122,7 @@ export const BadgeGrid = () => {
                   color={isUnlocked ? colors.text : colors.tabIconDefault}
                   numberOfLines={2}
                 >
-                  {badge.title}
+                  {t(badge.titleKey as any)}
                 </Text>
               </Card>
             </Pressable>

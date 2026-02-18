@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, FlatList, Alert } from 'react-native';
+import { View, FlatList, Alert, ScrollView, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenLayout } from '@/components/ScreenLayout';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useLanguage } from '@/context/LanguageContext';
@@ -18,17 +19,35 @@ import {
   Spinner,
   Spacer,
 } from 'tamagui';
-import { format } from 'date-fns'; // Assuming date-fns is available or standard Date
+import { Loading } from '@/components/shared/Loading';
+import { format } from 'date-fns';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useAuth } from '@/store/authStore';
+import * as Notifications from 'expo-notifications';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 export default function WalletScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { token } = useAuth();
 
-  const trips = useQuery(api.trips.getTrips);
+  const trips = useQuery(api.trips.getTrips, token ? { token } : 'skip');
   const deleteTrip = useMutation(api.trips.deleteTrip);
+
+  // Sorting and Upcoming Logic
+  const mobileTrips = trips ? [...trips] : [];
+
+  // Find upcoming (Nearest Future Trip)
+  const now = Date.now();
+  const upcomingTripId = mobileTrips
+    .filter((t) => t.startDate > now)
+    .sort((a, b) => a.startDate - b.startDate)[0]?._id;
+
+  // Sort for Display (Newest to Oldest)
+  const sortedTrips = mobileTrips.sort((a, b) => b.startDate - a.startDate);
 
   const handleDelete = (id: any) => {
     Alert.alert(t('wallet_delete_title'), t('wallet_delete_msg'), [
@@ -38,7 +57,20 @@ export default function WalletScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await deleteTrip({ id });
+            // Cancel all notifications for this trip
+            const scheduled =
+              await Notifications.getAllScheduledNotificationsAsync();
+            const tripNotifications = scheduled.filter(
+              (n) => n.content.data?.tripId === id
+            );
+
+            for (const n of tripNotifications) {
+              await Notifications.cancelScheduledNotificationAsync(
+                n.identifier
+              );
+            }
+
+            await deleteTrip({ id, token: token! });
           } catch (e) {
             console.error(e);
             Alert.alert(t('common_error'), t('wallet_error_save'));
@@ -49,88 +81,120 @@ export default function WalletScreen() {
   };
 
   const renderTrip = ({ item, index }: { item: any; index: number }) => {
+    const isUpcoming = item._id === upcomingTripId;
+
     return (
       <Animated.View entering={FadeInDown.delay(index * 100).springify()}>
-        <Card
-          bordered
-          elevate
-          size="$4"
-          marginBottom="$3"
-          backgroundColor="$background"
-          borderColor="$borderColor"
-          overflow="hidden"
-          pressStyle={{ scale: 0.98 }}
+        <Pressable
+          onPress={() => router.push(`/wallet/${item._id}` as any)}
+          style={{ marginBottom: 14, marginHorizontal: 12 }}
         >
-          <XStack
-            padding="$4"
-            alignItems="center"
-            justifyContent="space-between"
+          <GlassCard
+            variant={isUpcoming ? 'default' : 'thin'}
+            borderRadius={20}
+            contentContainerStyle={{ overflow: 'hidden' }}
+            backgroundColor={isUpcoming ? colors.tint : undefined}
+            backgroundOpacity={isUpcoming ? 0.1 : 0.3}
+            shadowRadius={5} // Smaller shadow radius as requested
           >
-            {/* Trip Details */}
-            <YStack flex={1} space="$2">
-              <XStack alignItems="center" space="$2">
-                <FontAwesome5
-                  name="map-marker-alt"
-                  size={16}
-                  color={colors.tint}
-                />
-                <Heading size="$5" color="$color">
-                  {item.destination}
-                </Heading>
-              </XStack>
+            {isUpcoming && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  backgroundColor: colors.tint,
+                  paddingHorizontal: 18,
 
-              <XStack alignItems="center" space="$3">
-                <XStack alignItems="center" space="$1.5">
+                  borderBottomLeftRadius: 8,
+                }}
+              >
+                <Text color="white" fontSize="$2" fontWeight="bold">
+                  COMING NEXT
+                </Text>
+              </View>
+            )}
+
+            <XStack
+              padding="$4"
+              alignItems="flex-start"
+              justifyContent="space-between"
+            >
+              {/* Trip Details */}
+              <YStack flex={1} space="$2">
+                <XStack alignItems="center" space="$2">
                   <FontAwesome5
-                    name="calendar-alt"
-                    size={14}
-                    color="$color11"
+                    name="map-marker-alt"
+                    size={16}
+                    color={colors.tint}
                   />
-                  <Text color="$color11" fontSize="$3">
-                    {new Date(item.startDate).toLocaleDateString()}
-                  </Text>
+                  <Heading size="$5" color="$color">
+                    {item.destination}
+                  </Heading>
                 </XStack>
-                {item.flightNumber && (
+
+                <XStack alignItems="center" space="$3">
                   <XStack alignItems="center" space="$1.5">
-                    <FontAwesome5 name="plane" size={14} color="$color11" />
-                    <Text color="$color11" fontSize="$3">
-                      {item.flightNumber}
+                    <FontAwesome5
+                      name="calendar-alt"
+                      size={14}
+                      color={colors.tabIconDefault}
+                    />
+                    <Text color={colors.text} opacity={0.7} fontSize="$3">
+                      {format(new Date(item.startDate), 'MMM dd, HH:mm')}
                     </Text>
                   </XStack>
-                )}
-              </XStack>
+                  {item.flightNumber && (
+                    <XStack alignItems="center" space="$1.5">
+                      <FontAwesome5
+                        name="plane"
+                        size={14}
+                        color={colors.tabIconDefault}
+                      />
+                      <Text color={colors.text} opacity={0.7} fontSize="$3">
+                        {item.flightNumber}
+                      </Text>
+                    </XStack>
+                  )}
+                </XStack>
 
-              {item.notes && (
-                <Text color="$color10" fontSize="$3" numberOfLines={2}>
-                  {item.notes}
-                </Text>
-              )}
-            </YStack>
+                {item.notes ? (
+                  <GlassCard
+                    variant="thin"
+                    style={{ marginTop: 8 }}
+                    borderRadius={8}
+                    backgroundColor="$background"
+                    backgroundOpacity={0.5}
+                  >
+                    <Text color="$color10" fontSize="$2" fontWeight="600">
+                      ITINERARY PREVIEW
+                    </Text>
+                    <Text color="$color10" fontSize="$3" numberOfLines={2}>
+                      {item.notes}
+                    </Text>
+                  </GlassCard>
+                ) : null}
+              </YStack>
 
-            {/* Delete Action */}
-            <Button
-              size="$3"
-              chromeless
-              icon={
-                <FontAwesome5
-                  name="trash"
-                  size={16}
-                  color={colors.tabIconDefault}
-                />
-              }
-              onPress={() => handleDelete(item._id)}
-            />
-          </XStack>
-        </Card>
+              {/* Delete Action */}
+              <GlassButton
+                size="small"
+                icon="trash"
+                variant="default"
+                shadowRadius={3}
+                backgroundOpacity={0}
+                onPress={() => handleDelete(item._id)}
+                textColor={colors.tabIconDefault}
+              />
+            </XStack>
+          </GlassCard>
+        </Pressable>
       </Animated.View>
     );
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={['top']}
-    >
+    <ScreenLayout edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
@@ -150,29 +214,32 @@ export default function WalletScreen() {
           </Text>
         </YStack>
 
-        <Button
-          size="$4"
-          backgroundColor={colors.tint}
-          color="white"
-          icon={<FontAwesome5 name="plus" size={16} color="white" />}
+        <GlassButton
+          size="medium"
+          icon="plus"
           onPress={() => router.push('/wallet/add')}
-          circular
-          elevate
+          variant="active"
+          backgroundColor={colors.tint}
+          textColor="white"
+          style={{ width: 44, height: 44, paddingHorizontal: 0 }}
         />
       </XStack>
 
       {/* Content */}
       <View style={{ flex: 1, paddingHorizontal: 16 }}>
         {trips === undefined ? (
-          <YStack flex={1} alignItems="center" justifyContent="center">
-            <Spinner size="large" color={colors.tint} />
-          </YStack>
+          <Loading fullScreen={false} />
         ) : trips.length === 0 ? (
-          <YStack
-            flex={1}
-            alignItems="center"
-            justifyContent="center"
-            space="$4"
+          <GlassCard
+            shadowRadius={3}
+            variant="default"
+            contentContainerStyle={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 20,
+              gap: 20,
+            }}
           >
             <View
               style={{
@@ -196,25 +263,67 @@ export default function WalletScreen() {
             <Text textAlign="center" color="$color11" maxWidth={300}>
               {t('wallet_empty_desc')}
             </Text>
-            <Button
-              marginTop="$4"
-              backgroundColor={colors.tint}
-              color="white"
+            <GlassButton
+              size="medium"
+              label={t('wallet_add')}
               onPress={() => router.push('/wallet/add')}
-            >
-              {t('wallet_add')}
-            </Button>
-          </YStack>
+              variant="active"
+              backgroundColor={colors.tint}
+            />
+          </GlassCard>
         ) : (
-          <FlatList
-            data={trips}
-            renderItem={renderTrip}
-            keyExtractor={(item) => item._id}
+          <ScrollView
             contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
             showsVerticalScrollIndicator={false}
-          />
+          >
+            {/* Upcoming Trips Section */}
+            {mobileTrips.filter((t) => t.startDate > now).length > 0 && (
+              <YStack marginBottom="$4">
+                <Heading
+                  size="$5"
+                  color="$color11"
+                  marginBottom="$2"
+                  textTransform="uppercase"
+                  fontSize={12}
+                  letterSpacing={1}
+                >
+                  {t('wallet_upcoming')}
+                </Heading>
+                {mobileTrips
+                  .filter((t) => t.startDate > now)
+                  .sort((a, b) => a.startDate - b.startDate)
+                  .map((item, index) => (
+                    <View key={item._id}>{renderTrip({ item, index })}</View>
+                  ))}
+              </YStack>
+            )}
+
+            {/* Past Trips Section */}
+            {mobileTrips.filter((t) => t.startDate <= now).length > 0 && (
+              <YStack>
+                <Heading
+                  size="$5"
+                  color="$color11"
+                  marginBottom="$2"
+                  textTransform="uppercase"
+                  fontSize={12}
+                  letterSpacing={1}
+                >
+                  {t('wallet_past')}
+                </Heading>
+                {mobileTrips
+                  .filter((t) => t.startDate <= now)
+                  .sort((a, b) => b.startDate - a.startDate)
+                  .map((item, index) => (
+                    <View key={item._id} style={{ opacity: 0.8 }}>
+                      {renderTrip({ item, index })}
+                    </View>
+                  ))}
+              </YStack>
+            )}
+          </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }

@@ -8,16 +8,17 @@ import {
   XStack,
   Separator,
   Spinner,
+  useTheme,
 } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { useUserStore } from '@/store/useUserStore';
 import { haptics } from '@/utils/haptics';
 import { useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TripPlannerModalProps {
   visible: boolean;
@@ -27,6 +28,8 @@ interface TripPlannerModalProps {
   countryLng?: number;
 }
 
+import { OfflineMapGuideModal } from './OfflineMapGuideModal';
+
 export const TripPlannerModal = ({
   visible,
   onClose,
@@ -34,29 +37,50 @@ export const TripPlannerModal = ({
   countryLat,
   countryLng,
 }: TripPlannerModalProps) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
   const tier = useUserStore((state) => state.tier);
   const isPro = tier === 'pro';
   const router = useRouter();
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showMapGuide, setShowMapGuide] = useState(false);
   const generateItinerary = useAction(api.ai.generateTripItinerary);
   const createTrip = useMutation(api.trips.createTrip);
 
-  const handleDownloadMap = async () => {
+  const { token } = useAuth();
+
+  const handleDownloadMap = () => {
     haptics.selection();
+    setShowMapGuide(true);
+  };
+
+  const executeMapDownload = async () => {
+    haptics.selection();
+    setShowMapGuide(false);
+
     // Deep link to Google Maps
-    const scheme = Platform.select({
-      ios: 'maps://0,0?q=',
-      android: 'geo:0,0?q=',
-    });
-    const latLng = `${countryLat},${countryLng}`;
-    const label = countryName;
-    const url = Platform.select({
-      ios: `${scheme}${label}@${latLng}`,
-      android: `${scheme}${latLng}(${label})`,
-    });
+    // On iOS, we use the specific comgooglemaps URL scheme or https fallback to ensure
+    // we don't open Apple Maps, as our guide is specific to Google Maps.
+    const query = encodeURIComponent(countryName);
+    const latLng =
+      countryLat && countryLng ? `${countryLat},${countryLng}` : undefined;
+
+    let url = '';
+
+    if (Platform.OS === 'ios') {
+      // Use universal link which opens Google Maps app if installed
+      url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      if (latLng) {
+        url += `&center=${latLng}`;
+      }
+    } else {
+      // Android - prefer geo scheme
+      if (latLng) {
+        url = `geo:${latLng}?q=${latLng}(${query})`;
+      } else {
+        url = `geo:0,0?q=${query}`;
+      }
+    }
 
     if (url) {
       Linking.openURL(url);
@@ -65,190 +89,156 @@ export const TripPlannerModal = ({
 
   const handleGeneratePlan = async () => {
     haptics.selection();
-
-    if (!isPro) {
-      // Should be blocked by UI, but double check
-      return;
-    }
-
-    try {
-      setIsGenerating(true);
-
-      // Default to a trip 1 month from now
-      const startDateDate = new Date();
-      startDateDate.setDate(startDateDate.getDate() + 30);
-
-      const itinerary = await generateItinerary({
-        destination: countryName,
-        duration: 3,
-        startDate: startDateDate.toISOString().split('T')[0],
+    onClose();
+    // Navigate to the travel planner page with the destination pre-filled
+    setTimeout(() => {
+      router.push({
+        pathname: '/travel-planner',
+        params: { destination: countryName },
       });
-
-      await createTrip({
-        destination: countryName,
-        startDate: startDateDate.getTime(),
-        notes: itinerary,
-      });
-
-      onClose();
-      // Navigate to the wallet to see the new trip
-      setTimeout(() => {
-        router.push('/wallet');
-      }, 500);
-    } catch (error) {
-      console.error('Failed to generate trip:', error);
-      alert('Could not generate itinerary. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
+    }, 300);
   };
 
   return (
-    <Sheet
-      modal
-      open={visible}
-      onOpenChange={(open) => !open && onClose()}
-      snapPoints={[45]}
-      dismissOnSnapToBottom
-      position={0}
-      zIndex={100_000}
-      animation="medium"
-    >
-      <Sheet.Overlay
-        animation="lazy"
-        enterStyle={{ opacity: 0 }}
-        exitStyle={{ opacity: 0 }}
-      />
-      <Sheet.Handle />
-      <Sheet.Frame
-        padding="$4"
-        justifyContent="flex-start"
-        backgroundColor="$background"
-        borderTopLeftRadius="$6"
-        borderTopRightRadius="$6"
+    <>
+      <Sheet
+        modal
+        open={visible}
+        onOpenChange={(open: boolean) => !open && onClose()}
+        snapPoints={[45]}
+        dismissOnSnapToBottom
+        position={0}
+        zIndex={100_000}
+        animation="medium"
       >
-        <YStack gap="$4" alignItems="center" paddingBottom="$8">
-          {/* Header Icon */}
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 8,
-            }}
-          >
-            <FontAwesome5 name="plane-departure" size={28} color="white" />
-          </LinearGradient>
-
-          <YStack alignItems="center" gap="$2">
-            <Text
-              fontSize="$6"
-              fontWeight="800"
-              color="$color"
-              textAlign="center"
+        <Sheet.Overlay
+          animation="lazy"
+          enterStyle={{ opacity: 0 }}
+          exitStyle={{ opacity: 0 }}
+        />
+        <Sheet.Handle />
+        <Sheet.Frame
+          padding="$4"
+          justifyContent="flex-start"
+          backgroundColor="$background"
+          borderTopLeftRadius="$6"
+          borderTopRightRadius="$6"
+        >
+          <YStack gap="$4" alignItems="center" paddingBottom="$8">
+            {/* Header Icon */}
+            <LinearGradient
+              colors={['#6366f1', '#8b5cf6']}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+              }}
             >
-              Planning a trip to {countryName}?
-            </Text>
-            <Text
-              fontSize="$3"
-              color="$gray10"
-              textAlign="center"
-              paddingHorizontal="$4"
-            >
-              Get ready for your adventure with our Pro travel tools.
-            </Text>
-          </YStack>
+              <FontAwesome5 name="plane-departure" size={28} color="white" />
+            </LinearGradient>
 
-          <Separator width="100%" opacity={0.5} />
-
-          <YStack width="100%" gap="$3">
-            {/* Download Offline Map Option */}
-            <Button
-              size="$5"
-              themeInverse={isPro}
-              backgroundColor={isPro ? '$tint' : '$gray5'}
-              onPress={isPro ? handleDownloadMap : undefined}
-              icon={
-                <FontAwesome5
-                  name="map-marked-alt"
-                  size={18}
-                  color={isPro ? 'white' : '$gray10'}
-                />
-              }
-              opacity={isPro ? 1 : 0.6}
-              disabled={!isPro}
-            >
-              <XStack
-                flex={1}
-                justifyContent="space-between"
-                alignItems="center"
+            <YStack alignItems="center" gap="$2">
+              <Text
+                fontSize="$6"
+                fontWeight="800"
+                color="$color"
+                textAlign="center"
               >
-                <Text
-                  color={isPro ? 'white' : '$gray10'}
-                  fontWeight="600"
-                  fontSize="$4"
-                >
-                  Download Offline Map
-                </Text>
-                {!isPro && (
-                  <FontAwesome5 name="lock" size={14} color="$gray10" />
-                )}
-              </XStack>
-            </Button>
-
-            {/* Generate Itinerary Option */}
-            <Button
-              size="$5"
-              variant="outlined"
-              borderColor="$borderColor"
-              onPress={handleGeneratePlan}
-              disabled={isGenerating || !isPro}
-              opacity={isPro ? 1 : 0.6}
-              icon={
-                isGenerating ? (
-                  <Spinner color="$tint" />
-                ) : (
-                  <FontAwesome5
-                    name="magic"
-                    size={16}
-                    color={!isPro ? '#888' : colors.tint}
-                  />
-                )
-              }
-            >
-              <XStack
-                flex={1}
-                justifyContent="center"
-                alignItems="center"
-                gap="$2"
-              >
-                <Text
-                  color={!isPro ? '$gray10' : '$color'}
-                  fontWeight="600"
-                  fontSize="$4"
-                >
-                  {isGenerating
-                    ? 'Generating Itinerary...'
-                    : 'Generate AI Itinerary'}
-                </Text>
-                {!isPro && (
-                  <FontAwesome5 name="lock" size={14} color="$gray10" />
-                )}
-              </XStack>
-            </Button>
-
-            {/* Dismiss */}
-            <Button size="$3" chromeless onPress={onClose} marginTop="$2">
-              <Text color="$gray9" fontSize="$3">
-                No, just adding to bucket list
+                Planning a trip to {countryName}?
               </Text>
-            </Button>
+              <Text
+                fontSize="$3"
+                color="$gray10"
+                textAlign="center"
+                paddingHorizontal="$4"
+              >
+                Get ready for your adventure with our Pro travel tools.
+              </Text>
+            </YStack>
+
+            <Separator width="100%" opacity={0.5} />
+
+            <YStack width="100%" gap="$3">
+              {/* Download Offline Map Option */}
+              <GlassButton
+                size="large"
+                label={
+                  <XStack alignItems="center" gap="$2">
+                    <Text
+                      color={isPro ? 'white' : '$gray10'}
+                      fontWeight="600"
+                      fontSize="$4"
+                    >
+                      Download Offline Map
+                    </Text>
+                    {!isPro && (
+                      <FontAwesome5 name="lock" size={14} color="$gray10" />
+                    )}
+                  </XStack>
+                }
+                icon="map-marked-alt"
+                onPress={isPro ? handleDownloadMap : () => {}}
+                backgroundColor={isPro ? theme.tint.get() : '$gray5'}
+                textColor={isPro ? 'white' : '$gray10'}
+                backgroundOpacity={isPro ? 1 : 0.6}
+                disabled={!isPro}
+              />
+
+              {/* Generate Itinerary Option */}
+              <GlassButton
+                size="large"
+                label={
+                  <XStack alignItems="center" gap="$2">
+                    <Text
+                      color={!isPro ? '$gray10' : 'white'}
+                      fontWeight="600"
+                      fontSize="$4"
+                    >
+                      {isGenerating
+                        ? 'Generating Itinerary...'
+                        : 'Generate AI Itinerary'}
+                    </Text>
+                    {!isPro && (
+                      <FontAwesome5 name="lock" size={14} color="$gray10" />
+                    )}
+                  </XStack>
+                }
+                icon={isGenerating ? undefined : 'magic'}
+                iconComponent={
+                  isGenerating ? <Spinner color="white" /> : undefined
+                }
+                onPress={handleGeneratePlan}
+                backgroundColor={isPro ? '$purple10' : '$gray5'}
+                textColor={!isPro ? '$gray10' : 'white'}
+                backgroundOpacity={isPro ? 1 : 0.6}
+                disabled={isGenerating || !isPro}
+              />
+
+              {/* Dismiss */}
+              <YStack marginTop="$2">
+                <GlassButton
+                  size="small"
+                  label="No, just adding to bucket list"
+                  onPress={onClose}
+                  backgroundColor={undefined}
+                  backgroundOpacity={0}
+                  textColor="$gray9"
+                />
+              </YStack>
+            </YStack>
           </YStack>
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+        </Sheet.Frame>
+      </Sheet>
+
+      <OfflineMapGuideModal
+        visible={showMapGuide}
+        onClose={() => setShowMapGuide(false)}
+        onConfirm={executeMapDownload}
+        countryName={countryName}
+      />
+    </>
   );
 };

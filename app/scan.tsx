@@ -30,13 +30,15 @@ export default function ScanScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth(); // Destructure token
   const { t, language } = useLanguage();
   const addPantryItem = useMutation(api.pantry.addPantryItem);
+  const logActivity = useMutation(api.gamification.logActivity);
 
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const identifyFood = useAction(api.ai.identifyFood);
 
@@ -105,6 +107,7 @@ export default function ScanScreen() {
 
       const parsed = JSON.parse(jsonString);
       setResult(parsed);
+      setSelectedItems(parsed.items || []); // Select all initially
       haptics.success();
     } catch (error) {
       console.error('Analysis failed', error);
@@ -115,11 +118,17 @@ export default function ScanScreen() {
     }
   };
 
-  const handleAddItems = () => {
-    if (!result?.items) return;
+  const toggleSelection = (item: string) => {
+    haptics.selection();
+    setSelectedItems((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
+  };
 
-    result.items.forEach(async (item: string) => {
-      // Simple logic to remove "(Mock)" suffix if present
+  const handleAddItems = async () => {
+    if (selectedItems.length === 0) return;
+
+    for (const item of selectedItems) {
       const name = item.replace(' (Mock)', '');
       if (user?._id) {
         await addPantryItem({
@@ -129,11 +138,21 @@ export default function ScanScreen() {
           measure: '1',
         });
       }
-    });
+    }
 
     haptics.success();
     Alert.alert(t('scan_success_title'), t('scan_success_message'));
     router.back();
+
+    // Log Scan Activity
+    console.log(
+      '[SCAN] Triggering logActivity for pantry_add',
+      selectedItems.length
+    );
+    await logActivity({
+      actionType: 'pantry_add',
+      count: selectedItems.length,
+    }).catch((e) => console.error('[SCAN] logActivity failed:', e));
   };
 
   return (
@@ -269,26 +288,51 @@ export default function ScanScreen() {
                 )}
 
                 <YStack gap="$2">
-                  {result.items.map((item: string, index: number) => (
-                    <XStack key={index} alignItems="center" gap="$2">
-                      <FontAwesome5
-                        name="check-circle"
-                        size={14}
-                        color={colors.tint}
-                      />
-                      <Text fontSize="$3">{item}</Text>
-                    </XStack>
-                  ))}
+                  {result.items.map((item: string, index: number) => {
+                    const isSelected = selectedItems.includes(item);
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() => toggleSelection(item)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                          opacity: isSelected ? 1 : 0.5,
+                        }}
+                      >
+                        <FontAwesome5
+                          name={isSelected ? 'check-square' : 'square'}
+                          size={20}
+                          color={isSelected ? colors.tint : colors.text}
+                          style={{ marginRight: 12 }}
+                        />
+                        <Text
+                          fontSize="$4"
+                          color={isSelected ? colors.text : '$color11'}
+                          textDecorationLine={
+                            isSelected ? 'none' : 'line-through'
+                          }
+                        >
+                          {item}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </YStack>
 
                 <Button
-                  marginTop="$2"
-                  backgroundColor={colors.tint}
+                  marginTop="$4"
+                  backgroundColor={
+                    selectedItems.length > 0 ? colors.tint : '$color05'
+                  }
+                  disabled={selectedItems.length === 0}
                   onPress={handleAddItems}
                   icon={<FontAwesome5 name="plus" color="white" />}
+                  size="$5"
                 >
                   <Text color="white" fontWeight="700">
-                    {t('scan_add_pantry')}
+                    {t('pantry_add_item_button')} ({selectedItems.length})
                   </Text>
                 </Button>
 

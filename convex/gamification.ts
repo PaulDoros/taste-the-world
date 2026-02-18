@@ -54,8 +54,11 @@ export const logActivity = mutation({
     actionType: v.string(), // 'cook', 'chat', 'quiz', etc.
     token: v.optional(v.string()), // Added token support
     recipeCategory: v.optional(v.string()),
+    recipeArea: v.optional(v.string()),
+    count: v.optional(v.number()), // For bulk actions like shopping
   },
   handler: async (ctx, args) => {
+    console.log('[GAMIFICATION] logActivity called:', args);
     let user;
 
     // 1. Try Standard Auth
@@ -79,6 +82,18 @@ export const logActivity = mutation({
 
     if (!user) return null;
 
+    // [NEW] Log to Activities Table (Source of Truth)
+    await ctx.db.insert('activities', {
+      userId: user._id,
+      actionType: args.actionType,
+      data: {
+        recipeCategory: args.recipeCategory,
+        recipeArea: args.recipeArea,
+        count: args.count,
+      },
+      timestamp: Date.now(),
+    });
+
     const now = new Date();
     const currentStats = user.gamification || {
       xp: 0,
@@ -86,12 +101,24 @@ export const logActivity = mutation({
       currentStreak: 0,
       lastActivityDate: 0, // epoch
       badges: [],
+      photosUploaded: 0,
+      recipesCooked: 0,
+      uniqueRegions: [],
+      aiMessagesSent: 0,
+      visitedCountries: [],
+      aiRecipesSaved: 0,
+      shoppingItemsAdded: 0,
+      pantryItemCount: 0,
     };
 
-    // Initialize new stats if missing
+    // Initialize new stats if missing (fallback for old users)
     let photosUploaded = currentStats.photosUploaded || 0;
     let recipesCooked = currentStats.recipesCooked || 0;
-    let uniqueRegions = currentStats.uniqueRegions || [];
+    let uniqueRegions: string[] = currentStats.uniqueRegions || [];
+    let visitedCountries: string[] = currentStats.visitedCountries || [];
+    let aiRecipesSaved = currentStats.aiRecipesSaved || 0;
+    let shoppingItemsAdded = currentStats.shoppingItemsAdded || 0;
+    let pantryItemCount = currentStats.pantryItemCount || 0;
     let categoryCounts: Record<string, number> =
       currentStats.categoryCounts || {};
     let aiMessagesSent = currentStats.aiMessagesSent || 0;
@@ -103,10 +130,26 @@ export const logActivity = mutation({
     } else if (args.actionType === 'cook') {
       recipesCooked += 1;
 
-      // Track regions (passed as optional arg or looked up, but for now we rely on explicit pass or just increment)
-      // TO DO: Ideally pass region in args, but for now we just increment count.
-      // If we want 'Global Taster', we need to know the region.
-      // Let's add optional region to args.
+      // Track Categories
+      if (args.recipeCategory) {
+        categoryCounts[args.recipeCategory] =
+          (categoryCounts[args.recipeCategory] || 0) + 1;
+      }
+
+      // Track Regions
+      if (args.recipeArea && !uniqueRegions.includes(args.recipeArea)) {
+        uniqueRegions.push(args.recipeArea);
+      }
+    } else if (args.actionType === 'view_country') {
+      if (args.recipeArea && !visitedCountries.includes(args.recipeArea)) {
+        visitedCountries.push(args.recipeArea);
+      }
+    } else if (args.actionType === 'save_ai_recipe') {
+      aiRecipesSaved += 1;
+    } else if (args.actionType === 'shopping_add') {
+      shoppingItemsAdded += args.count || 1;
+    } else if (args.actionType === 'pantry_add') {
+      // Just triggers the periodic check below
     }
 
     // --- Streak Logic ---
@@ -153,9 +196,7 @@ export const logActivity = mutation({
     // --- NEW Badge Checks ---
     if (newStreak >= 3 && !badges.includes('streak_3')) badges.push('streak_3');
     if (newStreak >= 7 && !badges.includes('streak_7')) badges.push('streak_7'); // Added streak 7
-    if (newLevel >= 5 && !badges.includes('level_5')) badges.push('level_5');
-    if (newLevel >= 10 && !badges.includes('master_chef'))
-      badges.push('master_chef');
+    if (newLevel >= 10 && !badges.includes('level_10')) badges.push('level_10');
 
     // Gordon R. (5 Photos)
     if (photosUploaded >= 5 && !badges.includes('gordon_r'))
@@ -206,6 +247,69 @@ export const logActivity = mutation({
     )
       badges.push('ocean_lover');
 
+    // Global Taster (3 Unique Regions - cooked)
+    if (uniqueRegions.length >= 3 && !badges.includes('global_taster')) {
+      badges.push('global_taster');
+    }
+
+    // Explorer (5 Unique Countries - visited)
+    if (visitedCountries.length >= 5 && !badges.includes('explorer')) {
+      badges.push('explorer');
+    }
+
+    // Shopping Spree (50 Items Added)
+    if (shoppingItemsAdded >= 50 && !badges.includes('shopping_spree')) {
+      badges.push('shopping_spree');
+    }
+
+    // AI Chef Bestie (5 Saved AI Recipes)
+    if (aiRecipesSaved >= 5 && !badges.includes('ai_chef_bestie')) {
+      badges.push('ai_chef_bestie');
+    }
+
+    // Map Explorer (Use Map Feature)
+    if (
+      args.actionType === 'map_interaction' &&
+      !badges.includes('map_explorer')
+    ) {
+      badges.push('map_explorer'); // Requires adding map_explorer to Badges.ts
+    }
+
+    if (args.actionType === 'cook') {
+      // Night Owl (Cook > 9 PM)
+      if (now.getHours() >= 21 && !badges.includes('night_owl')) {
+        badges.push('night_owl');
+      }
+
+      // Weekend Warrior (Sat/Sun)
+      const day = now.getDay();
+      if ((day === 0 || day === 6) && !badges.includes('weekend_warrior')) {
+        badges.push('weekend_warrior');
+      }
+    }
+
+    // Variety King (5 Categories)
+    if (
+      Object.keys(categoryCounts).length >= 5 &&
+      !badges.includes('variety_king')
+    ) {
+      badges.push('variety_king');
+    }
+
+    // Pantry Master (20 Items in Pantry)
+    // Run query if triggered by pantry_add or cook or periodically
+    const pantryItemsQuery = await ctx.db
+      .query('pantry')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    // Update count stats
+    pantryItemCount = pantryItemsQuery.length;
+
+    if (pantryItemCount >= 20 && !badges.includes('pantry_master')) {
+      badges.push('pantry_master');
+    }
+
     // Update User
     if (user) {
       await ctx.db.patch(user._id, {
@@ -220,6 +324,10 @@ export const logActivity = mutation({
           uniqueRegions,
           categoryCounts,
           aiMessagesSent,
+          visitedCountries,
+          aiRecipesSaved,
+          shoppingItemsAdded,
+          pantryItemCount,
         },
       });
     }

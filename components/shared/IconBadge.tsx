@@ -1,7 +1,5 @@
-import { YStack } from 'tamagui';
+import { YStack, useTheme } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
 
 export interface IconBadgeProps {
   icon: string;
@@ -26,9 +24,8 @@ export function IconBadge({
   padding = 10,
   solid = false,
 }: IconBadgeProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const finalBackgroundColor = backgroundColor || colors.tint;
+  const theme = useTheme();
+  const finalBackgroundColor = backgroundColor || theme.tint.val;
 
   return (
     <YStack

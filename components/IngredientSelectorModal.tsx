@@ -363,7 +363,7 @@ interface IngredientCheckboxItemProps {
   isInPantry: boolean;
   showConversion: boolean;
   onToggle: () => void;
-  colors: typeof Colors.light;
+  colors: any;
   confirmColor: string;
   t: any;
 }

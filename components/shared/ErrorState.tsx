@@ -1,10 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useTheme } from 'tamagui';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-
+import { YStack, Heading, Paragraph, useTheme, Button } from 'tamagui';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface ErrorStateProps {
@@ -22,8 +18,6 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   retryText,
   icon = 'exclamation-circle',
 }) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
   const theme = useTheme();
   const { t } = useLanguage();
 
@@ -31,62 +25,41 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   const finalRetryText = retryText || t('shared_retry');
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <YStack
+      flex={1}
+      alignItems="center"
+      justifyContent="center"
+      paddingHorizontal="$6"
+      backgroundColor="$background"
+      space="$4"
+    >
       <FontAwesome5
         name={icon}
         size={48}
-        color={colors.error}
-        style={styles.icon}
+        color={theme.red10?.val || '#ef4444'}
       />
-      <Text style={[styles.title, { color: colors.error }]}>{finalTitle}</Text>
-      <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
+
+      <YStack space="$2" alignItems="center">
+        <Heading size="$6" color="$red10" textAlign="center">
+          {finalTitle}
+        </Heading>
+        <Paragraph size="$4" color="$color" opacity={0.8} textAlign="center">
+          {message}
+        </Paragraph>
+      </YStack>
+
       {onRetry && (
-        <Pressable
+        <Button
           onPress={onRetry}
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: colors.tint,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
+          backgroundColor="$tint"
+          color="white"
+          size="$4"
+          borderRadius="$4"
+          pressStyle={{ opacity: 0.8 }}
         >
-          <Text style={styles.buttonText}>{finalRetryText}</Text>
-        </Pressable>
+          {finalRetryText}
+        </Button>
       )}
-    </View>
+    </YStack>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  icon: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-    opacity: 0.8,
-  },
-  button: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});

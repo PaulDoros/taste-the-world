@@ -1,97 +1,107 @@
-// Type definitions to match react-native-google-mobile-ads
-// so we don't break TypeScript checks even if using checks at runtime.
+import { NativeModules } from 'react-native';
 
-export const AdEventType = {
-  CLOSED: 'closed',
-  OPENED: 'opened',
-  CLICKED: 'clicked',
-  LOADED: 'loaded',
-  ERROR: 'error',
-};
+let isAdMobAvailable = !!NativeModules.RNGoogleMobileAdsModule;
 
-export const RewardedAdEventType = {
-  LOADED: 'loaded',
-  EARNED_REWARD: 'earned_reward',
-};
+let AdMob: any;
 
-export const TestIds = {
-  REWARDED_INTERSTITIAL: 'ca-app-pub-3940256099942544~3347511713',
-};
-
-// Mock implementation for Expo Go / Non-native builds
-class MockRewardedInterstitialAd {
-  _loaded = false;
-  _listeners: Record<string, Array<() => void>> = {};
-
-  static createForAdRequest(adUnitId: string, requestOptions?: any) {
-    return new MockRewardedInterstitialAd();
+if (isAdMobAvailable) {
+  try {
+    AdMob = require('react-native-google-mobile-ads');
+  } catch (error) {
+    console.warn(
+      'Failed to require react-native-google-mobile-ads, falling back to mock',
+      error
+    );
+    isAdMobAvailable = false;
   }
+}
 
-  addAdEventListener(eventType: string, listener: () => void) {
-    if (!this._listeners[eventType]) {
-      this._listeners[eventType] = [];
-    }
-    this._listeners[eventType].push(listener);
-    return () => {
-      this._listeners[eventType] = this._listeners[eventType].filter(
-        (l) => l !== listener
-      );
+if (!isAdMobAvailable) {
+  // Mock Implementation for Expo Go
+  console.warn('AdMob not available: Using Mock Implementation');
+
+  const createMockAd = () => {
+    let listeners: Record<string, Function[]> = {};
+    const trigger = (event: string) => {
+      if (listeners[event]) listeners[event].forEach((l) => l());
     };
-  }
+    return {
+      load: () => {
+        console.log('[MockAd] Loading...');
+        setTimeout(() => {
+          console.log('[MockAd] Loaded');
+          trigger('loaded');
+        }, 1000);
+      },
+      show: () => {
+        console.log('[MockAd] Show');
+        setTimeout(() => {
+          console.log('[MockAd] Earned Reward');
+          trigger('earned_reward');
+          setTimeout(() => {
+            console.log('[MockAd] Closed');
+            trigger('closed');
+          }, 500);
+        }, 2000);
+      },
+      addAdEventListener: (event: string, handler: () => void) => {
+        if (!listeners[event]) listeners[event] = [];
+        listeners[event].push(handler);
+        return () => {
+          listeners[event] = listeners[event].filter((l) => l !== handler);
+        };
+      },
+    };
+  };
 
-  load() {
-    console.log('[MockAd] Loading ad...');
-    setTimeout(() => {
-      this._loaded = true;
-      this._emit(RewardedAdEventType.LOADED);
-      console.log('[MockAd] Ad loaded.');
-    }, 1500);
-  }
-
-  show() {
-    console.log('[MockAd] Showing ad...');
-    setTimeout(() => {
-      this._emit(RewardedAdEventType.EARNED_REWARD);
-      // Then close
-      setTimeout(() => {
-        this._emit(AdEventType.CLOSED);
-      }, 500);
-    }, 2000); // Simulate watching
-  }
-
-  _emit(eventType: string) {
-    if (this._listeners[eventType]) {
-      this._listeners[eventType].forEach((l) => l());
-    }
-  }
+  AdMob = {
+    BannerAd: ({ unitId, size, requestOptions }: any) => {
+      // console.log('Mock BannerAd rendered');
+      return null;
+    },
+    BannerAdSize: {
+      ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER',
+      BANNER: 'BANNER',
+      FULL_BANNER: 'FULL_BANNER',
+      LARGE_BANNER: 'LARGE_BANNER',
+      LEADERBOARD: 'LEADERBOARD',
+      MEDIUM_RECTANGLE: 'MEDIUM_RECTANGLE',
+    },
+    TestIds: {
+      BANNER: 'ca-app-pub-3940256099942544/6300978111',
+      INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712',
+      REWARDED: 'ca-app-pub-3940256099942544/5224354917',
+      REWARDED_INTERSTITIAL: 'ca-app-pub-3940256099942544/5354046379',
+    },
+    AdEventType: {
+      CLOSED: 'closed',
+      ERROR: 'error',
+      LOADED: 'loaded',
+      OPENED: 'opened',
+      CLICKED: 'clicked',
+      EARNED_REWARD: 'earned_reward', // RewardedAdEventType mixed in mocks for simplicity
+    },
+    RewardedAdEventType: {
+      LOADED: 'loaded',
+      EARNED_REWARD: 'earned_reward',
+    },
+    RewardedInterstitialAd: {
+      createForAdRequest: (adUnitId: string, requestOptions: any) =>
+        createMockAd(),
+    },
+    InterstitialAd: {
+      createForAdRequest: (adUnitId: string, requestOptions: any) =>
+        createMockAd(),
+    },
+  };
 }
 
-// Try to import the specific native module to check existence
-// This is safer than importing the whole text
-let RNGoogleMobileAds;
-try {
-  // Use require so it doesn't crash statically?
-  // Actually standard import might crash.
-  // We will assume that if we are here and valid, it works.
-  // BUT the user's error says "Invariant Violation".
-  // This means the JS code WAS imported, but it checked for Native Module and failed.
-
-  // So we interpret: If we alias this file to 'react-native-google-mobile-ads' in imports? No.
-  // We just have to use *this* file instead of the real library in our components.
-
-  // We can try to import the real one dynamically?
-  RNGoogleMobileAds = require('react-native-google-mobile-ads');
-} catch (e) {
-  console.warn('Google Mobile Ads Native Module not found. Using Mock.');
-  RNGoogleMobileAds = null;
-}
-
-// Export the "Real" items if available, else Mock items
-export const RewardedInterstitialAd =
-  RNGoogleMobileAds?.RewardedInterstitialAd || MockRewardedInterstitialAd;
-
-// Fallback for constants if module is missing (though constants usually pure JS?)
-// Yes, constants like RewardedAdEventType are usually exported from JS.
-// But if the package entry point does `NativeModules.RNGoogleMobileAdsModule`, it crashes.
-// So we must rely on our local definitions if the require failed.
-export const MobileAds = RNGoogleMobileAds?.MobileAds;
+export const {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+  AdEventType,
+  RewardedAdEventType,
+  RewardedInterstitialAd,
+  InterstitialAd,
+} = AdMob;

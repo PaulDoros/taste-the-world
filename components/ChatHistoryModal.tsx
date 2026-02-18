@@ -1,16 +1,17 @@
 import { Id } from '@/convex/_generated/dataModel';
 import React from 'react';
+import { Modal, FlatList } from 'react-native';
 import {
-  Modal,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Text, XStack, YStack, Button } from 'tamagui';
+  Text,
+  XStack,
+  YStack,
+  Button,
+  useTheme,
+  Card,
+  ScrollView,
+} from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ChatHistoryModalProps {
   visible: boolean;
@@ -29,46 +30,49 @@ export function ChatHistoryModal({
   currentChatId,
   mode,
 }: ChatHistoryModalProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   const renderItem = ({ item }: { item: any }) => {
     const isSelected = item._id === currentChatId;
     const date = new Date(item.lastMessageAt).toLocaleDateString();
 
     return (
-      <TouchableOpacity
+      <Card
+        bordered
         onPress={() => {
           onSelectChat(item._id);
           onClose();
         }}
-        style={[
-          styles.chatItem,
-          {
-            backgroundColor: isSelected ? colors.tint + '20' : colors.card,
-            borderColor: isSelected ? colors.tint : colors.border,
-          },
-        ]}
+        pressStyle={{ opacity: 0.9, scale: 0.98 }}
+        animation="quick"
+        backgroundColor={isSelected ? '$blue3' : '$background'}
+        borderColor={isSelected ? '$blue8' : '$borderColor'}
+        padding="$3"
+        marginBottom="$3"
+        elevation={2}
       >
         <XStack alignItems="center" gap="$3">
-          <View
-            style={{
-              backgroundColor: isSelected ? colors.tint : '$gray5',
-              padding: 10,
-              borderRadius: 20,
-            }}
+          <YStack
+            backgroundColor={isSelected ? '$blue8' : '$gray5'}
+            padding="$2.5"
+            borderRadius="$4"
+            alignItems="center"
+            justifyContent="center"
           >
+            {/* Use text color based on background contrast */}
             <FontAwesome5
               name={mode === 'chef' ? 'utensils' : 'plane'}
-              size={16}
-              color={isSelected ? 'white' : colors.text}
+              size={14}
+              color={isSelected ? 'white' : theme.color.get()}
             />
-          </View>
+          </YStack>
           <YStack flex={1}>
             <Text
               fontWeight={isSelected ? '700' : '500'}
               numberOfLines={1}
-              color={colors.text}
+              color={isSelected ? '$blue11' : '$color'}
+              fontSize="$4"
             >
               {item.title || 'New Conversation'}
             </Text>
@@ -77,10 +81,10 @@ export function ChatHistoryModal({
             </Text>
           </YStack>
           {isSelected && (
-            <FontAwesome5 name="check" size={16} color={colors.tint} />
+            <FontAwesome5 name="check" size={16} color={theme.blue10?.get()} />
           )}
         </XStack>
-      </TouchableOpacity>
+      </Card>
     );
   };
 
@@ -91,7 +95,11 @@ export function ChatHistoryModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        paddingTop={insets.top} // Ensure header isn't hidden on non-pageSheet modals if they fallback
+      >
         <XStack
           padding="$4"
           alignItems="center"
@@ -102,8 +110,8 @@ export function ChatHistoryModal({
           <Text fontSize="$6" fontWeight="700">
             History
           </Text>
-          <Button size="$3" chromeless onPress={onClose}>
-            <Text color="$blue10">Done</Text>
+          <Button size="$3" chromeless onPress={onClose} color="$blue10">
+            Done
           </Button>
         </XStack>
 
@@ -114,24 +122,18 @@ export function ChatHistoryModal({
           contentContainerStyle={{ padding: 16 }}
           ListEmptyComponent={
             <YStack alignItems="center" marginTop="$10" gap="$4" opacity={0.5}>
-              <FontAwesome5 name="history" size={48} color={colors.text} />
-              <Text fontSize="$4">No history yet</Text>
+              <FontAwesome5
+                name="history"
+                size={48}
+                color={theme.color.get()}
+              />
+              <Text fontSize="$4" color="$color">
+                No history yet
+              </Text>
             </YStack>
           }
         />
-      </View>
+      </YStack>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  chatItem: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-});

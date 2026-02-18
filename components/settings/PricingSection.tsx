@@ -1,6 +1,6 @@
-import { View, LayoutChangeEvent } from 'react-native';
+import { View, LayoutChangeEvent, StyleSheet } from 'react-native';
 import { useState, useMemo, useEffect } from 'react';
-import { YStack, XStack, Text, Button, Card, Separator } from 'tamagui';
+import { YStack, XStack, Text, Button, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -10,21 +10,105 @@ import Animated, {
   withTiming,
   withSequence,
   withSpring,
+  interpolateColor,
 } from 'react-native-reanimated';
-import { SUBSCRIPTION_PRICES, PREMIUM_BENEFITS } from '@/constants/Config';
+import { PREMIUM_BENEFITS } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
 import { gradients } from '@/theme/gradients';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { Pressable, ActivityIndicator } from 'react-native';
+import { usePremium } from '@/hooks/usePremium';
+import { PurchasesPackage } from 'react-native-purchases';
 
 interface PricingSectionProps {
   selectedSubscription: 'monthly' | 'yearly';
   selectedTier: 'personal' | 'pro';
   onSelectSubscription: (type: 'monthly' | 'yearly') => void;
   onSelectTier: (tier: 'personal' | 'pro') => void;
-  onUpgrade: () => void;
+  onUpgrade: (pack?: PurchasesPackage) => void;
 }
+
+// Inner Component for Animatable Card Background
+const AnimatedPricingCard = ({
+  isSelected,
+  activeColor,
+  inactiveColor,
+  children,
+  onPress,
+  style,
+}: {
+  isSelected: boolean;
+  activeColor: string;
+  inactiveColor: string;
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: any;
+}) => {
+  const progress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isSelected ? 1 : 0, { duration: 300 });
+  }, [isSelected]);
+
+  const animatedBgStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: interpolateColor(
+        progress.value,
+        [0, 1],
+        [inactiveColor, activeColor]
+      ),
+    };
+  });
+
+  const animatedBorderStyle = useAnimatedStyle(() => {
+    return {
+      borderWidth: 2,
+      borderColor: interpolateColor(
+        progress.value,
+        [0, 1],
+        ['transparent', activeColor]
+      ),
+      borderRadius: 16,
+    };
+  });
+
+  return (
+    <GlassCard
+      style={[{ flex: 1 }, style]}
+      contentContainerStyle={{ flex: 1 }}
+      // transparent base, we handle bg manually
+      backgroundColor="transparent"
+      intensity={isSelected ? 80 : 40}
+      borderRadius={16}
+      borderRadiusInside={16}
+    >
+      <Animated.View style={[StyleSheet.absoluteFill, animatedBgStyle]} />
+
+      {/* Border overlay */}
+      <Animated.View
+        style={[StyleSheet.absoluteFill, animatedBorderStyle]}
+        pointerEvents="none"
+      />
+
+      <Pressable
+        style={({ pressed }) => ({
+          flex: 1,
+          padding: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: pressed ? 0.9 : 1,
+        })}
+        onPress={onPress}
+      >
+        {children}
+      </Pressable>
+    </GlassCard>
+  );
+};
 
 export const PricingSection = ({
   selectedSubscription,
@@ -37,12 +121,32 @@ export const PricingSection = ({
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const [showAllBenefits, setShowAllBenefits] = useState(false);
+  const { offerings, isReady } = usePremium();
+
+  // Track user interaction to stop auto-toggling
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const isYearly = selectedSubscription === 'yearly';
   const isPro = selectedTier === 'pro';
-  const currentPrices = SUBSCRIPTION_PRICES[selectedTier];
 
-  // Memoize benefits filtering to avoid re-calculation on every render
+  // Find the correct RevenueCat package
+  const currentPackage = useMemo(() => {
+    if (!offerings.length) return null;
+
+    // Construct identifier based on selection
+    // e.g. "pro_yearly" or "personal_monthly" (assuming "monthly" is default for personal)
+    // The user said identifiers are:
+    // weekly, monthly, yearly
+    // pro_weekly, pro_monthly, pro_yearly
+    // personal_weekly, personal_monthly, personal_yearly
+
+    let identifier = selectedTier === 'pro' ? 'pro_' : 'personal_';
+    identifier += selectedSubscription; // monthly or yearly
+
+    return offerings.find((o) => o.product.identifier === identifier);
+  }, [offerings, selectedTier, selectedSubscription]);
+
+  // Memoize benefits filtering
   const filteredBenefits = useMemo(() => {
     return PREMIUM_BENEFITS.filter((benefit) => {
       if (selectedTier === 'personal' && benefit.includes('offline'))
@@ -51,25 +155,20 @@ export const PricingSection = ({
     });
   }, [selectedTier]);
 
-  // New PRO color (Indigo/Violet) instead of Yellow
+  // Colors
   const PRO_COLOR = '#6366f1';
-  const PRO_ICON_COLOR = '#4f46e5';
+  const ACTIVE_COLOR = isPro ? PRO_COLOR : colors.tint;
+  const INACTIVE_COLOR = `${colors.text}10`;
 
-  // Pulse Animation for CTA
+  // Animations
   const pulseScale = useSharedValue(1);
-
-  // Savings Badge Animation
   const badgeScale = useSharedValue(1);
   const badgeRotate = useSharedValue(0);
-
-  // Tab Switcher Animation
   const [tabWidth, setTabWidth] = useState(0);
   const tabPosition = useSharedValue(0);
 
   // Tab Switcher Logic
   useEffect(() => {
-    // 0 = Personal, 1 = Pro
-    // Smoother spring config: Snappy but not too stiff
     tabPosition.value = withSpring(selectedTier === 'pro' ? 1 : 0, {
       damping: 150,
       stiffness: 150,
@@ -85,21 +184,30 @@ export const PricingSection = ({
     };
   });
 
-  // Badge Animation Loop (Heartbeat-like)
+  // Auto-Toggle Loop
+  useEffect(() => {
+    if (hasInteracted) return;
+
+    const interval = setInterval(() => {
+      onSelectTier(selectedTier === 'pro' ? 'personal' : 'pro');
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [hasInteracted, selectedTier, onSelectTier]);
+
+  // Badge Loop
   useEffect(() => {
     const interval = setInterval(() => {
-      // Gentle pop
       badgeScale.value = withSequence(
         withSpring(1.2, { damping: 10, stiffness: 200 }),
         withSpring(1, { damping: 10, stiffness: 200 })
       );
-      // Subtle wiggle
       badgeRotate.value = withSequence(
         withTiming(-5, { duration: 100 }),
         withTiming(5, { duration: 100 }),
         withTiming(0, { duration: 100 })
       );
-    }, 4000); // Every 4 seconds
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -110,15 +218,15 @@ export const PricingSection = ({
     ],
   }));
 
-  // CTA Pulse Loop
+  // CTA Pulse
   useState(() => {
     pulseScale.value = withRepeat(
       withSequence(
         withTiming(1.02, { duration: 1000 }),
         withTiming(1, { duration: 1000 })
       ),
-      -1, // Infinite
-      true // Reverse
+      -1,
+      true
     );
   });
 
@@ -128,22 +236,32 @@ export const PricingSection = ({
 
   const handleLayout = (e: LayoutChangeEvent) => {
     if (e.nativeEvent.layout.width > 0 && tabWidth === 0) {
-      setTabWidth((e.nativeEvent.layout.width - 8) / 2); // 8 is padding compensation
+      setTabWidth((e.nativeEvent.layout.width - 8) / 2);
     }
   };
+
+  const stopAutoToggle = () => {
+    if (!hasInteracted) {
+      haptics.selection();
+      setHasInteracted(true);
+    }
+  };
+
+  if (!isReady) {
+    return (
+      <YStack padding="$5" alignItems="center" justifyContent="center">
+        <ActivityIndicator size="small" color={colors.tint} />
+        <Text fontSize="$2" color="$gray9" marginTop="$2">
+          {t('pricing_loading')}
+        </Text>
+      </YStack>
+    );
+  }
 
   return (
     <YStack gap="$5" marginBottom="$6">
       {/* Premium Banner Card */}
-      <Card
-        bordered
-        elevate
-        size="$4"
-        overflow="hidden"
-        backgroundColor="$background"
-        borderColor="$borderColor"
-        padding={0}
-      >
+      <GlassCard borderRadius={16} borderRadiusInside={16} intensity={60}>
         <LinearGradient
           colors={isPro ? [PRO_COLOR, '#4338ca'] : gradients.primaryDark}
           start={{ x: 0, y: 0 }}
@@ -195,14 +313,13 @@ export const PricingSection = ({
             onLayout={handleLayout}
             style={{
               backgroundColor: colorScheme === 'dark' ? '#1e293b' : '#f1f5f9',
-              borderRadius: 12, // More rounded for modern feel
+              borderRadius: 12,
               padding: 4,
               flexDirection: 'row',
               position: 'relative',
               height: 48,
             }}
           >
-            {/* Sliding Indicator */}
             {tabWidth > 0 && (
               <Animated.View
                 style={[
@@ -224,14 +341,13 @@ export const PricingSection = ({
               />
             )}
 
-            {/* Touch Targets */}
             <Button
               flex={1}
               size="$3"
               chromeless
               backgroundColor="transparent"
               onPress={() => {
-                haptics.selection();
+                stopAutoToggle();
                 onSelectTier('personal');
               }}
             >
@@ -255,7 +371,7 @@ export const PricingSection = ({
               chromeless
               backgroundColor="transparent"
               onPress={() => {
-                haptics.selection();
+                stopAutoToggle();
                 onSelectTier('pro');
               }}
             >
@@ -285,196 +401,173 @@ export const PricingSection = ({
                     <FontAwesome5
                       name="check"
                       size={10}
-                      color={isPro ? PRO_ICON_COLOR : colors.tint}
+                      color={isPro ? '#4f46e5' : colors.tint}
                     />
                   </View>
                   <Text fontSize="$3" color="$color" opacity={0.9} flex={1}>
                     {benefit === 'premium_benefit_ai' && !isPro
                       ? t('premium_benefit_ai_personal' as any)
                       : benefit === 'premium_benefit_planner' && !isPro
-                        ? t('premium_benefit_planner_personal' as any)
+                        ? t('premium_benefit_planner_personal')
                         : t(benefit as any)}
                   </Text>
                 </XStack>
               ))}
 
-            {/* Show More / Show Less Toggle */}
-            <Button
-              size="$2"
-              backgroundColor="$background"
-              opacity={0.8}
-              color="$color"
+            <GlassButton
+              label={
+                showAllBenefits
+                  ? t('pricing_show_less')
+                  : t('pricing_show_more')
+              }
               onPress={() => {
                 haptics.selection();
                 setShowAllBenefits(!showAllBenefits);
               }}
-              iconAfter={
-                <FontAwesome5
-                  name={showAllBenefits ? 'chevron-up' : 'chevron-down'}
-                  size={10}
-                  color={colors.text}
-                />
-              }
-              chromeless
-            >
-              <Text fontSize="$2" fontStyle="italic" color="$color">
-                {showAllBenefits ? 'Show Less' : 'Show More...'}
-              </Text>
-            </Button>
+              size="small"
+              icon={showAllBenefits ? 'chevron-up' : 'chevron-down'}
+              backgroundColor={undefined}
+              backgroundOpacity={0}
+              textColor={colors.text}
+            />
           </YStack>
 
-          {/* Pricing Options Toggle */}
+          {/* Pricing Options Toggle (Animated) */}
           <XStack gap="$3" marginTop="$2">
             {/* Monthly Option */}
-            <Card
-              flex={1}
-              bordered
-              pressStyle={{ scale: 0.95 }}
-              onPress={() => {
-                haptics.light();
-                onSelectSubscription('monthly');
-              }}
-              backgroundColor={
-                !isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$background'
-              }
-              borderColor={
-                !isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$borderColor'
-              }
-              padding="$3"
-              borderWidth={!isYearly ? 2 : 1}
-              animation="quick"
-            >
-              <YStack alignItems="center" gap="$1">
-                <Text
-                  fontSize="$3"
-                  fontWeight="600"
-                  color={!isYearly ? 'white' : '$color'}
-                  opacity={!isYearly ? 1 : 0.7}
-                >
-                  {t('pricing_monthly')}
-                </Text>
-                <Text
-                  fontSize="$5"
-                  fontWeight="800"
-                  color={!isYearly ? 'white' : '$color'}
-                >
-                  ${currentPrices.monthly}
-                </Text>
-              </YStack>
-            </Card>
+            <View style={{ flex: 1, height: 120 }}>
+              <AnimatedPricingCard
+                isSelected={!isYearly}
+                activeColor={ACTIVE_COLOR}
+                inactiveColor={INACTIVE_COLOR}
+                onPress={() => {
+                  stopAutoToggle();
+                  onSelectSubscription('monthly');
+                }}
+              >
+                <YStack alignItems="center" gap="$1">
+                  <Text
+                    fontSize="$3"
+                    fontWeight="600"
+                    color={!isYearly ? '#ffffff' : colors.text}
+                    opacity={!isYearly ? 1 : 0.7}
+                  >
+                    {t('pricing_monthly')}
+                  </Text>
+
+                  {/* Dynamic Price */}
+                  <Text
+                    fontSize="$5"
+                    fontWeight="800"
+                    color={!isYearly ? '#ffffff' : colors.text}
+                  >
+                    {/* HACK: We find the monthly offering for the current tier */}
+                    {offerings.find(
+                      (o) =>
+                        o.product.identifier ===
+                        (isPro ? 'pro_monthly' : 'personal_monthly')
+                    )?.product.priceString || '...'}
+                  </Text>
+                </YStack>
+              </AnimatedPricingCard>
+            </View>
 
             {/* Yearly Option - Featured */}
-            <Card
-              flex={1}
-              bordered
-              pressStyle={{ scale: 0.95 }}
-              onPress={() => {
-                haptics.light();
-                onSelectSubscription('yearly');
-              }}
-              backgroundColor={
-                isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$background'
-              }
-              borderColor={
-                isYearly ? (isPro ? PRO_COLOR : colors.tint) : '$borderColor'
-              }
-              padding="$3"
-              borderWidth={isYearly ? 2 : 1}
-              position="relative"
-              overflow="visible"
-              animation="quick"
-            >
-              {/* Savings Badge Animation */}
-              <Animated.View
-                style={[
-                  { position: 'absolute', top: -12, right: -10, zIndex: 10 },
-                  animatedBadgeStyle,
-                ]}
+            <View style={{ flex: 1, height: 120 }}>
+              <AnimatedPricingCard
+                isSelected={isYearly}
+                activeColor={ACTIVE_COLOR}
+                inactiveColor={INACTIVE_COLOR}
+                onPress={() => {
+                  stopAutoToggle();
+                  onSelectSubscription('yearly');
+                }}
               >
-                <YStack>
-                  <LinearGradient
-                    colors={['#22c55e', '#16a34a']}
-                    start={[0, 0]}
-                    end={[1, 1]}
-                    style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 12,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                  >
-                    <Text fontSize={11} fontWeight="800" color="white">
-                      {currentPrices.savings} OFF
-                    </Text>
-                  </LinearGradient>
-                </YStack>
-              </Animated.View>
+                {/* Savings Badge Animation */}
+                <Animated.View
+                  style={[
+                    { position: 'absolute', top: -4, right: -4, zIndex: 10 },
+                    animatedBadgeStyle,
+                  ]}
+                >
+                  <GlassCard shadowRadius={2}>
+                    <LinearGradient
+                      colors={['#22c55e', '#16a34a']}
+                      start={[0, 0]}
+                      end={[1, 1]}
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 6,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <Text
+                        paddingRight={10}
+                        paddingTop={4}
+                        fontSize={10}
+                        fontWeight="800"
+                        color="#fff"
+                      >
+                        {t('pricing_save_percent', { percent: 17 })}
+                      </Text>
+                    </LinearGradient>
+                  </GlassCard>
+                </Animated.View>
 
-              <YStack alignItems="center" gap="$1">
-                <Text
-                  fontSize="$3"
-                  fontWeight="600"
-                  color={isYearly ? 'white' : '$color'}
-                  opacity={isYearly ? 1 : 0.7}
-                >
-                  {t('pricing_yearly')}
-                </Text>
-                <Text
-                  fontSize="$5"
-                  fontWeight="800"
-                  color={isYearly ? 'white' : '$color'}
-                >
-                  ${currentPrices.yearly}
-                </Text>
-                <Text
-                  fontSize={10}
-                  color={isYearly ? 'white' : '$gray9'}
-                  opacity={0.8}
-                >
-                  (${(currentPrices.yearly / 12).toFixed(2)}/mo)
-                </Text>
-              </YStack>
-            </Card>
+                <YStack alignItems="center" gap="$1" marginTop="$2">
+                  <Text
+                    fontSize="$3"
+                    fontWeight="600"
+                    color={isYearly ? '#ffffff' : colors.text}
+                    opacity={isYearly ? 1 : 0.7}
+                  >
+                    {t('pricing_yearly')}
+                  </Text>
+                  <Text
+                    fontSize="$5"
+                    fontWeight="800"
+                    color={isYearly ? '#ffffff' : colors.text}
+                  >
+                    {offerings.find(
+                      (o) =>
+                        o.product.identifier ===
+                        (isPro ? 'pro_yearly' : 'personal_yearly')
+                    )?.product.priceString || '...'}
+                  </Text>
+                </YStack>
+              </AnimatedPricingCard>
+            </View>
           </XStack>
 
           {/* Upgrade Button - CTA */}
           <Animated.View style={animatedButtonStyle}>
-            <Button
-              size="$5"
-              themeInverse
-              backgroundColor={isPro ? PRO_COLOR : colors.tint}
-              hoverStyle={{ opacity: 0.9 }}
-              pressStyle={{ opacity: 0.9 }}
+            <GlassButton
+              label={
+                currentPackage
+                  ? `${t('pricing_get_premium').toUpperCase()} ${currentPackage.product.priceString}`
+                  : t('pricing_select_plan')
+              }
               onPress={() => {
                 haptics.success();
-                onUpgrade();
+                // Pass the selected package to parent upgrade handler
+                if (currentPackage) {
+                  onUpgrade(currentPackage);
+                }
               }}
-              icon={<FontAwesome5 name="star" size={14} color="white" />}
-              marginTop="$2"
-              elevate
-              bordered
-              borderColor="white"
-            >
-              <Text
-                color="white"
-                fontWeight="800"
-                fontSize="$4"
-                letterSpacing={0.5}
-              >
-                {t('pricing_get_premium').toUpperCase()}
-              </Text>
-            </Button>
+              size="large"
+              icon="star"
+              backgroundColor={isPro ? PRO_COLOR : colors.tint}
+              textColor="white"
+              backgroundOpacity={1}
+              disabled={!currentPackage}
+            />
           </Animated.View>
 
           <Text textAlign="center" fontSize="$2" opacity={0.5} marginTop="$1">
             {t('pricing_cancel_anytime')}
           </Text>
         </YStack>
-      </Card>
+      </GlassCard>
     </YStack>
   );
 };

@@ -1,34 +1,36 @@
-import { brandColors } from '../theme/colors';
+import { lightTheme, darkTheme, brandColors } from '../theme/themes';
 
 const tintColorLight = brandColors.primary;
-const tintColorDark = brandColors.primarySoft;
+const tintColorDark = brandColors.primaryDark;
 
 export const Colors = {
   light: {
-    text: brandColors.slate900,
-    background: brandColors.slate50,
-    card: '#FFFFFF',
-    tint: tintColorLight,
-    tabIconDefault: brandColors.slate400,
-    tabIconSelected: tintColorLight,
-    border: brandColors.slate200,
+    ...lightTheme,
+    text: lightTheme.color,
+    background: lightTheme.background,
+    card: lightTheme.surface,
+    tint: lightTheme.tint,
+    tabIconDefault: lightTheme.textTertiary,
+    tabIconSelected: lightTheme.tint,
+    border: lightTheme.borderColor,
     success: brandColors.success,
-    error: brandColors.danger,
+    error: brandColors.error,
     warning: brandColors.warning,
-    premium: '#8B5CF6', // Keep as specific accent or move to theme if needed
+    premium: brandColors.accent,
   },
   dark: {
-    text: brandColors.slate50,
-    background: brandColors.slate900,
-    card: brandColors.slate800,
-    tint: tintColorDark,
-    tabIconDefault: brandColors.slate500,
-    tabIconSelected: tintColorDark,
-    border: brandColors.slate700,
-    success: brandColors.successSoft,
-    error: brandColors.dangerSoft,
-    warning: brandColors.warningSoft,
-    premium: '#A78BFA',
+    ...darkTheme,
+    text: darkTheme.color,
+    background: darkTheme.background,
+    card: darkTheme.surface,
+    tint: darkTheme.tint,
+    tabIconDefault: darkTheme.textTertiary,
+    tabIconSelected: darkTheme.tint,
+    border: darkTheme.borderColor,
+    success: brandColors.success,
+    error: brandColors.error,
+    warning: brandColors.warning,
+    premium: brandColors.accent,
   },
 };
 

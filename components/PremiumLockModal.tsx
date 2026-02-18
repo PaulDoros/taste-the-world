@@ -97,8 +97,8 @@ export const PremiumLockModal = ({
     ),
   }));
 
-  const PRO_COLOR = '#6366f1';
-  const PRO_GRADIENT = [PRO_COLOR, '#4338ca', '#818cf8'];
+  const PRO_COLOR = colors.tint;
+  const PRO_GRADIENT = [colors.tint, '#3B82F6', '#8B5CF6']; // Electric Gradient
 
   return (
     <Sheet
@@ -149,7 +149,6 @@ export const PremiumLockModal = ({
               shadowColor={PRO_COLOR}
               shadowRadius={20}
               shadowOpacity={0.3}
-              elevation={10}
             >
               {/* Icon Background Gradient */}
               <LinearGradient
@@ -215,7 +214,6 @@ export const PremiumLockModal = ({
               padding={0} // Clear padding for gradient
               overflow="hidden"
               borderRadius="$6"
-              elevate
             >
               <LinearGradient
                 colors={PRO_GRADIENT as any}

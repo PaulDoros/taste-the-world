@@ -1,20 +1,13 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 /**
  * FilterBar Component
- * Modern horizontal filter chips with animations and unique colors
- * Inspired by Airbnb, Instagram, and Material Design
+ * Modern horizontal filter chips using GlassButton
  */
 
 type RegionFilter =
@@ -42,136 +35,6 @@ const REGION_COLORS = {
   Asia: '#dc2626', // Red
   Europe: '#2563eb', // Blue
   Oceania: '#0891b2', // Cyan/Teal
-};
-
-// Animated Filter Chip Component - SUPER SMOOTH ANIMATIONS! ⚡✨
-const AnimatedFilterChip = ({
-  label,
-  icon,
-  isActive,
-  onPress,
-  bgColor,
-  textColor,
-}: {
-  label: string;
-  icon: string;
-  isActive: boolean;
-  onPress: () => void;
-  bgColor: string;
-  textColor: string;
-}) => {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-  const iconScale = useSharedValue(1);
-  const rotate = useSharedValue(0);
-  const translateY = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
-
-  const iconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }, { rotate: `${rotate.value}deg` }],
-  }));
-
-  const handlePressIn = () => {
-    'worklet';
-    // 💥 PRESS DOWN - Instant response!
-    scale.value = withSpring(0.92, {
-      damping: 15,
-      stiffness: 700,
-    });
-    opacity.value = withTiming(0.8, { duration: 50 });
-    translateY.value = withSpring(2, {
-      damping: 15,
-      stiffness: 700,
-    });
-  };
-
-  const handlePressOut = () => {
-    'worklet';
-    // 🚀 RELEASE - Bounce back!
-    scale.value = withSpring(1, {
-      damping: 12,
-      stiffness: 600,
-    });
-    opacity.value = withTiming(1, { duration: 100 });
-    translateY.value = withSpring(0, {
-      damping: 12,
-      stiffness: 600,
-    });
-  };
-
-  const handlePress = () => {
-    // 🎯 INSTANT FEEDBACK!
-    haptics.light();
-
-    // Call the actual handler IMMEDIATELY
-    onPress();
-  };
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-          borderRadius: 16,
-          backgroundColor: bgColor,
-          borderWidth: isActive ? 0 : 1.5,
-          borderColor: isActive ? 'transparent' : `${bgColor}40`,
-          shadowColor: isActive ? bgColor : '#000',
-          shadowOffset: { width: 0, height: isActive ? 4 : 1 },
-          shadowOpacity: isActive ? 0.35 : 0.05,
-          shadowRadius: isActive ? 8 : 2,
-          elevation: isActive ? 6 : 1,
-          ...(isActive && {
-            shadowColor: bgColor,
-          }),
-        }}
-      >
-        <Animated.View
-          style={[
-            {
-              width: 16, // Much smaller
-              height: 16,
-              borderRadius: 8,
-              backgroundColor: isActive
-                ? 'rgba(255, 255, 255, 0.25)'
-                : 'transparent',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 5, // Reduced spacing
-            },
-            iconAnimatedStyle,
-          ]}
-        >
-          <FontAwesome5
-            name={icon}
-            size={8} // Smaller icon
-            color={textColor}
-            solid={isActive}
-          />
-        </Animated.View>
-        <Text
-          style={{
-            color: textColor,
-            fontSize: 11, // Smaller text
-            fontWeight: isActive ? '700' : '600',
-            letterSpacing: 0.2,
-          }}
-        >
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
 };
 
 export const FilterBar = ({
@@ -314,21 +177,25 @@ export const FilterBar = ({
         contentContainerStyle={{
           paddingLeft: 16,
           paddingRight: 24,
-          paddingVertical: 8, // Prevent clipping of shadows and chips
+          paddingVertical: 8,
           gap: 10,
         }}
       >
         {regions.map((region) => {
           const isActive = selectedRegion === region.value;
           return (
-            <AnimatedFilterChip
+            <GlassButton
               key={region.value}
               label={region.label}
               icon={region.icon}
-              isActive={isActive}
               onPress={() => onRegionChange(region.value)}
-              bgColor={isActive ? region.color : `${region.color}15`}
-              textColor={isActive ? 'white' : region.color}
+              size="small"
+              // Active: Solid color, White text
+              // Inactive: Tinted BG, Colored text
+              backgroundColor={isActive ? region.color : `${region.color}15`}
+              textColor={isActive ? '#FFFFFF' : region.color}
+              backgroundOpacity={isActive ? 0.9 : 0.8} // Slightly more solid for active
+              shadowOpacity={isActive ? 0.3 : 0} // Only shadow when active
             />
           );
         })}
@@ -341,21 +208,23 @@ export const FilterBar = ({
         contentContainerStyle={{
           paddingLeft: 16,
           paddingRight: 24,
-          paddingVertical: 8, // Prevent clipping of shadows and chips
+          paddingVertical: 8,
           gap: 10,
         }}
       >
         {premiumFilters.map((filter) => {
           const isActive = selectedPremium === filter.value;
           return (
-            <AnimatedFilterChip
+            <GlassButton
               key={filter.value}
               label={filter.label}
               icon={filter.icon}
-              isActive={isActive}
               onPress={() => onPremiumChange(filter.value)}
-              bgColor={isActive ? filter.color : `${filter.color}15`}
-              textColor={isActive ? 'white' : filter.color}
+              size="small"
+              backgroundColor={isActive ? filter.color : `${filter.color}15`}
+              textColor={isActive ? '#FFFFFF' : filter.color}
+              backgroundOpacity={isActive ? 0.9 : 0.8}
+              shadowOpacity={isActive ? 0.3 : 0}
             />
           );
         })}

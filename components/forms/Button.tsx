@@ -1,137 +1,174 @@
-import React from 'react';
 import {
+  GetProps,
+  styled,
+  Button as TamaguiButton,
+  Text as TamaguiText,
+  Spinner,
+  createStyledContext,
+  withStaticProperties,
   View,
-  Pressable,
-  Text,
-  ActivityIndicator,
-  PressableProps,
-} from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  FadeInDown,
-} from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { haptics } from '@/utils/haptics';
+} from 'tamagui';
+import React from 'react';
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+// 1. Create Context for compound logic (size propagation)
+export const ButtonContext = createStyledContext({
+  size: '$medium',
+  variant: 'primary',
+});
 
-interface ButtonProps extends PressableProps {
-  title: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+// 2. Styled Frame (The Container)
+const ButtonFrame = styled(TamaguiButton, {
+  userSelect: 'none',
+  context: ButtonContext,
+  borderRadius: '$4',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  pressStyle: { scale: 0.98 },
+  animation: 'bouncy',
+
+  // Base sizing
+  paddingVertical: '$3',
+  paddingHorizontal: '$4',
+
+  variants: {
+    variant: {
+      primary: {
+        backgroundColor: '$tint',
+        color: 'white',
+        borderWidth: 0,
+        hoverStyle: { backgroundColor: '$tint', opacity: 0.9 },
+        pressStyle: { backgroundColor: '$tint', opacity: 0.8 },
+      },
+      secondary: {
+        backgroundColor: '$surface',
+        color: '$color',
+        borderWidth: 1,
+        borderColor: '$borderColor',
+        hoverStyle: { backgroundColor: '$backgroundHover' },
+      },
+      outline: {
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderColor: '$tint',
+        color: '$tint',
+        hoverStyle: {
+          borderColor: '$tint',
+          backgroundColor: '$backgroundHover',
+        },
+      },
+      ghost: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        color: '$tint',
+        hoverStyle: { backgroundColor: '$backgroundHover' },
+      },
+    },
+
+    size: {
+      small: {
+        height: 44,
+        paddingHorizontal: '$3',
+      },
+      medium: {
+        height: 56,
+        paddingHorizontal: '$4',
+      },
+      large: {
+        height: 64,
+        paddingHorizontal: '$6',
+      },
+    },
+
+    fullWidth: {
+      true: {
+        width: '100%',
+        alignSelf: 'stretch',
+      },
+    },
+
+    disabled: {
+      true: {
+        opacity: 0.5,
+        pointerEvents: 'none',
+      },
+    },
+  } as const,
+
+  defaultVariants: {
+    variant: 'primary',
+    size: 'medium',
+  },
+});
+
+// 3. Styled Text (The Label)
+const ButtonText = styled(TamaguiText, {
+  context: ButtonContext,
+  textAlign: 'center',
+  fontWeight: '600',
+  fontFamily: '$body', // Ensure you have a font token
+
+  variants: {
+    size: {
+      small: { fontSize: '$3' },
+      medium: { fontSize: '$4' },
+      large: { fontSize: '$6' },
+      // '$medium': { fontSize: '$4' }
+    },
+    variant: {
+      primary: { color: 'white' },
+      secondary: { color: '$color' },
+      outline: { color: '$tint' },
+      ghost: { color: '$tint' },
+    },
+  } as const,
+});
+
+// 4. Styled Icon (Helper)
+const ButtonIcon = styled(View, {
+  context: ButtonContext,
+  variants: {
+    size: {
+      small: { scale: 0.9 },
+      medium: { scale: 1 },
+      large: { scale: 1.2 },
+    },
+  } as const,
+});
+
+// 5. Types
+type ButtonProps = GetProps<typeof ButtonFrame> & {
+  title?: string;
   loading?: boolean;
-  fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-}
+};
 
-export const Button: React.FC<ButtonProps> = ({
-  title,
-  variant = 'primary',
-  size = 'medium',
-  loading = false,
-  fullWidth = false,
-  disabled,
-  leftIcon,
-  rightIcon,
-  style,
-  onPress,
-  ...props
-}) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const scale = useSharedValue(1);
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
-    haptics.light();
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
-  };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const getButtonStyle = () => {
-    const baseStyle = {
-      backgroundColor:
-        variant === 'primary'
-          ? colors.tint
-          : variant === 'secondary'
-            ? colors.card
-            : 'transparent',
-      borderWidth: variant === 'outline' ? 2 : 0,
-      borderColor: variant === 'outline' ? colors.tint : 'transparent',
-    };
-
-    const sizeStyle = {
-      paddingVertical: size === 'small' ? 12 : size === 'medium' ? 16 : 20,
-      paddingHorizontal: size === 'small' ? 20 : size === 'medium' ? 24 : 32,
-      minHeight: size === 'small' ? 44 : size === 'medium' ? 56 : 64,
-    };
-
-    return [baseStyle, sizeStyle];
-  };
-
-  const getTextStyle = () => {
-    return {
-      color:
-        variant === 'primary'
-          ? '#FFFFFF'
-          : variant === 'secondary'
-            ? colors.text
-            : colors.tint,
-      fontSize: size === 'small' ? 14 : size === 'medium' ? 16 : 18,
-      fontWeight: '600' as const,
-    };
-  };
-
-  const sizeClasses = {
-    small: 'py-3 px-5 min-h-[44px]',
-    medium: 'py-4 px-6 min-h-[56px]',
-    large: 'py-5 px-8 min-h-[64px]',
-  };
-
-  const textSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg',
-  };
+// 6. The Component
+const ButtonComponent = React.forwardRef<any, ButtonProps>((props, ref) => {
+  const { title, loading, leftIcon, rightIcon, children, ...rest } = props;
 
   return (
-    <AnimatedPressable
-      entering={FadeInDown.delay(200)}
-      className={`rounded-xl items-center justify-center flex-row ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''} ${disabled || loading ? 'opacity-50' : ''}`}
-      style={[getButtonStyle(), animatedStyle, style]}
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={disabled || loading}
-      {...props}
-    >
+    <ButtonFrame ref={ref} {...rest}>
       {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' ? '#FFFFFF' : colors.tint}
-          size="small"
-        />
+        <Spinner color={props.variant === 'primary' ? 'white' : '$tint'} />
       ) : (
         <>
-          {leftIcon && <View className="mr-2">{leftIcon}</View>}
-          <Text
-            className={`text-center font-semibold ${textSizeClasses[size]}`}
-            style={getTextStyle()}
-          >
-            {title}
-          </Text>
-          {rightIcon && <View className="ml-2">{rightIcon}</View>}
+          {leftIcon && <ButtonIcon marginRight="$2">{leftIcon}</ButtonIcon>}
+
+          {/* Support both children (compound) and title prop (simple) */}
+          {children ? children : <ButtonText>{title}</ButtonText>}
+
+          {rightIcon && <ButtonIcon marginLeft="$2">{rightIcon}</ButtonIcon>}
         </>
       )}
-    </AnimatedPressable>
+    </ButtonFrame>
   );
-};
+});
+
+// 7. Compound Export
+export const Button = withStaticProperties(ButtonComponent, {
+  Text: ButtonText,
+  Icon: ButtonIcon,
+  Props: ButtonContext.Provider,
+});

@@ -16,6 +16,10 @@ const TIER_LIMITS = {
     aiPromptsPerDay: 9999,
     travelPromptsPerDay: 9999,
   },
+  guest: {
+    aiPromptsPerDay: 0,
+    travelPromptsPerDay: 0,
+  },
 };
 
 export const unlockCountry = mutation({
@@ -97,7 +101,7 @@ export const getUsageStatus = query({
 
     if (!user) return null;
 
-    const tier = (user.tier as 'free' | 'personal' | 'pro') || 'free';
+    const tier = (user.tier as 'free' | 'personal' | 'pro' | 'guest') || 'free';
     const limits = TIER_LIMITS[tier];
 
     // Check if reset needed (for display accuracy)

@@ -52,7 +52,7 @@ export const CountrySelectorModal: React.FC<CountrySelectorModalProps> = ({
   }, [countries, searchQuery]);
 
   const isUnlocked = (country: Country) => {
-    if (tier === 'premium') return true;
+    if (tier === 'pro' || tier === 'personal') return true;
     return unlockedCountries.includes(country.cca2);
   };
 

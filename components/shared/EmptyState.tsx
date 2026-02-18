@@ -1,7 +1,5 @@
-import { YStack, Text, Button } from 'tamagui';
+import { YStack, Text, Button, useTheme } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
 
 export interface EmptyStateProps {
   icon: string;
@@ -22,23 +20,25 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
-  accentColor = Colors.light.tint,
+  accentColor,
 }: EmptyStateProps) {
+  const theme = useTheme();
+  const finalAccentColor = accentColor || theme.tint.val;
+
   return (
-    <Animated.View
-      entering={FadeInDown.springify()}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 24,
-      }}
+    <YStack
+      flex={1}
+      alignItems="center"
+      justifyContent="center"
+      paddingHorizontal="$6"
+      animation="lazy"
+      enterStyle={{ opacity: 0, scale: 0.9, y: 10 }}
     >
       <YStack alignItems="center" gap="$4" maxWidth={300}>
         <FontAwesome5
           name={icon}
           size={64}
-          color={accentColor}
+          color={finalAccentColor}
           style={{ opacity: 0.3 }}
           solid
         />
@@ -67,7 +67,7 @@ export function EmptyState({
         {actionLabel && onAction && (
           <Button
             size="$4"
-            backgroundColor={accentColor}
+            backgroundColor={finalAccentColor}
             color="white"
             onPress={onAction}
             marginTop="$2"
@@ -80,6 +80,6 @@ export function EmptyState({
           </Button>
         )}
       </YStack>
-    </Animated.View>
+    </YStack>
   );
 }

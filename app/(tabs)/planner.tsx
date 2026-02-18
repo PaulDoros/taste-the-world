@@ -1,65 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
-  Modal,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ScrollView, Alert } from 'react-native';
+import { YStack, Text, Button, Stack } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenLayout } from '@/components/ScreenLayout';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Card,
-  Input,
-  Theme,
-  Stack,
-} from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  FadeInUp,
-  FadeInRight,
-  FadeOut,
-  LinearTransition,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
 import * as Calendar from 'expo-calendar';
-import { Alert, Platform } from 'react-native';
 import { useShoppingList } from '@/hooks/useShoppingList';
 import { useAuth } from '@/hooks/useAuth';
-import { LinearGradient } from 'expo-linear-gradient';
-import BabyProfile from '@/components/BabyProfile';
-import { COUNTRY_TO_AREA_MAP } from '@/constants/Config';
-import { useLanguage } from '@/context/LanguageContext';
 import { Translations } from '@/constants/Translations';
+import { useLanguage } from '@/context/LanguageContext';
 import { useTierLimit } from '@/hooks/useTierLimit';
 import { useFocusEffect } from 'expo-router';
 import { PremiumLockModal } from '@/components/PremiumLockModal';
 
-// Extract keys for selection list
-const AVAILABLE_CUISINES = Object.keys(COUNTRY_TO_AREA_MAP).sort();
+// Imported Components
+import { PlannerHeader } from '@/components/planner/PlannerHeader';
+import { PlannerInputSection } from '@/components/planner/PlannerInputSection';
+import { PlannerDayItem } from '@/components/planner/PlannerDayItem';
+import { PlannerMealCard } from '@/components/planner/PlannerMealCard';
+import { PlannerActions } from '@/components/planner/PlannerActions';
+import { PlannerHistoryModal } from '@/components/planner/PlannerHistoryModal';
+import { PlannerEmptyState } from '@/components/planner/PlannerEmptyState';
 
 export default function PlannerScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const insets = useSafeAreaInsets();
 
   const [preferences, setPreferences] = useState('');
   const [activeDay, setActiveDay] = useState(0);
-  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null); // New state (fixed)
+  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [planData, setPlanData] = useState<any>(null);
   const [mode, setMode] = useState<'standard' | 'baby'>('standard');
-  const [generatingRecipe, setGeneratingRecipe] = useState<string | null>(null); // Track which meal is generating
+  const [generatingRecipe, setGeneratingRecipe] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingList, setIsGeneratingList] = useState(false);
@@ -76,6 +57,7 @@ export default function PlannerScreen() {
   );
   const babyProfile = useQuery(api.babyFood.getProfile);
   const { isAuthenticated, token } = useAuth();
+
   // Local state for guest users to persist data between tab switches
   const [guestPlans, setGuestPlans] = useState<{ standard: any; baby: any }>({
     standard: null,
@@ -93,8 +75,6 @@ export default function PlannerScreen() {
   const { addMultipleItems } = useShoppingList();
 
   const [currentPlan, setCurrentPlan] = useState<any>(null);
-  // Sync animation with mode
-  // ... (auth/queries)
 
   useEffect(() => {
     // If authenticated, sync with backend
@@ -119,7 +99,6 @@ export default function PlannerScreen() {
     }
   }, [latestPlan, mode, isAuthenticated, guestPlans]);
 
-  // handleGenerate ...
   const handleGenerate = async () => {
     haptics.medium();
     setIsLoading(true);
@@ -139,10 +118,10 @@ export default function PlannerScreen() {
           preferences:
             preferences ||
             (mode === 'baby'
-              ? '6 months old, just starting' // Keeping this English for AI context or should we localise prompt inputs? Prompt inputs should likely remain English unless AI supports multilingual prompts well. For now, leave these defaults as internal values or display values? These seem to be defaults if empty.
+              ? '6 months old, just starting'
               : 'Balanced diet, no restrictions'),
           type: mode,
-          cuisine: selectedCuisine || undefined, // Pass cuisine
+          cuisine: selectedCuisine || undefined,
           token: token || undefined,
           language: Translations[language]?.languageName || 'English',
         });
@@ -273,7 +252,6 @@ export default function PlannerScreen() {
     }
   };
 
-  // handleViewRecipe ...
   const handleViewRecipe = async (mealName: string) => {
     haptics.selection();
     setGeneratingRecipe(mealName);
@@ -326,7 +304,7 @@ export default function PlannerScreen() {
 
   if (isUnlocked === false) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScreenLayout edges={['top', 'left', 'right']}>
         <YStack
           flex={1}
           alignItems="center"
@@ -376,230 +354,40 @@ export default function PlannerScreen() {
             featureTitle={t('meal_planner')}
           />
         </YStack>
-      </SafeAreaView>
+      </ScreenLayout>
     );
   }
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={['top']}
-    >
+    <ScreenLayout edges={['left', 'right']}>
       <YStack flex={1}>
-        {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          justifyContent="space-between"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <XStack alignItems="center" gap="$3">
-            <View
-              style={{
-                backgroundColor: colors.tint,
-                padding: 8,
-                borderRadius: 12,
-              }}
-            >
-              <FontAwesome5 name="calendar-alt" size={20} color="white" />
-            </View>
-            <YStack>
-              <Text fontSize="$5" fontWeight="700">
-                {t('meal_planner')}
-              </Text>
-              <Text fontSize="$2" opacity={0.6}>
-                {t('planner_subtitle')}
-              </Text>
-            </YStack>
-          </XStack>
-
-          <Button
-            size="$3"
-            chromeless
-            icon={<FontAwesome5 name="history" size={16} color={colors.text} />}
-            onPress={() => setShowHistory(true)}
-          />
-        </XStack>
+        <PlannerHeader
+          colorScheme={colorScheme}
+          insets={insets}
+          colors={colors}
+          t={t}
+          onHistoryPress={() => setShowHistory(true)}
+        />
 
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-          {/* Input Section */}
-          <Card
-            padding="$0"
-            bordered
-            backgroundColor="$card"
-            marginBottom="$6"
-            elevation={2}
-            overflow="hidden"
-          >
-            <LinearGradient
-              colors={[
-                mode === 'baby' ? '#FFE4E1' : `${colors.tint}15`,
-                colors.card,
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{ padding: 16, gap: 12 }}
-            >
-              <YStack gap="$3">
-                {/* Custom Animated Mode Switcher */}
-                <AnimatedModeSwitcher
-                  mode={mode}
-                  setMode={setMode}
-                  colors={colors}
-                  t={t}
-                />
+          <PlannerInputSection
+            mode={mode}
+            setMode={setMode}
+            preferences={preferences}
+            setPreferences={setPreferences}
+            selectedCuisine={selectedCuisine}
+            setSelectedCuisine={setSelectedCuisine}
+            colors={colors}
+            t={t}
+            isLoading={isLoading}
+            onGenerate={handleGenerate}
+          />
 
-                <Animated.View
-                  key={mode}
-                  entering={FadeInUp.springify().damping(50)}
-                  style={{ gap: 12 }}
-                >
-                  <YStack>
-                    <Text
-                      fontSize="$3"
-                      fontWeight="600"
-                      marginBottom="$2"
-                      opacity={0.7}
-                    >
-                      {t('planner_preferences_label')}
-                    </Text>
-                    <Input
-                      placeholder={
-                        mode === 'baby'
-                          ? t('planner_preferences_placeholder_baby')
-                          : t('planner_preferences_placeholder_standard')
-                      }
-                      value={preferences}
-                      onChangeText={setPreferences}
-                      backgroundColor="$background"
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      size="$4"
-                    />
-
-                    <Text
-                      fontSize="$3"
-                      fontWeight="600"
-                      marginBottom="$2"
-                      marginTop="$3"
-                      opacity={0.7}
-                    >
-                      {t('planner_cuisine_label')}
-                    </Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ gap: 8, paddingRight: 20 }}
-                    >
-                      <Pressable
-                        onPress={() => {
-                          haptics.selection();
-                          setSelectedCuisine(null);
-                        }}
-                        style={{
-                          paddingHorizontal: 16,
-                          paddingVertical: 8,
-                          borderRadius: 20,
-                          backgroundColor:
-                            selectedCuisine === null
-                              ? colors.tint
-                              : colors.background,
-                          borderWidth: 1,
-                          borderColor:
-                            selectedCuisine === null
-                              ? colors.tint
-                              : '$borderColor',
-                        }}
-                      >
-                        <Text
-                          fontSize="$3"
-                          fontWeight="600"
-                          color={
-                            selectedCuisine === null ? 'white' : colors.text
-                          }
-                        >
-                          {t('planner_cuisine_all')}
-                        </Text>
-                      </Pressable>
-
-                      {AVAILABLE_CUISINES.map((cuisine) => (
-                        <Pressable
-                          key={cuisine}
-                          onPress={() => {
-                            haptics.selection();
-                            setSelectedCuisine(cuisine);
-                          }}
-                          style={{
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor:
-                              selectedCuisine === cuisine
-                                ? colors.tint
-                                : colors.background,
-                            borderWidth: 1,
-                            borderColor:
-                              selectedCuisine === cuisine
-                                ? colors.tint
-                                : '$borderColor',
-                          }}
-                        >
-                          <Text
-                            fontSize="$3"
-                            fontWeight="600"
-                            color={
-                              selectedCuisine === cuisine
-                                ? 'white'
-                                : colors.text
-                            }
-                          >
-                            {cuisine}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </ScrollView>
-                  </YStack>
-
-                  <Button
-                    size="$5"
-                    backgroundColor={mode === 'baby' ? '#FFB6C1' : colors.tint}
-                    onPress={handleGenerate}
-                    disabled={isLoading}
-                    marginTop="$2"
-                    pressStyle={{ scale: 0.97 }}
-                    icon={
-                      isLoading ? (
-                        <ActivityIndicator color="white" />
-                      ) : (
-                        <FontAwesome5
-                          name={mode === 'baby' ? 'baby' : 'magic'}
-                          size={18}
-                          color="white"
-                        />
-                      )
-                    }
-                  >
-                    <Text color="white" fontWeight="700" fontSize="$4">
-                      {isLoading
-                        ? t('planner_generating')
-                        : t('planner_generate_button')}
-                    </Text>
-                  </Button>
-                </Animated.View>
-              </YStack>
-            </LinearGradient>
-          </Card>
-
-          {/* Plan Display */}
           {planData && planData.days ? (
             <Animated.View
-              key={`${mode}-plans`} // Force re-render on mode change
+              key={`${mode}-plans`}
               entering={FadeInUp.springify().damping(50)}
             >
-              {/* Weekly Calendar Horizontal Scroll */}
               <View style={{ marginBottom: 24 }}>
                 <ScrollView
                   horizontal
@@ -616,387 +404,53 @@ export default function PlannerScreen() {
                       latestPlan={latestPlan}
                       colors={colors}
                       t={t}
-                      language={useLanguage().language}
+                      language={language}
                     />
                   ))}
                 </ScrollView>
               </View>
 
-              {/* Meals for Active Day */}
               <YStack gap="$4">
                 {['breakfast', 'lunch', 'dinner'].map((mealType, index) => {
                   const mealName = planData.days[activeDay].meals[mealType];
-
-                  const getTheme = () => {
-                    switch (mealType) {
-                      case 'breakfast':
-                        return {
-                          icon: 'coffee',
-                          color: '$orange10',
-                          iconBg: '$orange3',
-                          bg: ['#FFF8E1', '#FFFFFF'],
-                        };
-                      case 'lunch':
-                        return {
-                          icon: 'sun',
-                          color: '$yellow11',
-                          iconBg: '$yellow4',
-                          bg: ['#F9FBE7', '#FFFFFF'],
-                        };
-                      case 'dinner':
-                        return {
-                          icon: 'moon',
-                          color: '$blue10',
-                          iconBg: '$blue3',
-                          bg: ['#E3F2FD', '#FFFFFF'],
-                        };
-                      default:
-                        return {
-                          icon: 'utensils',
-                          color: colors.tint,
-                          iconBg: '$gray3',
-                          bg: ['#F3E5F5', '#FFFFFF'],
-                        };
-                    }
-                  };
-
-                  const theme = getTheme();
-
                   return (
-                    <Animated.View
+                    <PlannerMealCard
                       key={`${mealType}-${activeDay}`}
-                      entering={FadeInUp.delay(index * 150)
-                        .springify()
-                        .damping(50)
-                        .stiffness(200)}
-                    >
-                      <Card
-                        padding="$0"
-                        bordered
-                        backgroundColor="$card"
-                        elevation={2}
-                        overflow="hidden"
-                        borderRadius="$5"
-                      >
-                        {/* Header Strip */}
-                        <XStack
-                          padding="$3"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          backgroundColor={`${theme.color.replace('$', '')}10`}
-                        >
-                          <XStack gap="$3" alignItems="center">
-                            <Stack
-                              backgroundColor={theme.iconBg}
-                              padding={8}
-                              borderRadius={100}
-                              width={34}
-                              height={34}
-                              alignItems="center"
-                              justifyContent="center"
-                              animation="bouncy"
-                              pressStyle={{ scale: 0.9 }}
-                            >
-                              <FontAwesome5
-                                name={theme.icon}
-                                size={14}
-                                color={theme.color}
-                              />
-                            </Stack>
-                            <Text
-                              fontSize="$3"
-                              fontWeight="700"
-                              textTransform="uppercase"
-                              color={theme.color}
-                              letterSpacing={0.5}
-                            >
-                              {t(`common_meal_${mealType}` as any)}
-                            </Text>
-                          </XStack>
-
-                          {/* Actions Right */}
-                          <Pressable
-                            onPress={() => handleViewRecipe(mealName)}
-                            disabled={generatingRecipe === mealName}
-                            hitSlop={10}
-                          >
-                            <XStack gap="$1" alignItems="center" opacity={0.8}>
-                              <Text
-                                fontSize="$2"
-                                fontWeight="600"
-                                color={colors.tint}
-                              >
-                                {t('planner_see_recipe')}
-                              </Text>
-                              <FontAwesome5
-                                name="chevron-right"
-                                size={10}
-                                color={colors.tint}
-                              />
-                            </XStack>
-                          </Pressable>
-                        </XStack>
-
-                        {/* Content Body */}
-                        <YStack paddingHorizontal="$4" paddingVertical="$4">
-                          {generatingRecipe === mealName ? (
-                            <XStack gap="$3" alignItems="center">
-                              <ActivityIndicator
-                                size="small"
-                                color={colors.tint}
-                              />
-                              <Text fontSize="$3" color="$gray10">
-                                {t('planner_preparing_recipe')}
-                              </Text>
-                            </XStack>
-                          ) : (
-                            <Text
-                              fontSize="$6"
-                              fontWeight="600"
-                              lineHeight={28}
-                            >
-                              {mealName}
-                            </Text>
-                          )}
-                        </YStack>
-                      </Card>
-                    </Animated.View>
+                      mealType={mealType}
+                      mealName={mealName}
+                      activeDay={activeDay}
+                      index={index}
+                      colors={colors}
+                      t={t}
+                      onViewRecipe={handleViewRecipe}
+                      generatingRecipe={generatingRecipe}
+                    />
                   );
                 })}
               </YStack>
 
-              {/* Bottom Action Bar */}
-              <XStack gap="$3" marginTop="$6" marginBottom="$4">
-                <Button
-                  flex={1}
-                  size="$4"
-                  backgroundColor="$background"
-                  borderColor="$borderColor"
-                  borderWidth={1}
-                  onPress={handleAddToCalendar}
-                  icon={
-                    <FontAwesome5
-                      name="calendar-check"
-                      size={16}
-                      color={colors.text}
-                    />
-                  }
-                >
-                  <Text fontWeight="600">{t('planner_sync_calendar')}</Text>
-                </Button>
-                <Button
-                  flex={1}
-                  size="$4"
-                  backgroundColor={colors.tint}
-                  onPress={handleAddWeekToList}
-                  disabled={isGeneratingList}
-                  icon={
-                    isGeneratingList ? (
-                      <ActivityIndicator color="white" />
-                    ) : (
-                      <FontAwesome5
-                        name="shopping-basket"
-                        size={16}
-                        color="white"
-                      />
-                    )
-                  }
-                >
-                  <Text color="white" fontWeight="600">
-                    {t('planner_shop_ingredients')}
-                  </Text>
-                </Button>
-              </XStack>
+              <PlannerActions
+                onAddToCalendar={handleAddToCalendar}
+                onAddWeekToList={handleAddWeekToList}
+                isGeneratingList={isGeneratingList}
+                colors={colors}
+                t={t}
+              />
             </Animated.View>
           ) : (
-            <YStack
-              padding="$8"
-              alignItems="center"
-              opacity={0.6}
-              gap="$4"
-              marginTop="$6"
-            >
-              <View
-                style={{
-                  marginBottom: 10,
-                  padding: 20,
-                  backgroundColor: `${colors.tint}10`,
-                  borderRadius: 100,
-                }}
-              >
-                <FontAwesome5
-                  name="calendar-plus"
-                  size={40}
-                  color={colors.tint}
-                />
-              </View>
-              <Text fontSize="$5" fontWeight="600" textAlign="center">
-                {t('planner_empty_title')}
-              </Text>
-              <Text
-                fontSize="$3"
-                textAlign="center"
-                opacity={0.7}
-                paddingHorizontal="$4"
-              >
-                {t('planner_empty_text')}
-              </Text>
-            </YStack>
+            <PlannerEmptyState colors={colors} t={t} />
           )}
         </ScrollView>
       </YStack>
-      {/* History Modal */}
-      <Modal
+
+      <PlannerHistoryModal
         visible={showHistory}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowHistory(false)}
-      >
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-          <XStack
-            padding="$4"
-            justifyContent="space-between"
-            alignItems="center"
-            borderBottomWidth={1}
-            borderBottomColor="$borderColor"
-          >
-            <Text fontSize="$5" fontWeight="700">
-              {t('planner_history')}
-            </Text>
-            <Button
-              size="$3"
-              chromeless
-              onPress={() => setShowHistory(false)}
-              icon={<FontAwesome5 name="times" size={16} color={colors.text} />}
-            />
-          </XStack>
-          <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {mealPlanHistory?.map((plan: any) => (
-              <Card
-                key={plan._id}
-                padding="$4"
-                marginBottom="$3"
-                bordered
-                backgroundColor="$card"
-                pressStyle={{ scale: 0.98 }}
-                onPress={() => loadHistoricalPlan(plan)}
-              >
-                <XStack justifyContent="space-between" alignItems="center">
-                  <YStack>
-                    <Text fontWeight="600" fontSize="$4">
-                      {new Date(plan._creationTime).toLocaleDateString()}
-                    </Text>
-                    <Text fontSize="$3" opacity={0.6}>
-                      {plan.type === 'baby'
-                        ? t('planner_baby_plan')
-                        : t('planner_standard_plan')}
-                    </Text>
-                  </YStack>
-                  <FontAwesome5
-                    name="chevron-right"
-                    size={14}
-                    color={colors.text}
-                  />
-                </XStack>
-              </Card>
-            ))}
-            {(!mealPlanHistory || mealPlanHistory.length === 0) && (
-              <Text textAlign="center" opacity={0.5} marginTop="$10">
-                {t('planner_history_empty')}
-              </Text>
-            )}
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+        onClose={() => setShowHistory(false)}
+        mealPlanHistory={mealPlanHistory || []}
+        onLoadPlan={loadHistoricalPlan}
+        colors={colors}
+        t={t}
+      />
+    </ScreenLayout>
   );
 }
-
-/**
- * Planner Day Item Component
- * Extracted to allow safe use of hooks (useAnimatedStyle) for each item
- */
-const PlannerDayItem = ({
-  day,
-  index,
-  isActive,
-  setActiveDay,
-  latestPlan,
-  colors,
-  t,
-  language,
-}: any) => {
-  const planStartDate = latestPlan?.startDate || Date.now();
-  const date = new Date(planStartDate);
-  date.setDate(date.getDate() + index);
-
-  // Safe to use hooks here!
-  const scaleStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withSpring(isActive ? 1.1 : 1, {
-          damping: 20,
-          stiffness: 200,
-        }),
-      },
-    ],
-  }));
-
-  return (
-    <Animated.View
-      key={index}
-      entering={FadeInRight.delay(index * 50)
-        .springify()
-        .damping(50)}
-    >
-      <Pressable
-        onPress={() => {
-          haptics.light();
-          setActiveDay(index);
-        }}
-      >
-        <Animated.View style={scaleStyle}>
-          <LinearGradient
-            colors={
-              isActive ? [colors.tint, colors.tint] : [colors.card, colors.card]
-            }
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingVertical: 16,
-              width: 70,
-              borderRadius: 35,
-              borderWidth: isActive ? 0 : 1,
-              borderColor: '$borderColor',
-              elevation: isActive ? 4 : 0,
-              shadowColor: colors.tint,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isActive ? 0.3 : 0,
-              shadowRadius: 8,
-              marginVertical: 8,
-            }}
-          >
-            <Text
-              color={isActive ? 'white' : colors.text}
-              opacity={isActive ? 0.9 : 0.5}
-              fontSize="$2"
-              fontWeight="700"
-              marginBottom={4}
-            >
-              {date
-                .toLocaleDateString(language, { weekday: 'short' })
-                .toUpperCase()}
-            </Text>
-            <Text
-              color={isActive ? 'white' : colors.text}
-              fontSize="$6"
-              fontWeight="800"
-            >
-              {date.getDate()}
-            </Text>
-          </LinearGradient>
-        </Animated.View>
-      </Pressable>
-    </Animated.View>
-  );
-};

@@ -23,7 +23,24 @@ export const useTierLimit = () => {
   const unlockedCountries = usageStatus?.unlockedCountries || [];
 
   // Helper to check if a specific feature is accessible
+
   const canAccessFeature = (feature: FeatureType): boolean => {
+    // Strict check for guest users
+    const isGuest = tier === 'guest' || user?.email?.includes('@guest.local');
+
+    if (isGuest) {
+      // Guests have NO access to these premium features
+      if (
+        feature === 'wallet' ||
+        feature === 'planner' ||
+        feature === 'offline' ||
+        feature === 'travel' ||
+        feature === 'baby'
+      ) {
+        return false;
+      }
+    }
+
     switch (feature) {
       case 'nutrition':
         // Personal and PRO
@@ -38,8 +55,8 @@ export const useTierLimit = () => {
         // Personal (limited) and PRO (unlimited)
         return tier === 'personal' || tier === 'pro';
       case 'wallet':
-        // PRO only
-        return tier === 'pro';
+        // Personal and PRO
+        return tier === 'personal' || tier === 'pro';
       case 'planner':
         // Personal and PRO
         return tier === 'personal' || tier === 'pro';

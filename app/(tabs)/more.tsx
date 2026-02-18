@@ -2,6 +2,7 @@ import React from 'react';
 import { XStack } from 'tamagui';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenLayout } from '@/components/ScreenLayout';
 import { useRouter } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -11,6 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTierLimit } from '@/hooks/useTierLimit';
 import { PremiumLockModal } from '@/components/PremiumLockModal';
 import { XPProgress } from '@/components/gamification/XPProgress';
+import { AmbientBackground } from '@/components/ui/AmbientBackground';
 import { useState } from 'react';
 
 export default function MoreScreen() {
@@ -59,6 +61,14 @@ export default function MoreScreen() {
       locked: !canAccessFeature('planner'),
     },
     {
+      title: t('more_menu_travel_planner'),
+      icon: 'plane-departure',
+      route: '/travel-planner',
+      color: '#3b82f6',
+      description: t('more_menu_travel_planner_desc'),
+      locked: !canAccessFeature('planner'),
+    },
+    {
       title: t('more_menu_shopping'),
       icon: 'shopping-basket',
       route: '/(tabs)/shopping-list',
@@ -75,6 +85,14 @@ export default function MoreScreen() {
       locked: false,
     },
     {
+      title: t('more_menu_my_recipes'),
+      icon: 'book-open',
+      route: '/recipes/my-book',
+      color: '#d946ef',
+      description: t('more_menu_my_recipes_desc'),
+      locked: false,
+    },
+    {
       title: t('more_menu_history'),
       icon: 'history',
       route: '/(tabs)/history',
@@ -85,40 +103,45 @@ export default function MoreScreen() {
   ];
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={['top', 'left', 'right']}
-    >
-      {/* Header */}
+    <ScreenLayout edges={['top', 'left', 'right']}>
       <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 12,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
       >
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 32,
-            fontWeight: '700',
-            letterSpacing: -0.5,
-            marginBottom: 4,
-          }}
-        >
-          {t('more_title')}
-        </Text>
-        <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-          {t('more_subtitle')}
-        </Text>
+        <View>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 32,
+              fontWeight: '700',
+              letterSpacing: -0.5,
+              marginBottom: 4,
+            }}
+          >
+            {t('more_title')}
+          </Text>
+          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+            {t('more_subtitle')}
+          </Text>
+        </View>
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingHorizontal: 16,
           paddingBottom: 120,
         }}
         showsVerticalScrollIndicator={false}
       >
+        <AmbientBackground />
         {/* Gamification Stats */}
-        <View style={{ marginBottom: 24 }}>
+        <View style={{ marginBottom: 24, paddingHorizontal: 16 }}>
           <XStack
             justifyContent="space-between"
             alignItems="center"
@@ -179,7 +202,7 @@ export default function MoreScreen() {
           </Pressable>
         </View>
         {/* Menu Grid */}
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 12, paddingHorizontal: 16 }}>
           {menuItems.map((item, index) => (
             <Pressable
               key={item.title}
@@ -311,6 +334,6 @@ export default function MoreScreen() {
         }}
         featureTitle={lockedFeatureName}
       />
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }

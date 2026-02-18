@@ -1,44 +1,74 @@
 import React, { useState } from 'react';
 import {
-  View,
   Alert,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { useLanguage } from '@/context/LanguageContext';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { ScreenLayout } from '@/components/ScreenLayout';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 import {
   YStack,
   XStack,
   Heading,
   Text,
   Button,
+  Card,
   Input,
-  TextArea,
+  Theme,
   Label,
-  Spinner,
+  Switch,
 } from 'tamagui';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { useLanguage } from '@/context/LanguageContext';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useAuth } from '@/hooks/useAuth';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { haptics } from '@/utils/haptics';
+import { playSound } from '@/utils/sounds';
 
 export default function AddTripScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-
+  const { token } = useAuth();
   const createTrip = useMutation(api.trips.createTrip);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [destination, setDestination] = useState('');
-  const [date, setDate] = useState('');
-  const [flight, setFlight] = useState('');
-  const [notes, setNotes] = useState('');
+  const [flightNumber, setFlightNumber] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [hours, setHours] = useState('12');
+  const [minutes, setMinutes] = useState('00');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        haptics.selection();
+        // In a real implementation, we would upload here using generateUploadUrl
+        // For now, we'll simulate success or handle the file URI locally if needed
+        Alert.alert('File Selected', `Picked: ${result.assets[0].name}`);
+        // storageId logic would go here
+      }
+    } catch (err) {
+      console.warn(err);
+      Alert.alert('Error', 'Failed to pick file');
+    }
+  };
 
   const handleSave = async () => {
     if (!destination.trim()) {
@@ -46,147 +76,222 @@ export default function AddTripScreen() {
       return;
     }
 
-    // Basic date validation (heuristic)
-    let parsedDate = Date.now();
-    if (date.trim()) {
-      const d = new Date(date);
-      if (!isNaN(d.getTime())) {
-        parsedDate = d.getTime();
-      }
+    if (!token) {
+      Alert.alert(t('common_error'), 'Please sign in to save trips.');
+      return;
     }
 
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+      haptics.selection();
+
+      const tripDate = new Date(date);
+      tripDate.setHours(parseInt(hours) || 0);
+      tripDate.setMinutes(parseInt(minutes) || 0);
+
+      // Play sound
+      playSound('airplane');
+
       await createTrip({
+        token,
         destination: destination.trim(),
-        startDate: parsedDate,
-        flightNumber: flight.trim() || undefined,
-        notes: notes.trim() || undefined,
+        startDate: tripDate.getTime(),
+        flightNumber: flightNumber.trim() || undefined,
       });
+
+      haptics.success();
       router.back();
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      Alert.alert(t('common_error'), e.message || t('wallet_error_save'));
+      Alert.alert(t('common_error'), t('wallet_error_save'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={['top']}
-    >
-      <Stack.Screen options={{ headerShown: false }} />
+    <ScreenLayout edges={['top']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: t('wallet_new_trip'),
+          headerLeft: () => (
+            <Button
+              size="$3"
+              chromeless
+              onPress={() => router.back()}
+              icon={<FontAwesome5 name="times" size={16} color={colors.text} />}
+            />
+          ),
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: 'transparent' }} />
+          ),
+          headerTransparent: true,
+        }}
+      />
 
-      {/* Header */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        alignItems="center"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Button
-          size="$3"
-          circular
-          chromeless
-          icon={
-            <FontAwesome5 name="arrow-left" size={20} color={colors.text} />
-          }
-          onPress={() => router.back()}
-        />
-        <Heading size="$6" marginLeft="$3" color={colors.text}>
-          {t('wallet_new_trip')}
-        </Heading>
-      </XStack>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <YStack space="$4">
-            {/* Destination */}
-            <YStack space="$2">
-              <Label color={colors.text} fontWeight="600">
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 100 }}>
+        <GlassCard
+          variant="default"
+          contentContainerStyle={{ padding: 24, gap: 20 }}
+        >
+          <YStack gap="$4">
+            <YStack gap="$2">
+              <Label fontWeight="700" color="$color" fontSize="$3">
                 {t('wallet_label_dest')}
               </Label>
-              <Input
-                size="$4"
-                borderWidth={1}
-                placeholder={t('wallet_ph_dest')}
-                value={destination}
-                onChangeText={setDestination}
-                backgroundColor={colors.card}
-              />
+              <GlassCard
+                variant="thin"
+                borderRadius={12}
+                contentContainerStyle={{ paddingHorizontal: 12 }}
+              >
+                <Input
+                  unstyled
+                  size="$4"
+                  placeholder={t('wallet_ph_dest')}
+                  value={destination}
+                  onChangeText={setDestination}
+                  color="$color"
+                  height={44}
+                  placeholderTextColor="$gray10"
+                  backgroundColor="transparent"
+                  borderWidth={0}
+                />
+              </GlassCard>
             </YStack>
 
-            {/* Date */}
-            <YStack space="$2">
-              <Label color={colors.text} fontWeight="600">
-                {t('wallet_label_date')}
-              </Label>
-              <Input
-                size="$4"
-                borderWidth={1}
-                placeholder="YYYY-MM-DD"
-                value={date}
-                onChangeText={setDate}
-                backgroundColor={colors.card}
-              />
-              <Text fontSize="$2" color="$color10">
-                Leavy empty for today
-              </Text>
-            </YStack>
+            <XStack gap="$3">
+              <YStack flex={1} gap="$2">
+                <Label fontWeight="700" color="$color" fontSize="$3">
+                  {t('wallet_label_date')}
+                </Label>
+                <GlassCard
+                  variant="thin"
+                  borderRadius={12}
+                  contentContainerStyle={{ paddingHorizontal: 12 }}
+                >
+                  <Input
+                    unstyled
+                    size="$4"
+                    placeholder="YYYY-MM-DD"
+                    value={date}
+                    onChangeText={setDate}
+                    color="$color"
+                    height={44}
+                    placeholderTextColor="$gray10"
+                    backgroundColor="transparent"
+                    borderWidth={0}
+                  />
+                </GlassCard>
+              </YStack>
+              <YStack flex={0.7} gap="$2">
+                <Label fontWeight="700" color="$color" fontSize="$3">
+                  Time
+                </Label>
+                <GlassCard
+                  variant="thin"
+                  borderRadius={12}
+                  contentContainerStyle={{
+                    paddingHorizontal: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Input
+                    flex={1}
+                    unstyled
+                    textAlign="center"
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    value={hours}
+                    onChangeText={setHours}
+                    color="$color"
+                    height={44}
+                    backgroundColor="transparent"
+                    borderWidth={0}
+                    placeholder="HH"
+                    placeholderTextColor="$gray10"
+                  />
+                  <Text color="$gray10">:</Text>
+                  <Input
+                    flex={1}
+                    unstyled
+                    textAlign="center"
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    value={minutes}
+                    onChangeText={setMinutes}
+                    color="$color"
+                    height={44}
+                    backgroundColor="transparent"
+                    borderWidth={0}
+                    placeholder="MM"
+                    placeholderTextColor="$gray10"
+                  />
+                </GlassCard>
+              </YStack>
+            </XStack>
 
-            {/* Flight */}
-            <YStack space="$2">
-              <Label color={colors.text} fontWeight="600">
+            <YStack gap="$2">
+              <Label fontWeight="700" color="$color" fontSize="$3">
                 {t('wallet_label_flight')}
               </Label>
-              <Input
-                size="$4"
-                borderWidth={1}
-                placeholder={t('wallet_ph_flight')}
-                value={flight}
-                onChangeText={setFlight}
-                backgroundColor={colors.card}
-              />
+              <GlassCard
+                variant="thin"
+                borderRadius={12}
+                contentContainerStyle={{ paddingHorizontal: 12 }}
+              >
+                <Input
+                  unstyled
+                  size="$4"
+                  placeholder={t('wallet_ph_flight')}
+                  value={flightNumber}
+                  onChangeText={setFlightNumber}
+                  color="$color"
+                  height={44}
+                  placeholderTextColor="$gray10"
+                  backgroundColor="transparent"
+                  borderWidth={0}
+                />
+              </GlassCard>
             </YStack>
 
-            {/* Notes */}
-            <YStack space="$2">
-              <Label color={colors.text} fontWeight="600">
-                {t('wallet_label_notes')}
-              </Label>
-              <TextArea
-                size="$4"
-                minHeight={100}
-                borderWidth={1}
-                placeholder={t('wallet_ph_notes')}
-                value={notes}
-                onChangeText={setNotes}
-                backgroundColor={colors.card}
-                multiline
-              />
-            </YStack>
+            <View style={{ height: 10 }} />
 
-            {/* Save Button */}
-            <Button
-              size="$5"
-              themeInverse
-              marginTop="$4"
+            <GlassButton
+              size="medium"
+              label={
+                <YStack>
+                  <Text fontWeight="600" color="$color">
+                    {t('wallet_upload_btn')}
+                  </Text>
+                  <Text fontSize="$2" color="$gray10">
+                    Upload PDF or image ticket
+                  </Text>
+                </YStack>
+              }
+              icon="upload"
+              onPress={handleUpload}
+              variant="default"
+              style={{ justifyContent: 'space-between' }}
+              backgroundOpacity={0.4}
+            />
+
+            <View style={{ height: 10 }} />
+
+            <GlassButton
+              size="large"
+              label={isSubmitting ? 'Saving...' : t('wallet_save_btn')}
               onPress={handleSave}
+              variant="active"
               disabled={isSubmitting}
-              icon={isSubmitting ? <Spinner color="white" /> : undefined}
               backgroundColor={colors.tint}
-            >
-              {t('wallet_save_btn')}
-            </Button>
+              icon={isSubmitting ? undefined : 'save'}
+              textColor="white"
+            />
           </YStack>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </GlassCard>
+      </ScrollView>
+    </ScreenLayout>
   );
 }

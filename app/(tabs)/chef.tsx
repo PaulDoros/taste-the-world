@@ -11,11 +11,26 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { ScreenLayout } from '@/components/ScreenLayout';
 import { useQuery, useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { YStack, XStack, Text, Input, Button, Card, Avatar } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Text,
+  Input,
+  Button,
+  Card,
+  Avatar,
+  useTheme,
+} from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   FadeInUp,
@@ -30,9 +45,9 @@ import Animated, {
   Easing,
   SharedValue,
 } from 'react-native-reanimated';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import LottieView from 'lottie-react-native';
 import { haptics } from '@/utils/haptics';
+import { playSound } from '@/utils/sounds';
 
 import { useRouter } from 'expo-router';
 import Markdown from 'react-native-markdown-display';
@@ -44,17 +59,24 @@ import {
 import { CountrySelectorModal } from '@/components/CountrySelectorModal';
 import { Country } from '@/types';
 import { ChatHistoryModal } from '@/components/ChatHistoryModal';
+import { MessageBubble } from '@/components/MessageBubble';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTierLimit } from '@/hooks/useTierLimit';
+import { AmbientBackground } from '@/components/ui/AmbientBackground';
 
 // Local assets
-const CHEF_AVATAR = require('@/assets/images/chef-avatar.png');
-const TRAVEL_AVATAR = require('@/assets/images/travel-avatar.png');
+const CHEF_AVATAR = require('@/assets/images/chef-avatar.jpg');
+const TRAVEL_AVATAR = require('@/assets/images/travel-avatar.jpg');
+
+// ActionButtons extracted to MessageBubble.tsx
 
 export default function ChefScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  // Bridge legacy colors to theme tokens
+  // Bridge legacy colors to theme tokens
+  // Removed legacy colors object in favor of direct token usage
   const {
     user: currentUser,
     token,
@@ -165,32 +187,29 @@ export default function ChefScreen() {
     source: IngredientSource;
     ingredients?: string[];
   }) => {
-    let prompt = `I want to cook a ${config.style} meal. `;
+    let prompt = t('chef_prompt_style', { style: config.style });
 
-    if (config.style === 'quick')
-      prompt +=
-        'It should be ready in under 15 minutes with max 5 ingredients. ';
-    if (config.style === 'family')
-      prompt += 'It should be a nice family dinner (~45 mins). ';
-    if (config.style === 'gourmet')
-      prompt += 'I want a full gourmet experience (1+ hour). ';
+    if (config.style === 'quick') prompt += t('chef_prompt_quick');
+    if (config.style === 'family') prompt += t('chef_prompt_family');
+    if (config.style === 'gourmet') prompt += t('chef_prompt_gourmet');
 
-    prompt += `The cuisine/style should be ${config.cuisine}. `;
+    prompt += t('chef_prompt_cuisine', { cuisine: config.cuisine });
 
     if (config.source === 'pantry') {
       if (pantryItems.length === 0) {
-        prompt +=
-          'I wanted to use my pantry, but it seems empty. Please suggest a recipe with common ingredients.';
+        prompt += t('chef_prompt_pantry_empty');
       } else {
         // Use selected ingredients if available, otherwise use all pantry items
         const ingredientsToUse =
           config.ingredients && config.ingredients.length > 0
             ? config.ingredients.join(', ')
             : pantryItems.map((i: any) => i.name).join(', ');
-        prompt += `I have these ingredients in my pantry: ${ingredientsToUse}. Please use some of them.`;
+        prompt += t('chef_prompt_pantry_ingredients', {
+          ingredients: ingredientsToUse,
+        });
       }
     } else {
-      prompt += 'Please suggest the ingredients.';
+      prompt += t('chef_prompt_suggest_ingredients');
     }
 
     // JSON requirement is now enforced by the backend (hidden context)
@@ -198,6 +217,8 @@ export default function ChefScreen() {
 
     handleSend(prompt);
   };
+
+  // ... (ActionButtons removed from here)
 
   const handleCountrySelect = (country: Country) => {
     const prompt = t('chef_prompt_country', {
@@ -219,6 +240,7 @@ export default function ChefScreen() {
     }
 
     haptics.medium();
+    playSound('message-sent');
     const content = text.trim();
     setInputText('');
     setIsLoading(true);
@@ -329,6 +351,15 @@ export default function ChefScreen() {
 
   // Auto-scroll to bottom
   useEffect(() => {
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      // Only play if it's AI and likely a "new" one (we could improve this with timestamp check)
+      // For now, rely on length change + role check.
+      if (lastMsg.role !== 'user' && !isTyping) {
+        playSound('message-received');
+      }
+    }
+
     if (messages.length > 0 || isTyping) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
@@ -417,397 +448,266 @@ export default function ChefScreen() {
     }
   };
 
-  const renderMessage = ({ item, index }: { item: any; index: number }) => {
-    const isUser = item.role === 'user';
+  const createTrip = useMutation(api.trips.createTrip);
 
-    // Parse content for JSON block
-    let content = item.content;
-    let jsonBlock = null;
-    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+  const handleSavePlan = async (jsonBlockOrString: string) => {
+    if (!currentUser?._id) return;
+    try {
+      let data;
+      // Check if input is a JSON string or plain text
+      if (jsonBlockOrString.trim().startsWith('{')) {
+        try {
+          data = JSON.parse(jsonBlockOrString);
+        } catch (e) {
+          // Fallback if parse fails, treat as raw object structure passed from ActionButtons
+          data = { tripName: 'New Trip', itinerary: jsonBlockOrString };
+        }
+      } else {
+        // It's a raw string passed explicitly
+        data = { tripName: 'New Trip', itinerary: jsonBlockOrString };
+      }
 
-    if (jsonMatch && !isUser) {
-      jsonBlock = jsonMatch[1];
-      // Remove the JSON block from the displayed content
-      content = content.replace(/```json\n[\s\S]*?\n```/, '').trim();
+      // If called from ActionButtons with built object (which is stringified there)
+      // Wait, ActionButtons calls it with:
+      // 1. jsonBlock (string) -> parsed -> data.itinerary might be object or string
+      // 2. JSON.stringify({ tripName, itinerary: fullContent }) -> parsed -> data.itinerary is string
+
+      // Let's re-parse if we received a string that looks like JSON
+      try {
+        const parsed = JSON.parse(jsonBlockOrString);
+        data = parsed;
+      } catch (e) {
+        // Not JSON, assume it's just the itinerary text?
+        // Actually ActionButtons *always* passes a JSON string now?
+        // "onSavePlan(jsonBlock || JSON.stringify(...))"
+        // So it is always a JSON string.
+        // However, if the jsonBlock *was* the itinerary note itself? No, jsonBlock is usually the whole plan.
+      }
+
+      if (!data) return;
+
+      if (data.tripName || data.itinerary) {
+        haptics.medium();
+
+        // Prepare notes: if itinerary is an object, stringify it. If string, leave as is.
+        let notesContent =
+          typeof data.itinerary === 'string'
+            ? data.itinerary
+            : JSON.stringify(data.itinerary, null, 2);
+
+        // Fix for escaped newlines often returned by AI or double-stringified
+        notesContent = notesContent.replace(/\\n/g, '\n');
+
+        // Optional: Remove starting/ending quotes if they exist and wrap the whole text unnecessarily
+        // This handles cases where the string itself was JSON stringified twice "Content..."
+        if (notesContent.startsWith('"') && notesContent.endsWith('"')) {
+          notesContent = notesContent.slice(1, -1);
+        }
+
+        await createTrip({
+          token: token!,
+          destination: data.tripName || 'New Trip',
+          startDate: Date.now(),
+          notes: notesContent,
+        });
+        haptics.success();
+        Alert.alert(
+          t('common_success'),
+          'Trip saved to your Travel Wallet! ✈️'
+        );
+      }
+    } catch (e) {
+      console.error('Failed to save trip', e);
+      Alert.alert(t('common_error'), 'Failed to save travel plan.');
     }
-
-    return (
-      <Animated.View
-        entering={FadeInUp.delay(index * 50).springify()}
-        style={{
-          maxWidth: '98%',
-          marginBottom: 16,
-        }}
-      >
-        <XStack
-          gap="$2"
-          alignItems="flex-end"
-          flexDirection={isUser ? 'row-reverse' : 'row'}
-        >
-          <Avatar
-            circular
-            size="$4"
-            backgroundColor={isUser ? '$blue10' : colors.tint}
-          >
-            <Avatar.Image
-              accessibilityLabel="Cam"
-              source={
-                isUser
-                  ? undefined
-                  : mode === 'chef'
-                    ? CHEF_AVATAR
-                    : TRAVEL_AVATAR
-              }
-            />
-            <Avatar.Fallback
-              backgroundColor={isUser ? '$blue10' : colors.tint}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <FontAwesome5
-                name={isUser ? 'user' : 'utensils'}
-                size={12}
-                color="white"
-              />
-            </Avatar.Fallback>
-          </Avatar>
-
-          <YStack gap="$2" flex={1}>
-            <Card
-              bordered
-              padding="$3"
-              borderRadius="$5"
-              borderBottomRightRadius={isUser ? 0 : '$5'}
-              borderBottomLeftRadius={isUser ? '$5' : 0}
-              backgroundColor={isUser ? colors.tint : colors.card}
-              borderColor={isUser ? 'transparent' : '$borderColor'}
-              elevation={isUser ? 0 : 4}
-              shadowColor={isUser ? undefined : '$shadowColor'}
-              shadowRadius={isUser ? 0 : 8}
-              shadowOffset={isUser ? undefined : { width: 0, height: 4 }}
-              shadowOpacity={isUser ? 0 : 0.1}
-            >
-              <View style={{ width: '100%' }}>
-                <Markdown
-                  style={{
-                    body: {
-                      color: isUser ? 'white' : colors.text,
-                      fontSize: 16,
-                      lineHeight: 24,
-                    },
-                    heading1: {
-                      color: isUser ? 'white' : colors.tint,
-                      fontSize: 24,
-                      fontWeight: 'bold',
-                      marginBottom: 8,
-                      marginTop: 8,
-                      borderBottomWidth: 1,
-                      borderBottomColor: isUser ? 'white' : colors.tint,
-                      paddingBottom: 4,
-                    },
-                    heading2: {
-                      color: isUser ? 'white' : colors.tint,
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      marginBottom: 8,
-                      marginTop: 16,
-                    },
-                    heading3: {
-                      color: isUser ? 'white' : colors.text,
-                      fontSize: 18,
-                      fontWeight: 'bold',
-                      marginBottom: 4,
-                      marginTop: 8,
-                    },
-                    bullet_list: {
-                      marginBottom: 8,
-                    },
-                    ordered_list: {
-                      marginBottom: 8,
-                    },
-                    list_item: {
-                      marginBottom: 4,
-                      color: isUser ? 'white' : colors.text,
-                    },
-                    code_inline: {
-                      backgroundColor: 'transparent',
-                      color: '#FF9800', // Orange for time/temp
-                      borderRadius: 4,
-                      paddingHorizontal: 4,
-                      paddingVertical: 0,
-                      fontWeight: 'bold',
-                    },
-                    strong: {
-                      color: isUser ? 'white' : '#4CAF50', // Green for vegetables
-                      fontWeight: 'bold',
-                    },
-                    em: {
-                      color: isUser ? 'white' : '#F44336', // Red for meat
-                      fontStyle: 'normal',
-                      fontWeight: 'bold',
-                    },
-                    s: {
-                      color: isUser ? 'white' : '#2196F3', // Blue for condiments
-                      textDecorationLine: 'none',
-                      fontWeight: 'bold',
-                    },
-                    del: {
-                      color: isUser ? 'white' : '#2196F3', // Blue for condiments
-                      textDecorationLine: 'none',
-                      fontWeight: 'bold',
-                    },
-                    link: {
-                      color: isUser ? '#ffd700' : colors.tint,
-                      textDecorationLine: 'underline',
-                      fontWeight: 'bold',
-                    },
-                  }}
-                  rules={{
-                    link: (node, children, parent, styles) => {
-                      const href = node.attributes.href;
-                      if (href === 'fish') {
-                        return (
-                          <Text
-                            key={node.key}
-                            style={{
-                              color: '#009688', // Teal for Fish
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {children}
-                          </Text>
-                        );
-                      }
-                      if (href === 'dairy') {
-                        return (
-                          <Text
-                            key={node.key}
-                            style={{
-                              color: '#3F51B5', // Indigo for Dairy
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {children}
-                          </Text>
-                        );
-                      }
-                      if (href === 'time') {
-                        return (
-                          <Text
-                            key={node.key}
-                            style={{
-                              color: '#9C27B0', // Purple for Time
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {children}
-                          </Text>
-                        );
-                      }
-                      return (
-                        <Text
-                          key={node.key}
-                          style={styles.link}
-                          onPress={() => Linking.openURL(node.attributes.href)}
-                        >
-                          {mode === 'travel' ? '🗺️ ' : '🔗 '}
-                          {children}
-                        </Text>
-                      );
-                    },
-                  }}
-                >
-                  {content}
-                </Markdown>
-              </View>
-            </Card>
-
-            {/* Shopping List Button */}
-            {jsonBlock && (
-              <ActionButtons
-                jsonBlock={jsonBlock}
-                onAdd={handleAddToShoppingList}
-                onCook={handleCookAndRemove}
-              />
-            )}
-          </YStack>
-        </XStack>
-      </Animated.View>
-    );
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={['top']}
-    >
+    <ScreenLayout edges={['bottom']}>
+      <AmbientBackground />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        {/* Header */}
-        <YStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor={colors.background}
-          gap="$3"
+        {/* Header with Glassmorphism */}
+        <GlassCard
+          borderRadius={0}
+          style={{
+            zIndex: 10,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          }}
         >
-          <XStack alignItems="center" justifyContent="space-between">
-            <XStack alignItems="center" gap="$3">
-              <View
-                style={{
-                  padding: 8,
-                  borderRadius: 12,
-                }}
-              >
-                <Avatar circular size="$4" backgroundColor={colors.tint}>
-                  <Avatar.Image
-                    accessibilityLabel="Cam"
-                    source={mode === 'chef' ? CHEF_AVATAR : TRAVEL_AVATAR}
-                  />
-                  <Avatar.Fallback alignItems="center" justifyContent="center">
-                    <FontAwesome5 name={'utensils'} size={12} color="white" />
-                  </Avatar.Fallback>
-                </Avatar>
-              </View>
-              <YStack>
-                <Text fontSize="$5" fontWeight="700">
-                  {mode === 'chef' ? t('chef_title') : t('chef_travel_guide')}
-                </Text>
-                <Text fontSize="$2" opacity={0.6}>
-                  {subscriptionType === 'monthly' ||
-                  subscriptionType === 'yearly'
-                    ? t('chef_prompts_unlimited')
-                    : remainingPrompts === 1
-                      ? t('chef_prompts_single', { count: remainingPrompts })
-                      : t('chef_prompts_left', { count: remainingPrompts })}
-                </Text>
-              </YStack>
-            </XStack>
-
-            <XStack gap="$2">
-              <Button
-                size="$3"
-                chromeless
-                icon={
-                  <FontAwesome5 name="history" size={16} color={colors.text} />
-                }
-                onPress={() => setShowHistory(true)}
-              />
-              <Button
-                size="$3"
-                chromeless
-                icon={
-                  <FontAwesome5 name="edit" size={16} color={colors.text} />
-                }
-                onPress={handleNewChat}
-              />
-            </XStack>
-          </XStack>
-
-          {/* Mode Switcher */}
-          <View
-            style={{
-              backgroundColor: '$gray4',
-              padding: 4,
-              borderRadius: 12,
-              height: 48,
-              flexDirection: 'row',
-              position: 'relative',
-            }}
+          <YStack
+            paddingHorizontal="$4"
+            paddingTop={insets.top + 12} // Adjusted for safe area
+            paddingBottom="$3"
+            borderBottomWidth={1}
+            borderBottomColor="$borderColor"
+            gap="$3"
           >
-            {/* Animated Background Indicator */}
-            <Animated.View
-              style={[
-                {
-                  position: 'absolute',
-                  top: 4,
-                  left: 4,
-                  width: '50%',
-                  height: 40,
-                  backgroundColor: colors.card,
-                  borderRadius: 10,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 2,
-                },
-                useAnimatedStyle(() => ({
-                  transform: [
-                    { translateX: withSpring(mode === 'chef' ? 0 : 200) },
-                  ], // Approximate width calculation, better to use onLayout
-                })),
-              ]}
-            />
+            <XStack alignItems="center" justifyContent="space-between">
+              <XStack alignItems="center" gap="$3">
+                <View
+                  style={{
+                    padding: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Avatar circular size="$4" backgroundColor="$tint">
+                    <Avatar.Image
+                      accessibilityLabel="Cam"
+                      source={mode === 'chef' ? CHEF_AVATAR : TRAVEL_AVATAR}
+                    />
+                    <Avatar.Fallback
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <FontAwesome5 name={'utensils'} size={12} color="white" />
+                    </Avatar.Fallback>
+                  </Avatar>
+                </View>
+                <YStack>
+                  <Text fontSize="$5" fontWeight="700">
+                    {mode === 'chef' ? t('chef_title') : t('chef_travel_guide')}
+                  </Text>
+                  <Text fontSize="$2" opacity={0.6}>
+                    {subscriptionType === 'monthly' ||
+                    subscriptionType === 'yearly'
+                      ? t('chef_prompts_unlimited')
+                      : remainingPrompts === 1
+                        ? t('chef_prompts_single', { count: remainingPrompts })
+                        : t('chef_prompts_left', { count: remainingPrompts })}
+                  </Text>
+                </YStack>
+              </XStack>
 
-            <Pressable
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1,
-              }}
-              onPress={() => setMode('chef')}
+              <XStack gap="$2">
+                <Button
+                  size="$3"
+                  chromeless
+                  icon={
+                    <FontAwesome5
+                      name="history"
+                      size={16}
+                      color={theme.color.get()}
+                    />
+                  }
+                  onPress={() => setShowHistory(true)}
+                />
+                <Button
+                  size="$3"
+                  chromeless
+                  icon={
+                    <FontAwesome5
+                      name="edit"
+                      size={16}
+                      color={theme.color.get()}
+                    />
+                  }
+                  onPress={handleNewChat}
+                />
+              </XStack>
+            </XStack>
+
+            {/* Mode Switcher */}
+            <XStack
+              backgroundColor="$gray4"
+              padding={4}
+              borderRadius={12}
+              height={48}
+              position="relative"
             >
-              <Text
-                fontWeight={mode === 'chef' ? '700' : '500'}
-                color={mode === 'chef' ? colors.text : '$gray11'}
+              {/* Animated Background Indicator */}
+              <Animated.View
+                style={[
+                  {
+                    position: 'absolute',
+                    top: 4,
+                    left: 4,
+                    width: '50%',
+                    height: 40,
+                    backgroundColor: theme.backgroundHover?.get() || '#F5F5F5',
+                    borderRadius: 10,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 2,
+                  },
+                  useAnimatedStyle(() => ({
+                    transform: [
+                      { translateX: withSpring(mode === 'chef' ? 0 : 200) },
+                    ], // Approximate width calculation, better to use onLayout
+                  })),
+                ]}
+              />
+
+              <Pressable
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1,
+                }}
+                onPress={() => setMode('chef')}
               >
-                {t('chef_tab_chef')}
-              </Text>
-            </Pressable>
-            <Pressable
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1,
-              }}
-              onPress={() => setMode('travel')}
-            >
-              <Text
-                fontWeight={mode === 'travel' ? '700' : '500'}
-                color={mode === 'travel' ? colors.text : '$gray11'}
+                <Text
+                  fontWeight={mode === 'chef' ? '700' : '500'}
+                  color={mode === 'chef' ? '$color' : '$gray11'}
+                >
+                  {t('chef_tab_chef')}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1,
+                }}
+                onPress={() => setMode('travel')}
               >
-                {t('chef_tab_travel')}
-              </Text>
-            </Pressable>
-          </View>
-        </YStack>
+                <Text
+                  fontWeight={mode === 'travel' ? '700' : '500'}
+                  color={mode === 'travel' ? '$color' : '$gray11'}
+                >
+                  {t('chef_tab_travel')}
+                </Text>
+              </Pressable>
+            </XStack>
+          </YStack>
+        </GlassCard>
 
         {/* Quick Actions / New Recipe Button */}
         {mode === 'chef' && messages.length === 0 && (
           <View style={{ padding: 16 }}>
-            <Button
-              size="$5"
-              theme="active"
+            <GlassButton
+              size="large"
+              variant="active"
               onPress={() => {
                 setModalInitialSource('random');
                 setShowRecipeSetup(true);
               }}
-              icon={<FontAwesome5 name="utensils" size={18} />}
-            >
-              {t('chef_start_new_recipe')}
-            </Button>
+              icon="utensils"
+              label={t('chef_start_new_recipe')}
+              backgroundOpacity={0.7}
+            />
           </View>
         )}
 
         {/* Travel Guide Quick Action */}
         {mode === 'travel' && messages.length === 0 && (
           <View style={{ padding: 16 }}>
-            <Button
-              size="$5"
-              theme="active"
-              backgroundColor="$orange10"
+            <GlassButton
+              size="large"
+              variant="active"
               onPress={() => setShowCountrySelector(true)}
-              icon={<FontAwesome5 name="globe-americas" size={18} />}
-            >
-              {t('chef_select_destination')}
-            </Button>
+              icon="globe-americas"
+              label={t('chef_select_destination')}
+              backgroundColor={theme.tint.get()}
+            />
           </View>
         )}
 
@@ -815,9 +715,24 @@ export default function ChefScreen() {
         <FlatList
           ref={flatListRef}
           data={[...messages, ...optimisticMessages]}
-          renderItem={renderMessage}
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              item={item}
+              index={index}
+              mode={mode}
+              userName={currentUser?.name || 'User'}
+              userImage={currentUser?.image}
+              onAdd={handleAddToShoppingList}
+              onCook={handleCookAndRemove}
+              onSavePlan={handleSavePlan}
+            />
+          )}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 48, // Increased padding to accommodate floating avatars at top
+            paddingBottom: 100,
+          }}
           style={{ flex: 1 }}
           ListFooterComponent={
             isTyping ? (
@@ -828,13 +743,13 @@ export default function ChefScreen() {
                 }}
               >
                 <XStack gap="$2" alignItems="flex-end">
-                  <Avatar circular size="$4" backgroundColor={colors.tint}>
+                  <Avatar circular size="$4" backgroundColor="$tint">
                     <Avatar.Image
                       accessibilityLabel="Cam"
                       source={mode === 'chef' ? CHEF_AVATAR : TRAVEL_AVATAR}
                     />
                     <Avatar.Fallback
-                      backgroundColor={colors.tint}
+                      backgroundColor="$tint"
                       alignItems="center"
                       justifyContent="center"
                     >
@@ -842,16 +757,21 @@ export default function ChefScreen() {
                     </Avatar.Fallback>
                   </Avatar>
 
+                  {/* Animated Background Indicator */}
                   <View
                     style={{
-                      backgroundColor: colors.card,
+                      backgroundColor:
+                        theme.backgroundHover?.get() || '#F5F5F5',
                       padding: 12,
                       borderRadius: 16,
                       borderBottomLeftRadius: 0,
                     }}
                   >
                     <XStack gap="$2" alignItems="center">
-                      <ActivityIndicator size="small" color={colors.tint} />
+                      <ActivityIndicator
+                        size="small"
+                        color={theme.blue10.get()}
+                      />
                       <Text fontSize="$2" color="$color11">
                         {mode === 'chef'
                           ? t('chef_chat_cooking')
@@ -872,10 +792,15 @@ export default function ChefScreen() {
               opacity={0.5}
               gap="$4"
             >
-              <FontAwesome5
-                name={mode === 'chef' ? 'utensils' : 'map-marked-alt'}
-                size={48}
-                color={colors.text}
+              <LottieView
+                source={
+                  mode === 'chef'
+                    ? require('@/assets/animations/Cooking.json')
+                    : require('@/assets/animations/travel.json')
+                }
+                autoPlay
+                loop
+                style={{ width: 200, height: 200 }}
               />
               <Text fontSize="$4" textAlign="center">
                 {mode === 'chef'
@@ -895,7 +820,16 @@ export default function ChefScreen() {
                     size="$3"
                     bordered
                     onPress={() => handleQuickAction('random')}
-                    icon={<FontAwesome5 name="dice" size={14} />}
+                    icon={
+                      <FontAwesome5
+                        name="dice"
+                        size={14}
+                        color={theme.tint.get()}
+                      />
+                    }
+                    borderColor="$tint"
+                    color="$tint"
+                    pressStyle={{ backgroundColor: '$tint', opacity: 0.1 }}
                   >
                     {t('chef_qa_random_recipe')}
                   </Button>
@@ -903,7 +837,16 @@ export default function ChefScreen() {
                     size="$3"
                     bordered
                     onPress={() => handleQuickAction('pantry')}
-                    icon={<FontAwesome5 name="carrot" size={14} />}
+                    icon={
+                      <FontAwesome5
+                        name="carrot"
+                        size={14}
+                        color={theme.tint.get()}
+                      />
+                    }
+                    borderColor="$tint"
+                    color="$tint"
+                    pressStyle={{ backgroundColor: '$tint', opacity: 0.1 }}
                   >
                     {t('chef_qa_use_pantry')}
                   </Button>
@@ -914,14 +857,12 @@ export default function ChefScreen() {
         />
 
         {/* Input Area - Always visible at bottom */}
-        <View
-          style={{
-            backgroundColor: colors.background,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            padding: 12,
-            paddingBottom: 110,
-          }}
+        <YStack
+          backgroundColor="$background"
+          borderTopWidth={1}
+          borderTopColor="$borderColor"
+          padding={12}
+          paddingBottom={110}
         >
           {/* Quick Actions Bar (if not empty) */}
           {messages.length > 0 && mode === 'chef' && (
@@ -929,7 +870,11 @@ export default function ChefScreen() {
               horizontal
               showsHorizontalScrollIndicator={false}
               style={{ marginBottom: 12 }}
-              contentContainerStyle={{ paddingHorizontal: 4, gap: 2 }}
+              contentContainerStyle={{
+                paddingHorizontal: 4,
+                gap: 8,
+                paddingBottom: 8,
+              }}
             >
               <QuickActionButton
                 index={0}
@@ -981,13 +926,13 @@ export default function ChefScreen() {
             <Button
               size="$4"
               circular
-              backgroundColor={inputText.trim() ? colors.tint : '$gray8'}
+              backgroundColor={inputText.trim() ? '$tint' : '$gray8'}
               onPress={() => handleSend()}
               disabled={!inputText.trim() || isLoading}
               icon={<FontAwesome5 name="paper-plane" size={16} color="white" />}
             />
           </XStack>
-        </View>
+        </YStack>
       </KeyboardAvoidingView>
 
       <RecipeSetupModal
@@ -1012,103 +957,9 @@ export default function ChefScreen() {
         currentChatId={currentChatId}
         mode={mode}
       />
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }
-
-// Action Buttons Component
-const ActionButtons = ({
-  jsonBlock,
-  onAdd,
-  onCook,
-}: {
-  jsonBlock: string;
-  onAdd: (json: string) => void;
-  onCook: (json: string) => void;
-}) => {
-  const cartScale = useSharedValue(1);
-  const fireScale = useSharedValue(1);
-
-  const cartStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: cartScale.value }],
-  }));
-
-  const fireStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fireScale.value }],
-  }));
-
-  const { t } = useLanguage();
-
-  const handleAddPress = () => {
-    cartScale.value = withSequence(withSpring(1.5), withSpring(1));
-    onAdd(jsonBlock);
-  };
-
-  const handleCookPress = () => {
-    fireScale.value = withSequence(
-      withTiming(1.5, { duration: 100 }),
-      withRepeat(withTiming(1.2, { duration: 100 }), 3, true),
-      withTiming(1, { duration: 100 })
-    );
-    onCook(jsonBlock);
-  };
-
-  return (
-    <XStack gap="$3" flexWrap="wrap" marginTop="$2">
-      <Pressable
-        onPress={handleAddPress}
-        style={({ pressed }) => ({
-          backgroundColor: '#10b981', // Emerald Green
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#10b981',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 4,
-          opacity: pressed ? 0.9 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        })}
-      >
-        <Animated.View style={cartStyle}>
-          <FontAwesome5 name="shopping-basket" size={16} color="white" />
-        </Animated.View>
-        <Text color="white" fontWeight="700" fontSize="$3" marginLeft="$2">
-          {t('chef_action_add_to_list')}
-        </Text>
-      </Pressable>
-
-      <Pressable
-        onPress={handleCookPress}
-        style={({ pressed }) => ({
-          backgroundColor: '#f97316', // Orange
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#f97316',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 4,
-          opacity: pressed ? 0.9 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        })}
-      >
-        <Animated.View style={fireStyle}>
-          <FontAwesome5 name="fire" size={16} color="white" />
-        </Animated.View>
-        <Text color="white" fontWeight="700" fontSize="$3" marginLeft="$2">
-          {t('chef_action_cook_update')}
-        </Text>
-      </Pressable>
-    </XStack>
-  );
-};
 
 const QuickActionButton = ({
   index,
@@ -1125,6 +976,8 @@ const QuickActionButton = ({
   onPress: () => void;
   children: React.ReactNode;
 }) => {
+  const theme = useTheme();
+
   // Animate ONLY the icon
   const iconStyle = useAnimatedStyle(() => {
     if (activeQuickAction.value !== index) return {};
@@ -1144,20 +997,16 @@ const QuickActionButton = ({
   });
 
   return (
-    <Button
-      size="$3"
-      theme="active"
-      variant="outlined"
+    <GlassButton
+      size="small"
       onPress={onPress}
-      borderRadius="$10"
-      paddingHorizontal="$3"
-      icon={
+      label={children}
+      shadowRadius={3}
+      iconComponent={
         <Animated.View style={iconStyle}>
-          <FontAwesome5 name={icon} size={14} color={Colors.light.tint} />
+          <FontAwesome5 name={icon} size={14} color={theme.blue10?.get()} />
         </Animated.View>
       }
-    >
-      {children}
-    </Button>
+    />
   );
 };

@@ -18,6 +18,20 @@ export const TIER_LIMITS = {
     hasAds: true,
     adTypes: ['banner'] as const,
   },
+  personal: {
+    countries: Infinity,
+    offlineMaps: Infinity,
+    aiRecipes: Infinity,
+    hasAds: false,
+    adTypes: [] as const,
+  },
+  pro: {
+    countries: Infinity,
+    offlineMaps: Infinity,
+    aiRecipes: Infinity,
+    hasAds: false,
+    adTypes: [] as const,
+  },
   premium: {
     countries: Infinity,
     offlineMaps: Infinity,
@@ -34,7 +48,9 @@ export function canAccessCountry(
   tier: UserTier,
   countryIndex: number
 ): boolean {
-  const limit = TIER_LIMITS[tier].countries;
+  // Fallback to free if tier not found (safety)
+  const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
+  const limit = limits.countries;
   return countryIndex < limit;
 }
 
@@ -66,6 +82,8 @@ export function getTierDisplayName(tier: UserTier): string {
   return {
     guest: 'Guest',
     free: 'Free',
+    personal: 'Personal',
+    pro: 'Pro',
     premium: 'Premium',
   }[tier];
 }
@@ -77,6 +95,8 @@ export function getTierColor(tier: UserTier): string {
   return {
     guest: '#9CA3AF', // gray
     free: '#3B82F6', // blue
+    personal: '#8B5CF6', // violet
+    pro: '#8B5CF6', // violet
     premium: '#F59E0B', // gold
   }[tier];
 }
@@ -85,12 +105,14 @@ export function getTierColor(tier: UserTier): string {
  * Check if user should see ads
  */
 export function shouldShowAds(tier: UserTier): boolean {
-  return TIER_LIMITS[tier].hasAds;
+  // Safe access with fallback
+  return TIER_LIMITS[tier]?.hasAds ?? true;
 }
 
 /**
  * Get allowed ad types for tier
  */
 export function getAllowedAdTypes(tier: UserTier): readonly string[] {
-  return TIER_LIMITS[tier].adTypes;
+  // Safe access with fallback
+  return TIER_LIMITS[tier]?.adTypes ?? ['banner'];
 }

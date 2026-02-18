@@ -21,11 +21,13 @@ import { getRecipesByArea, getRecipeById } from '@/services/recipesApi';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { RecipeCard } from '@/components/RecipeCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { haptics } from '@/utils/haptics';
 import { SearchBar } from '@/components/SearchBar';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { RecipeSkeletonGrid } from '@/components/SkeletonLoader';
 import { useLanguage } from '@/context/LanguageContext';
+import { getTranslatedCountryName } from '@/utils/countryTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -331,7 +333,7 @@ export default function CountryRecipesScreen() {
               flex: 1,
             }}
           >
-            {countryName || t('recipes_title')}
+            {getTranslatedCountryName(countryName, t) || t('recipes_title')}
           </Text>
         </View>
 
@@ -369,20 +371,15 @@ export default function CountryRecipesScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Pressable
+        <GlassButton
+          icon="arrow-left"
+          size="small"
           onPress={handleBack}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: `${colors.tint}15`,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 12,
-          }}
-        >
-          <FontAwesome5 name="arrow-left" size={18} color={colors.tint} />
-        </Pressable>
+          backgroundColor={colors.tint}
+          backgroundOpacity={0.15}
+          textColor={colors.tint}
+          style={{ marginRight: 12 }}
+        />
         <View style={{ flex: 1 }}>
           <Text
             style={{
@@ -391,7 +388,7 @@ export default function CountryRecipesScreen() {
               color: colors.text,
             }}
           >
-            {countryName || t('recipes_title')}
+            {getTranslatedCountryName(countryName, t) || t('recipes_title')}
           </Text>
           <Text
             style={{
@@ -415,7 +412,7 @@ export default function CountryRecipesScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder={t('recipes_search_placeholder', {
-            country: countryName || 'recipes',
+            country: getTranslatedCountryName(countryName, t) || 'recipes',
           })}
         />
       </View>

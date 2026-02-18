@@ -1,7 +1,10 @@
 import React from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { XStack, YStack, Text, Button, Card } from 'tamagui';
+import { XStack, YStack, Text } from 'tamagui';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -46,46 +49,69 @@ export function LanguageSelectorModal({
           <Text fontSize="$5" fontWeight="700" color={colors.text}>
             {t('settings_select_language')}
           </Text>
-          <Button
-            size="$3"
-            chromeless
+          <GlassButton
+            size="small"
+            label=""
             onPress={onClose}
-            icon={<FontAwesome5 name="times" size={16} color={colors.text} />}
+            icon="times"
+            backgroundColor={undefined}
+            shadowRadius={3}
+            backgroundOpacity={0}
+            textColor={colors.text}
           />
         </XStack>
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {(Object.keys(Translations) as Language[]).map((lang) => (
-            <Card
+            <GlassCard
               key={lang}
-              padding="$4"
-              marginBottom="$3"
-              bordered
-              backgroundColor={language === lang ? colors.tint + '20' : '$card'}
-              borderColor={language === lang ? colors.tint : '$borderColor'}
-              pressStyle={{ scale: 0.98 }}
-              onPress={() => handleLanguageSelect(lang)}
+              borderRadius={16}
+              borderRadiusInside={16}
+              shadowRadius={5}
+              backgroundColor={
+                language === lang ? `${colors.tint}20` : undefined
+              }
+              intensity={language === lang ? 60 : 30}
+              style={{ marginBottom: 12 }}
             >
-              <XStack justifyContent="space-between" alignItems="center">
-                <XStack alignItems="center" space="$3">
-                  <Text fontSize="$8">{FLAGS[lang]}</Text>
-                  <YStack>
-                    <Text
-                      fontSize="$4"
-                      fontWeight="600"
-                      color={language === lang ? colors.tint : colors.text}
-                    >
-                      {Translations[lang].languageName}
-                    </Text>
-                    <Text fontSize="$2" color="$color11">
-                      {lang.toUpperCase()}
-                    </Text>
-                  </YStack>
+              <Pressable
+                onPress={() => handleLanguageSelect(lang)}
+                style={({ pressed }) => ({
+                  padding: 16,
+                  opacity: pressed ? 0.9 : 1,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderRadius: 16, // Ensure interaction matches rounded corners
+                  borderWidth: language === lang ? 1 : 0,
+                  borderColor: language === lang ? colors.tint : 'transparent',
+                })}
+              >
+                <XStack
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flex={1}
+                >
+                  <XStack alignItems="center" gap="$3">
+                    <Text fontSize="$8">{FLAGS[lang]}</Text>
+                    <YStack>
+                      <Text
+                        fontSize="$4"
+                        fontWeight="600"
+                        color={language === lang ? colors.tint : colors.text}
+                      >
+                        {Translations[lang].languageName}
+                      </Text>
+                      <Text fontSize="$2" color="$color11">
+                        {lang.toUpperCase()}
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  {language === lang && (
+                    <FontAwesome5 name="check" size={16} color={colors.tint} />
+                  )}
                 </XStack>
-                {language === lang && (
-                  <FontAwesome5 name="check" size={16} color={colors.tint} />
-                )}
-              </XStack>
-            </Card>
+              </Pressable>
+            </GlassCard>
           ))}
         </ScrollView>
       </SafeAreaView>

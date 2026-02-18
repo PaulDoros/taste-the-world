@@ -1,16 +1,20 @@
-import { Text, Image, Pressable, View } from 'react-native';
+import React from 'react';
+import { Image, Animated, Pressable } from 'react-native'; // Tamagui Image can be tricky with resizeMode sometimes, standard Image is fine inside Card
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import {
+  Text,
+  View,
+  YStack,
+  XStack,
+  Paragraph,
+  Heading,
+  useTheme,
+  getTokens,
+} from 'tamagui';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 import { Country } from '@/types';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from './useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface CountryCardProps {
@@ -26,40 +30,8 @@ export const CountryCard = ({
   isLocked = false,
   onPress,
 }: CountryCardProps) => {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
   const { t } = useLanguage();
-
-  // Animation values
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-
-  // Animated style for press effect
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-      opacity: opacity.value,
-    };
-  });
-
-  // Handle press in - Snappier for better feel
-  const handlePressIn = () => {
-    scale.value = withSpring(0.96, {
-      // Less scale (was 0.95)
-      damping: 12, // More responsive (was 15)
-      stiffness: 250, // Faster (was 150)
-    });
-    opacity.value = withTiming(0.85, { duration: 100 }); // Faster (was 150ms)
-  };
-
-  // Handle press out
-  const handlePressOut = () => {
-    scale.value = withSpring(1, {
-      damping: 12,
-      stiffness: 250,
-    });
-    opacity.value = withTiming(1, { duration: 100 });
-  };
 
   const formatPopulation = (pop: number): string => {
     if (pop >= 1_000_000_000) {
@@ -72,260 +44,221 @@ export const CountryCard = ({
     return t('common_pop_unit', { count: pop });
   };
 
+  const scale = React.useRef(new Animated.Value(1)).current;
+
+  // Simple scale animation
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+      speed: 20,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+    }).start();
+  };
+
   return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{
-          borderRadius: 20,
-          overflow: 'hidden',
-          backgroundColor: colors.card,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 16,
-          elevation: 8,
-          marginBottom: 16,
-        }}
-      >
-        {/* Flag Section */}
-        <View style={{ height: 200, position: 'relative' }}>
-          <Image
-            source={{ uri: country.flags.png }}
-            style={{
-              width: '100%',
-              height: '100%',
-              opacity: isLocked ? 0.6 : 1,
-            }}
-            resizeMode="cover"
-          />
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={{ marginBottom: 16 }}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <GlassCard borderRadius={24} shadowOpacity={0.3} shadowRadius={8}>
+          <View height={200}>
+            <Image
+              source={{ uri: country.flags.png }}
+              style={{
+                width: '100%',
+                height: '100%',
+                opacity: isLocked ? 0.6 : 1,
+              }}
+              resizeMode="cover"
+            />
 
-          {/* Stronger Gradient Overlay */}
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.85)']}
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 120,
-            }}
-          />
-
-          {/* Locked Overlay */}
-          {isLocked && (
-            <View
+            {/* Gradient Overlay */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.85)']}
               style={{
                 position: 'absolute',
-                top: 0,
+                bottom: 0,
                 left: 0,
                 right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0,0,0,0.3)',
-                alignItems: 'center',
-                justifyContent: 'center',
+                height: 120,
               }}
-            >
-              <View
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  padding: 16,
-                  borderRadius: 40,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.2)',
-                }}
-              >
-                <FontAwesome5 name="lock" size={24} color="white" />
-              </View>
-            </View>
-          )}
+            />
 
-          {/* Premium Badge - Top Right */}
-          {isPremium && !isLocked && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                backgroundColor: '#9333ea',
-                borderRadius: 20,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                shadowColor: '#9333ea',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.4,
-                shadowRadius: 8,
-                elevation: 5,
-              }}
-            >
-              <FontAwesome5 name="crown" size={12} color="#fbbf24" />
-              <Text
-                style={{
-                  color: 'white',
-                  fontSize: 11,
-                  fontWeight: '700',
-                  marginLeft: 4,
-                  letterSpacing: 0.5,
-                }}
+            {/* Locked Overlay */}
+            {isLocked && (
+              <YStack
+                fullscreen
+                backgroundColor="rgba(0,0,0,0.3)"
+                alignItems="center"
+                justifyContent="center"
+                zIndex={10}
               >
-                {t('common_pro')}
-              </Text>
-            </View>
-          )}
-
-          {/* Country Name - Bottom */}
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: 16,
-            }}
-          >
-            <Text
-              numberOfLines={2}
-              style={{
-                color: 'white',
-                fontSize: 18,
-                fontWeight: '700',
-                letterSpacing: 0.3,
-                textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                textShadowOffset: { width: 0, height: 2 },
-                textShadowRadius: 8,
-                opacity: isLocked ? 0.8 : 1,
-              }}
-            >
-              {country.name.common}
-            </Text>
-
-            {/* Region Tag */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginTop: 6,
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                  paddingHorizontal: 8,
-                  paddingVertical: 4,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <Text
-                  style={{
-                    color: 'white',
-                    fontSize: 11,
-                    fontWeight: '600',
-                    letterSpacing: 0.5,
-                  }}
+                <YStack
+                  backgroundColor="rgba(0,0,0,0.6)"
+                  padding="$4"
+                  borderRadius="$10"
+                  borderWidth={1}
+                  borderColor="rgba(255,255,255,0.2)"
                 >
-                  {country.region}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Bottom Info - Cleaner */}
-        <View
-          style={{
-            padding: 12,
-            backgroundColor: colors.card,
-            opacity: isLocked ? 0.6 : 1,
-          }}
-        >
-          {/* Capital & Population Row */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            {/* Capital */}
-            {country.capital && (
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-              >
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: `${colors.tint}15`,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <FontAwesome5
-                    name="map-marker"
-                    size={12}
-                    color={colors.tint}
-                  />
-                </View>
-                <View style={{ marginLeft: 8, flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontSize: 11,
-                      opacity: 0.6,
-                      fontWeight: '500',
-                    }}
-                  >
-                    {t('common_capital')}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      color: colors.text,
-                      fontSize: 13,
-                      fontWeight: '600',
-                      marginTop: 1,
-                    }}
-                  >
-                    {country.capital[0]}
-                  </Text>
-                </View>
-              </View>
+                  <FontAwesome5 name="lock" size={24} color="white" />
+                </YStack>
+              </YStack>
             )}
+
+            {/* Premium Badge */}
+            {isPremium && !isLocked && (
+              <XStack
+                position="absolute"
+                top="$3"
+                right="$3"
+                backgroundColor={theme.purple10.get()}
+                borderRadius="$4"
+                paddingHorizontal="$2.5"
+                paddingVertical="$1.5"
+                alignItems="center"
+                space="$1.5"
+                shadowColor={theme.purple10.get()}
+                shadowOpacity={0.4}
+                shadowRadius={8}
+              >
+                <FontAwesome5
+                  name="crown"
+                  size={10}
+                  color={theme.yellow10.get()}
+                />
+                <Text
+                  color="white"
+                  fontSize={11}
+                  fontWeight="700"
+                  letterSpacing={0.5}
+                >
+                  {t('common_pro')}
+                </Text>
+              </XStack>
+            )}
+
+            {/* Country Info Overlay */}
+            <YStack
+              position="absolute"
+              bottom={0}
+              left={0}
+              right={0}
+              padding="$4"
+            >
+              <Heading
+                color="white"
+                size="$8"
+                fontWeight="800"
+                textShadowColor="rgba(0,0,0,0.9)"
+                textShadowOffset={{ width: 0, height: 2 }}
+                textShadowRadius={8}
+                opacity={isLocked ? 0.8 : 1}
+                numberOfLines={2}
+              >
+                {country.name.common}
+              </Heading>
+
+              {/* Region Tag */}
+              <XStack marginTop="$2">
+                <View
+                  backgroundColor="rgba(255, 255, 255, 0.25)"
+                  paddingHorizontal="$2"
+                  paddingVertical="$1"
+                  borderRadius="$3"
+                  borderWidth={1}
+                  borderColor="rgba(255, 255, 255, 0.3)"
+                >
+                  <Text
+                    color="white"
+                    fontSize={11}
+                    fontWeight="600"
+                    letterSpacing={0.5}
+                  >
+                    {country.region}
+                  </Text>
+                </View>
+              </XStack>
+            </YStack>
           </View>
 
-          {/* Population */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: 10,
-              paddingTop: 10,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-            }}
+          {/* Footer Info */}
+          <YStack
+            padding="$3"
+            // No background color - let glass shine through
+            opacity={isLocked ? 0.6 : 1}
           >
-            <FontAwesome5 name="users" size={11} color={colors.tint} />
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 12,
-                marginLeft: 6,
-                opacity: 0.7,
-                fontWeight: '500',
-              }}
-            >
-              {formatPopulation(country.population)}
-            </Text>
-          </View>
-        </View>
-      </Pressable>
-    </Animated.View>
+            <YStack flex={1} space="$2">
+              {/* Capital */}
+              {country.capital && (
+                <XStack alignItems="center">
+                  <YStack
+                    width={28}
+                    height={28}
+                    borderRadius="$10"
+                    backgroundColor={theme.tint.val + '15'}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <FontAwesome5
+                      name="map-marker"
+                      size={12}
+                      color={theme.tint.val}
+                    />
+                  </YStack>
+                  <YStack marginLeft="$2" flex={1}>
+                    <Text
+                      color="$color"
+                      fontSize={11}
+                      opacity={0.6}
+                      fontWeight="500"
+                    >
+                      {t('common_capital')}
+                    </Text>
+                    <Paragraph
+                      color="$color"
+                      size="$2"
+                      fontWeight="600"
+                      numberOfLines={1}
+                    >
+                      {country.capital[0]}
+                    </Paragraph>
+                  </YStack>
+                </XStack>
+              )}
+
+              {/* Population */}
+              <XStack
+                alignItems="center"
+                paddingTop="$2"
+                borderTopWidth={1}
+                borderColor="$borderColor"
+              >
+                <FontAwesome5 name="users" size={11} color={theme.tint.val} />
+                <Text
+                  color="$color"
+                  fontSize={12}
+                  marginLeft="$2"
+                  opacity={0.7}
+                  fontWeight="500"
+                >
+                  {formatPopulation(country.population)}
+                </Text>
+              </XStack>
+            </YStack>
+          </YStack>
+        </GlassCard>
+      </Animated.View>
+    </Pressable>
   );
 };

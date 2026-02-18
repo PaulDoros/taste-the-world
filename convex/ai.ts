@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { action } from './_generated/server';
 import { api } from './_generated/api';
+import { Buffer } from 'buffer';
 
 // Constants
 // Constants
@@ -155,12 +156,17 @@ export const sendMessage = action({
   },
   handler: async (ctx, args): Promise<{ content: string; chatId: any }> => {
     // Save user message via mutation (passing token)
-    const { chatId } = await ctx.runMutation(api.chat.saveUserMessage, {
-      chatId: args.chatId,
-      content: args.content,
-      token: args.token,
-      mode: args.mode,
-    });
+    const { chatId, messageId } = await ctx.runMutation(
+      api.chat.saveUserMessage,
+      {
+        chatId: args.chatId,
+        content: args.content,
+        token: args.token,
+        mode: args.mode,
+      }
+    );
+
+    // ... (User/Quota checks remain same, omitted for brevity if unchanged, but I need to match existing code structure)
 
     // Get user for quota checking
     const user = await ctx.runQuery(api.auth.getCurrentUser, {
@@ -215,26 +221,27 @@ export const sendMessage = action({
 
     try {
       // Fetch recent history for context
+      // Note: Due to consistency lag, this might NOT include the message we just saved.
       const messages = await ctx.runQuery(api.chat.getMessages, { chatId });
 
-      // Format messages for Gemini (Gemini expects "user" and "model" roles)
-      let contents = messages.map((m: any) => ({
+      // Filter out the current message if it IS found (to avoid duplication when we append it manually)
+      const historyMessages = messages.filter((m: any) => m._id !== messageId);
+
+      // Format history messages
+      let contents = historyMessages.map((m: any) => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
       }));
 
-      // Ensure we have at least the user's message
-      if (contents.length === 0) {
-        contents = [
-          {
-            role: 'user',
-            parts: [{ text: args.content }],
-          },
-        ];
-      }
+      // Explicitly Append the CURRENT User Message
+      // This ensures Gemini ALWAYS sees the latest prompt, regardless of DB lag.
+      contents.push({
+        role: 'user',
+        parts: [{ text: args.content }],
+      });
 
       // HIDDEN CONTEXT: Reinforce JSON requirement for Chef mode
-      // We append this to the prompt sent to AI, but the user sees the clean version in DB
+      // We append this to the prompt sent to AI (which is now definitely the last message)
       if (!args.mode || args.mode === 'chef') {
         const lastPart = contents[contents.length - 1].parts[0];
         lastPart.text +=
@@ -282,10 +289,14 @@ export const sendMessage = action({
       return { content: responseText, chatId };
     } catch (error) {
       console.error('AI Error:', error);
+      const errorMessage =
+        args.mode === 'travel'
+          ? "I'm having trouble connecting to the travel agency right now. Please try again later."
+          : "I'm having trouble connecting to the kitchen right now. Please try again later.";
+
       await ctx.runMutation(api.chat.saveAiResponse, {
         chatId,
-        content:
-          "I'm having trouble connecting to the kitchen right now. Please try again later.",
+        content: errorMessage,
       });
       return { content: 'Error', chatId };
     }
@@ -843,6 +854,95 @@ export const generateTripItinerary = action({
     } catch (error) {
       console.error('Itinerary Generation Error:', error);
       throw new Error('Failed to generate itinerary');
+    }
+  },
+});
+
+/**
+ * Extract recipe details from an image (My Recipe Book)
+ */
+export const extractRecipeFromImage = action({
+  args: {
+    imageStorageId: v.id('_storage'),
+    language: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      // Mock for no key
+      return JSON.stringify({
+        title: 'Scanned Recipe (Mock)',
+        description: 'A delicious recipe extracted from your image.',
+        ingredients: [
+          { name: 'Flour', measure: '500g' },
+          { name: 'Sugar', measure: '200g' },
+        ],
+        instructions: ['Mix ingredients.', 'Bake at 180°C.'],
+      });
+    }
+
+    try {
+      // 1. Get Image URL from Storage
+      const imageUrl = await ctx.storage.getUrl(args.imageStorageId);
+      if (!imageUrl) throw new Error('Image not found');
+
+      // 2. Download Image to get base64 or bytes
+      const imageResp = await fetch(imageUrl);
+      const imageBuffer = await imageResp.arrayBuffer();
+      const base64Data = Buffer.from(imageBuffer).toString('base64');
+
+      const languageInstruction = args.language
+        ? `Output MUST be in ${args.language} language.`
+        : '';
+
+      const prompt = `Extract the recipe from this image.
+       ${languageInstruction}
+       Return ONLY a JSON object with this exact structure:
+       {
+         "title": "Recipe Title",
+         "description": "Brief description",
+         "ingredients": [{"name": "Ingredient Name", "measure": "Quantity"}],
+         "instructions": ["Step 1", "Step 2"]
+       }`;
+
+      const responseText = await callGemini(
+        apiKey,
+        [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Data,
+                },
+              },
+            ],
+          },
+        ],
+        'You are a helpful culinary assistant.',
+        'application/json'
+      );
+
+      let jsonString = responseText;
+      const markdownMatch =
+        responseText.match(/```json\n([\s\S]*?)\n```/) ||
+        responseText.match(/```\n([\s\S]*?)\n```/);
+      if (markdownMatch) {
+        jsonString = markdownMatch[1];
+      } else {
+        jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
+      }
+
+      return jsonString;
+    } catch (e: any) {
+      console.error('Recipe Extraction Error Details:', {
+        message: e.message,
+        stack: e.stack,
+        cause: e.cause,
+      });
+      throw new Error(`Failed to extract recipe: ${e.message}`);
     }
   },
 });

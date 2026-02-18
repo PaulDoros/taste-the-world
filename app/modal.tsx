@@ -22,16 +22,18 @@ export default function ModalScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { setSubscription } = usePremium();
+  const { setSubscription, packages, isProcessing, purchasePackage } =
+    usePremium();
   const { showSuccess } = useAlertDialog();
   const { t } = useLanguage();
   const [selectedSubscription, setSelectedSubscription] = useState<
     'monthly' | 'yearly'
   >('yearly');
+  const [selectedTier, setSelectedTier] = useState<'personal' | 'pro'>('pro');
 
   const handleUpgrade = () => {
     haptics.light();
-    setSubscription(selectedSubscription);
+    setSubscription(selectedSubscription, selectedTier);
     showSuccess(
       t('modal_success_detail', {
         plan:
@@ -97,8 +99,12 @@ export default function ModalScreen() {
           {/* Pricing Section */}
           <PricingSection
             selectedSubscription={selectedSubscription}
+            selectedTier={selectedTier}
             onSelectSubscription={setSelectedSubscription}
+            onSelectTier={setSelectedTier}
             onUpgrade={handleUpgrade}
+            packages={packages}
+            isProcessing={isProcessing}
           />
 
           {/* Detailed Benefits - Using Reusable Component */}

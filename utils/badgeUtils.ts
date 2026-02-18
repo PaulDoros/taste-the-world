@@ -39,9 +39,40 @@ export const getBadgeProgress = (
       target = 1;
       break;
     case 'explorer':
-      // logic for explorer (visit 5 countries) - assuming tracked else 0
+      // Tracks visited country pages
+      current = ((userStats as any).visitedCountries || []).length;
+      target = 5;
+      suffix = 'visited';
+      break;
+    case 'globetrotter':
+      // Tracks unique regions cooked from
       current = (userStats.uniqueRegions || []).length;
       target = 5;
+      suffix = 'regions';
+      break;
+    case 'shopping_spree':
+      current = (userStats as any).shoppingItemsAdded || 0;
+      target = 50;
+      suffix = 'items';
+      break;
+    case 'pantry_master':
+      current = (userStats as any).pantryItemCount || 0;
+      target = 20;
+      suffix = 'items';
+      break;
+    case 'ai_chef_bestie':
+      current = (userStats as any).aiRecipesSaved || 0;
+      target = 5;
+      suffix = 'saved';
+      break;
+    case 'night_owl':
+      return { percent: 0, text: 'Cook after 9pm' };
+    case 'weekend_warrior':
+      return { percent: 0, text: 'Cook on Sat/Sun' };
+    case 'variety_king':
+      current = Object.keys(counts).length;
+      target = 5;
+      suffix = 'cats';
       break;
     case 'gordon_r':
       current = userStats.photosUploaded || 0;

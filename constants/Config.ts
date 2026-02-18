@@ -131,7 +131,12 @@ export const isFreeCountry = (countryName: string): boolean => {
   return APP_CONFIG.FREE_COUNTRIES.includes(countryName);
 };
 
-// Subscription Prices (EUR)
+export const PAYMENT_CONFIG = {
+  currency: 'USD',
+  currencySymbol: '$',
+};
+
+// Subscription Prices (in configured currency)
 export const SUBSCRIPTION_PRICES = {
   personal: {
     monthly: 5.99,

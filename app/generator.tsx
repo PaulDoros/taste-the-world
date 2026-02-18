@@ -81,22 +81,33 @@ export default function GeneratorScreen() {
 
       try {
         let jsonString = result;
-        // Clean up markdown code blocks if present
+
+        // 1. Extract JSON from markdown code blocks
         const markdownMatch =
           result.match(/```json\n([\s\S]*?)\n```/) ||
           result.match(/```\n([\s\S]*?)\n```/);
+
         if (markdownMatch) {
           jsonString = markdownMatch[1];
         } else {
-          // Fallback cleanup
+          // Fallback: simple strip of markdown tags
           jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '');
         }
+
+        // 2. Sanitize: Remove invalid control characters (0x00-0x1F)
+        // EXCEPT: \t (0x09), \n (0x0A), \r (0x0D)
+        // This fixes "JSON Parse error: U+0000 thru U+001F is not allowed in string"
+        jsonString = jsonString.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+
+        // 3. Trim whitespace
+        jsonString = jsonString.trim();
 
         const recipe = JSON.parse(jsonString);
         setGeneratedRecipe(recipe);
         haptics.success();
       } catch (e) {
         console.error('Failed to parse recipe JSON', e);
+        console.log('Raw JSON string:', result); // For debugging
         setError(t('generator_error_process'));
         haptics.error();
       }

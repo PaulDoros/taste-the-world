@@ -1,11 +1,11 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Premium Subscription Type
  */
-export type SubscriptionType = "free" | "monthly" | "yearly";
+export type SubscriptionType = 'free' | 'weekly' | 'monthly' | 'yearly';
 
 /**
  * Premium Store State
@@ -15,7 +15,7 @@ interface PremiumStore {
   isPremium: boolean;
   subscriptionStartDate: number | null;
   subscriptionEndDate: number | null;
-  
+
   // Actions
   setSubscription: (type: SubscriptionType) => void;
   cancelSubscription: () => void;
@@ -29,7 +29,7 @@ interface PremiumStore {
 export const usePremiumStore = create<PremiumStore>()(
   persist(
     (set, get) => ({
-      subscriptionType: "free",
+      subscriptionType: 'free',
       isPremium: false,
       subscriptionStartDate: null,
       subscriptionEndDate: null,
@@ -37,26 +37,27 @@ export const usePremiumStore = create<PremiumStore>()(
       // Set subscription
       setSubscription: (type: SubscriptionType) => {
         const now = Date.now();
+        const oneWeek = 1000 * 60 * 60 * 24 * 7;
         const oneMonth = 1000 * 60 * 60 * 24 * 30;
         const oneYear = 1000 * 60 * 60 * 24 * 365;
 
         set({
           subscriptionType: type,
-          isPremium: type !== "free",
+          isPremium: type !== 'free',
           subscriptionStartDate: now,
           subscriptionEndDate:
-            type === "monthly"
+            type === 'monthly'
               ? now + oneMonth
-              : type === "yearly"
-              ? now + oneYear
-              : null,
+              : type === 'yearly'
+                ? now + oneYear
+                : null,
         });
       },
 
       // Cancel subscription
       cancelSubscription: () => {
         set({
-          subscriptionType: "free",
+          subscriptionType: 'free',
           isPremium: false,
           subscriptionStartDate: null,
           subscriptionEndDate: null,
@@ -66,15 +67,18 @@ export const usePremiumStore = create<PremiumStore>()(
       // Check if subscription is still valid
       checkSubscriptionStatus: () => {
         const state = get();
-        
-        if (state.subscriptionType === "free") {
+
+        if (state.subscriptionType === 'free') {
           return false;
         }
 
-        if (state.subscriptionEndDate && Date.now() > state.subscriptionEndDate) {
+        if (
+          state.subscriptionEndDate &&
+          Date.now() > state.subscriptionEndDate
+        ) {
           // Subscription expired
           set({
-            subscriptionType: "free",
+            subscriptionType: 'free',
             isPremium: false,
             subscriptionStartDate: null,
             subscriptionEndDate: null,
@@ -86,9 +90,8 @@ export const usePremiumStore = create<PremiumStore>()(
       },
     }),
     {
-      name: "premium-storage",
+      name: 'premium-storage',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );
-

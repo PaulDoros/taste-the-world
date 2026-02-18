@@ -13,6 +13,7 @@ import { haptics } from '@/utils/haptics';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PantryItemCard } from '@/components/PantryItemCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,6 +37,7 @@ export default function PantryScreen() {
   const addPantryItem = useMutation(api.pantry.addPantryItem);
   const removePantryItem = useMutation(api.pantry.removePantryItem);
   const clearPantry = useMutation(api.pantry.clearPantry);
+  const logActivity = useMutation(api.gamification.logActivity);
 
   // Fetch pantry items
   const convexItems =
@@ -59,7 +61,7 @@ export default function PantryScreen() {
     a.displayName.localeCompare(b.displayName)
   );
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItemName.trim()) {
       haptics.warning();
       showError(t('pantry_add_error_name'));
@@ -67,12 +69,20 @@ export default function PantryScreen() {
     }
 
     if (user?._id) {
-      addPantryItem({
+      // Must await this so logActivity sees the new item!
+      await addPantryItem({
         userId: user._id as Id<'users'>,
         name: newItemName.trim(),
         displayName: newItemName.trim(),
         measure: newItemMeasure.trim() || t('common_as_needed'),
       });
+
+      // Log Activity
+      console.log('[PANTRY] Triggering logActivity for pantry_add');
+      await logActivity({
+        actionType: 'pantry_add',
+        token: token || undefined,
+      }).catch((e) => console.error('[PANTRY] logActivity failed:', e));
     }
     setNewItemName('');
     setNewItemMeasure('');
@@ -107,7 +117,11 @@ export default function PantryScreen() {
     >
       {/* Header */}
       <View
-        style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 12,
+        }}
       >
         <View
           style={{
@@ -141,59 +155,30 @@ export default function PantryScreen() {
           {/* Action Buttons */}
           {items.length > 0 && (
             <View style={{ gap: 8, flexDirection: 'row' }}>
-              <Pressable
+              <GlassButton
+                shadowRadius={2}
+                size="small"
+                icon="camera"
+                label={t('pantry_scan_button')}
                 onPress={() => {
                   haptics.medium();
-                  // @ts-ignore - router.push works with string path
                   router.push('/scan');
                 }}
-                style={({ pressed }) => ({
-                  backgroundColor: `${colors.tint}15`,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <FontAwesome5 name="camera" size={12} color={colors.tint} />
-                <Text
-                  style={{
-                    color: colors.tint,
-                    fontSize: 12,
-                    fontWeight: '600',
-                    marginLeft: 6,
-                  }}
-                >
-                  {t('pantry_scan_button')}
-                </Text>
-              </Pressable>
+                backgroundColor={colors.tint}
+                backgroundOpacity={0.15}
+                textColor={colors.tint}
+              />
 
-              <Pressable
+              <GlassButton
+                shadowRadius={2}
+                size="small"
+                icon="trash-alt"
+                label={t('pantry_clear_all_button')}
                 onPress={handleClearAll}
-                style={({ pressed }) => ({
-                  backgroundColor: `${colors.error}15`,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <FontAwesome5 name="trash-alt" size={12} color={colors.error} />
-                <Text
-                  style={{
-                    color: colors.error,
-                    fontSize: 12,
-                    fontWeight: '600',
-                    marginLeft: 6,
-                  }}
-                >
-                  {t('pantry_clear_all_button')}
-                </Text>
-              </Pressable>
+                backgroundColor={colors.error}
+                backgroundOpacity={0.15}
+                textColor={colors.error}
+              />
             </View>
           )}
         </View>
@@ -202,70 +187,35 @@ export default function PantryScreen() {
       {/* Add Item Button/Input */}
       <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
         {items.length > 0 && !showAddInput && (
-          <Pressable
-            onPress={() => {
-              haptics.medium();
-              // @ts-ignore - router.push works with string path
-              router.push('/generator');
-            }}
-            style={({ pressed }) => ({
-              backgroundColor: colors.tint,
-              marginBottom: 12,
-              paddingVertical: 14,
-              borderRadius: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: pressed ? 0.8 : 1,
-              shadowColor: colors.tint,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            })}
-          >
-            <FontAwesome5 name="magic" size={16} color="white" />
-            <Text
-              style={{
-                color: 'white',
-                fontWeight: '700',
-                fontSize: 16,
-                marginLeft: 8,
+          <View style={{ marginBottom: 12 }}>
+            <GlassButton
+              shadowRadius={2}
+              size="large"
+              icon="magic"
+              label={t('pantry_generate_recipe_button')}
+              onPress={() => {
+                haptics.medium();
+                router.push('/generator');
               }}
-            >
-              {t('pantry_generate_recipe_button')}
-            </Text>
-          </Pressable>
+              backgroundColor={colors.tint}
+              textColor="white"
+            />
+          </View>
         )}
 
         {!showAddInput ? (
-          <Pressable
+          <GlassButton
+            shadowRadius={2}
+            size="medium"
+            icon="plus"
+            label={t('pantry_add_item_button')}
             onPress={() => {
               haptics.light();
               setShowAddInput(true);
             }}
-            style={({ pressed }) => ({
-              backgroundColor: colors.tint,
-              paddingVertical: 14,
-              borderRadius: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <FontAwesome5 name="plus" size={16} color="white" />
-            <Text
-              style={{
-                color: 'white',
-                fontWeight: '700',
-                fontSize: 15,
-                marginLeft: 8,
-              }}
-            >
-              {t('pantry_add_item_button')}
-            </Text>
-          </Pressable>
+            backgroundColor={colors.tint}
+            textColor="white"
+          />
         ) : (
           <View
             style={{
@@ -316,53 +266,32 @@ export default function PantryScreen() {
               onSubmitEditing={handleAddItem}
             />
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Pressable
-                onPress={() => {
-                  haptics.light();
-                  setShowAddInput(false);
-                  setNewItemName('');
-                  setNewItemMeasure('');
-                }}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 12,
-                  backgroundColor: `${colors.text}10`,
-                  alignItems: 'center',
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: '600',
+              <View style={{ flex: 1 }}>
+                <GlassButton
+                  shadowRadius={2}
+                  size="small"
+                  label={t('pantry_cancel_button')}
+                  onPress={() => {
+                    haptics.light();
+                    setShowAddInput(false);
+                    setNewItemName('');
+                    setNewItemMeasure('');
                   }}
-                >
-                  {t('pantry_cancel_button')}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={handleAddItem}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 12,
-                  backgroundColor: colors.tint,
-                  alignItems: 'center',
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    color: 'white',
-                    fontSize: 14,
-                    fontWeight: '600',
-                  }}
-                >
-                  {t('pantry_add_button')}
-                </Text>
-              </Pressable>
+                  backgroundColor={colors.text}
+                  backgroundOpacity={0.1}
+                  textColor={colors.text}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <GlassButton
+                  shadowRadius={2}
+                  size="small"
+                  label={t('pantry_add_button')}
+                  onPress={handleAddItem}
+                  backgroundColor={colors.tint}
+                  textColor="white"
+                />
+              </View>
             </View>
           </View>
         )}
@@ -376,6 +305,12 @@ export default function PantryScreen() {
             icon="box"
             title={t('pantry_empty_title')}
             description={t('pantry_empty_desc')}
+            actionLabel={t('pantry_scan_button')}
+            onAction={() => {
+              haptics.medium();
+              // @ts-ignore
+              router.push('/scan');
+            }}
           />
         ) : (
           <FlatList
@@ -384,6 +319,7 @@ export default function PantryScreen() {
             contentContainerStyle={{
               paddingHorizontal: 16,
               paddingBottom: bottomPadding,
+              marginTop: 12,
             }}
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }) => (

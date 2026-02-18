@@ -1,9 +1,8 @@
-import { XStack, Button, Text } from 'tamagui';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { XStack } from 'tamagui';
+import { GlassButton } from '@/components/ui/GlassButton';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { haptics } from '@/utils/haptics';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useTheme } from 'tamagui';
 
 export interface ActionButton {
   label: string;
@@ -23,23 +22,30 @@ export interface ActionBarProps {
  * Used in shopping-list, history, and other screens with bulk actions
  */
 export function ActionBar({ actions, columns }: ActionBarProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
 
-  const getButtonColor = (variant?: string) => {
+  const getButtonProps = (variant?: string) => {
     switch (variant) {
       case 'danger':
-        return colors.error;
+        return {
+          backgroundColor: theme.red10?.get(),
+          textColor: 'white',
+          backgroundOpacity: 0.8,
+        };
       case 'secondary':
-        return '$bg2';
+        return {
+          backgroundColor: theme.color?.get(),
+          textColor: theme.color?.get(), // Text matches theme color
+          backgroundOpacity: 0.1,
+        };
       case 'primary':
       default:
-        return colors.tint;
+        return {
+          backgroundColor: theme.tint?.get(),
+          textColor: 'white',
+          backgroundOpacity: 1,
+        };
     }
-  };
-
-  const getTextColor = (variant?: string) => {
-    return variant === 'secondary' ? '$color' : 'white';
   };
 
   return (
@@ -49,47 +55,35 @@ export function ActionBar({ actions, columns }: ActionBarProps) {
       paddingHorizontal="$4"
       paddingVertical="$3"
     >
-      {actions.map((action, index) => (
-        <Animated.View
-          key={index}
-          entering={FadeInRight.delay(index * 50).springify()}
-          style={
-            columns
-              ? { flexBasis: `${100 / columns - 2}%`, flexGrow: 1 }
-              : { flex: actions.length === 1 ? 1 : undefined }
-          }
-        >
-          <Button
-            size="$3"
-            backgroundColor={getButtonColor(action.variant)}
-            disabled={action.disabled}
-            onPress={() => {
-              haptics.light();
-              action.onPress();
-            }}
-            icon={
-              action.icon ? (
-                <FontAwesome5
-                  name={action.icon}
-                  size={14}
-                  color={getTextColor(action.variant)}
-                />
-              ) : undefined
+      {actions.map((action, index) => {
+        const props = getButtonProps(action.variant);
+        return (
+          <Animated.View
+            key={index}
+            entering={FadeInRight.delay(index * 50).springify()}
+            style={
+              columns
+                ? { flexBasis: `${100 / columns - 2}%`, flexGrow: 1 }
+                : { flex: actions.length === 1 ? 1 : undefined }
             }
-            pressStyle={{ scale: 0.97, opacity: 0.9 }}
-            opacity={action.disabled ? 0.5 : 1}
-            borderRadius="$3"
           >
-            <Text
-              color={getTextColor(action.variant)}
-              fontWeight="600"
-              fontSize="$3"
-            >
-              {action.label}
-            </Text>
-          </Button>
-        </Animated.View>
-      ))}
+            <GlassButton
+              shadowRadius={5}
+              size="small"
+              label={action.label}
+              icon={action.icon}
+              onPress={() => {
+                haptics.light();
+                action.onPress();
+              }}
+              disabled={action.disabled}
+              backgroundColor={props.backgroundColor}
+              backgroundOpacity={props.backgroundOpacity}
+              textColor={props.textColor}
+            />
+          </Animated.View>
+        );
+      })}
     </XStack>
   );
 }
