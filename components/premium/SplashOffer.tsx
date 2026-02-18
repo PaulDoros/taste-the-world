@@ -28,7 +28,7 @@ import { GlassButton } from '@/components/ui/GlassButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { SUBSCRIPTION_PRICES } from '@/constants/Config';
-import { formatCurrency } from '@/utils/currency';
+import { useMemo } from 'react';
 
 interface SplashOfferProps {
   visible: boolean;
@@ -50,6 +50,41 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
     'personal'
   );
   const isPro = selectedTier === 'pro';
+
+  // Helper to find a package by tier + period using exact identifier
+  const findPackage = (
+    tier: 'personal' | 'pro',
+    period: 'weekly' | 'monthly' | 'yearly'
+  ) => {
+    const exactId = `${tier}_${period}`;
+    return offerings.find((o) => {
+      const id = o.product.identifier.toLowerCase();
+      // Match exact identifier (e.g. "personal_weekly", "pro_monthly")
+      // or with hyphens (e.g. "personal-weekly")
+      return (
+        id === exactId ||
+        id === exactId.replace('_', '-') ||
+        id.startsWith(exactId)
+      );
+    });
+  };
+
+  // Memoize current packages
+  const weeklyPkg = useMemo(
+    () => findPackage(selectedTier, 'weekly'),
+    [offerings, selectedTier]
+  );
+  const yearlyPkg = useMemo(
+    () => findPackage(selectedTier, 'yearly'),
+    [offerings, selectedTier]
+  );
+
+  // Fallback prices from config
+  const fallback = SUBSCRIPTION_PRICES[selectedTier];
+  const weeklyPrice =
+    weeklyPkg?.product.priceString ?? `$${fallback.weekly.toFixed(2)}`;
+  const yearlyPrice =
+    yearlyPkg?.product.priceString ?? `$${fallback.yearly.toFixed(2)}`;
 
   // Interaction State
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -124,16 +159,8 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
     setHasInteracted(true);
     haptics.selection();
 
-    // Find the correct package
-    // Identifiers: [tier]_[period], e.g. pro_yearly, personal_monthly (or just monthly/yearly for personal)
-    // Adjust logic based on your actual RevenueCat identifiers
-    const packageToBuy = offerings.find((p) => {
-      const id = p.product.identifier.toLowerCase();
-      const matchesPeriod = id.includes(type);
-      const matchesTier =
-        selectedTier === 'pro' ? id.includes('pro') : !id.includes('pro');
-      return matchesPeriod && matchesTier;
-    });
+    // Find the correct package using exact identifier matching
+    const packageToBuy = findPackage(selectedTier, type);
 
     if (packageToBuy) {
       await purchasePackage(packageToBuy);
@@ -142,7 +169,6 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
     } else {
       // Fallback or alert if no package found
       console.warn(`No package found for ${selectedTier} ${type}`);
-      // Optional: Alert.alert("Error", "Product not available");
     }
   };
 
@@ -169,7 +195,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
         'Standard Support',
       ];
 
-  const currentPricing = SUBSCRIPTION_PRICES[selectedTier];
+  // Dynamic pricing from offerings (fallback if not loaded)
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -365,12 +391,12 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                           {t('splash_weekly_pass')}
                         </Heading>
                         <Text color={colors.text} opacity={0.7} fontSize="$3">
-                          {isPro ? '$2.00' : '$1.00'} / week
+                          {weeklyPrice} / week
                         </Text>
                       </YStack>
                       <YStack alignItems="flex-end">
                         <Heading size="$6" color={accentColor}>
-                          {isPro ? '$2.00' : '$1.00'}
+                          {weeklyPrice}
                         </Heading>
                         <Text fontSize="$2" color={colors.text} opacity={0.7}>
                           / week
@@ -419,15 +445,15 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                             {t('pricing_yearly')}
                           </Heading>
                           <Text color={colors.text} opacity={0.7} fontSize="$3">
-                            {formatCurrency(currentPricing.yearly)} / year
+                            {yearlyPrice} / year
                           </Text>
                         </YStack>
                         <YStack alignItems="flex-end">
                           <Heading size="$6" color={accentColor}>
-                            {formatCurrency(currentPricing.yearly / 52)}
+                            {yearlyPrice}
                           </Heading>
                           <Text fontSize="$2" color={colors.text} opacity={0.7}>
-                            / week
+                            / year
                           </Text>
                         </YStack>
                       </XStack>
@@ -453,7 +479,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                         }}
                       >
                         <Text fontSize={10} fontWeight="800" color="#fff">
-                          {currentPricing.savings} OFF
+                          SAVE 30%
                         </Text>
                       </LinearGradient>
                     </GlassCard>

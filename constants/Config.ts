@@ -136,14 +136,16 @@ export const PAYMENT_CONFIG = {
   currencySymbol: '$',
 };
 
-// Subscription Prices (in configured currency)
+// Subscription Prices – fallback when RevenueCat offerings are unavailable
 export const SUBSCRIPTION_PRICES = {
   personal: {
+    weekly: 2.0,
     monthly: 5.99,
     yearly: 49.99,
     savings: '30%',
   },
   pro: {
+    weekly: 3.5,
     monthly: 9.99,
     yearly: 89.99,
     savings: '37%',

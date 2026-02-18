@@ -10,6 +10,10 @@ import { Alert, Platform, Linking } from 'react-native';
 
 export type SubscriptionType = 'free' | 'weekly' | 'monthly' | 'yearly';
 
+// Module-level lock — shared across ALL usePremium() instances
+let _lastIdentifiedId: string | null = null;
+let _isIdentifying = false;
+
 export function usePremium() {
   const { user, isPremium: isPremiumAuth, isAuthenticated, token } = useAuth();
   const updateSubscriptionMutation = useMutation(api.auth.updateSubscription);
@@ -39,17 +43,27 @@ export function usePremium() {
     setup();
   }, []);
 
-  // Identify user in RevenueCat
+  // Identify user in RevenueCat (module-level lock prevents concurrent calls)
   useEffect(() => {
     const identify = async () => {
       if (user && user._id) {
+        // Already identified with this ID or another call in progress
+        if (_lastIdentifiedId === user._id || _isIdentifying) return;
+
+        _isIdentifying = true;
         try {
           if (await Purchases.isConfigured()) {
             await Purchases.logIn(user._id);
+            _lastIdentifiedId = user._id;
           }
         } catch (e) {
           console.warn('RC Login Error:', e);
+        } finally {
+          _isIdentifying = false;
         }
+      } else if (!user && _lastIdentifiedId) {
+        // Reset on logout
+        _lastIdentifiedId = null;
       }
     };
     identify();
@@ -60,11 +74,8 @@ export function usePremium() {
       setIsProcessing(true);
       const { customerInfo } = await Purchases.purchasePackage(pack);
 
-      // Check if user is now entitled
-      if (
-        customerInfo.entitlements.active['premium_access'] !== undefined || // Personal
-        customerInfo.entitlements.active['pro_access'] !== undefined // Pro
-      ) {
+      // Check if user has ANY active entitlement
+      if (Object.keys(customerInfo.entitlements.active).length > 0) {
         // Sync with Convex
         // Ideally this happens via webhook, but we do optimistic update here
         await syncSubscriptionWithConvex(pack);
@@ -83,10 +94,7 @@ export function usePremium() {
   const restorePurchases = async () => {
     try {
       const customerInfo = await Purchases.restorePurchases();
-      if (
-        customerInfo.entitlements.active['premium_access'] !== undefined ||
-        customerInfo.entitlements.active['pro_access'] !== undefined
-      ) {
+      if (Object.keys(customerInfo.entitlements.active).length > 0) {
         Alert.alert('Success', 'Purchases restored successfully!');
         // In a real app we would determine which plan it was
         return true;

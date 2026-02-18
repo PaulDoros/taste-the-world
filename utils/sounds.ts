@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 
 const SOUND_MAP = {
   success: require('@/assets/sounds/success.wav'),
@@ -23,20 +23,48 @@ const SOUND_MAP = {
 
 export type SoundType = keyof typeof SOUND_MAP;
 
+/**
+ * React hook to play short UI sounds.
+ * Must be called from inside a React component.
+ *
+ * Usage:
+ *   const playSound = useSoundPlayer();
+ *   playSound('success');
+ */
+export function useSoundPlayer() {
+  // We can't dynamically switch sources, so we create a simple wrapper
+  // that creates a player on-the-fly for the requested sound.
+  return (type: SoundType) => {
+    playSound(type);
+  };
+}
+
+/**
+ * Play a short UI sound. Can be called from anywhere.
+ * Uses the global Audio API from expo-audio.
+ */
 export const playSound = async (type: SoundType) => {
   try {
     const soundSource = SOUND_MAP[type];
     if (soundSource) {
-      const { sound } = await Audio.Sound.createAsync(soundSource);
-      // Play and forget - careful with memory leaks on repeatedly creating sounds without unloading,
-      // but for short UI sounds usually fine or auto-unloads.
-      // Better pattern:
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
+      // expo-audio: createAudioPlayer for non-component contexts
+      const { createAudioPlayer } = await import('expo-audio');
+      const player = createAudioPlayer(soundSource);
+      player.play();
+      // Auto-cleanup after playback finishes
+      const checkInterval = setInterval(() => {
+        if (!player.playing) {
+          clearInterval(checkInterval);
+          player.remove();
         }
-      });
-      await sound.playAsync();
+      }, 500);
+      // Safety cleanup after 10s max
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        try {
+          player.remove();
+        } catch {}
+      }, 10000);
     }
   } catch (error) {
     console.log('[Sound] Failed to play sound', error);

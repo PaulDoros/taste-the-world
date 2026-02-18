@@ -74,7 +74,9 @@ export const unstable_settings = {
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might trigger some race conditions, ignore them */
+});
 
 import Purchases from 'react-native-purchases';
 
@@ -95,7 +97,9 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded) {
       // Hide native splash immediately so we see our custom Lottie view
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore error if splash screen is already hidden
+      });
 
       configureNotifications(); // Setup notifications
 
@@ -141,7 +145,7 @@ export default function RootLayout() {
     <ConvexProvider client={convex}>
       <AppThemeProvider>
         {/* Main App */}
-        <RootLayoutNav />
+        {isReady && <RootLayoutNav />}
 
         {/* Custom Lottie Splash Overlay */}
         {!splashAnimationFinished && (

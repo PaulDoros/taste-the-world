@@ -12,7 +12,7 @@ import Animated, {
   withSpring,
   interpolateColor,
 } from 'react-native-reanimated';
-import { PREMIUM_BENEFITS } from '@/constants/Config';
+import { PREMIUM_BENEFITS, SUBSCRIPTION_PRICES } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
 import { gradients } from '@/theme/gradients';
 import { Colors } from '@/constants/Colors';
@@ -143,8 +143,38 @@ export const PricingSection = ({
     let identifier = selectedTier === 'pro' ? 'pro_' : 'personal_';
     identifier += selectedSubscription; // monthly or yearly
 
-    return offerings.find((o) => o.product.identifier === identifier);
+    return offerings.find((o) => {
+      const id = o.product.identifier.toLowerCase();
+      return (
+        id === identifier ||
+        id === identifier.replace('_', '-') ||
+        id.startsWith(identifier)
+      );
+    });
   }, [offerings, selectedTier, selectedSubscription]);
+
+  // Fallback prices from config
+  const fallbackPrices = SUBSCRIPTION_PRICES[selectedTier];
+
+  // Use exact matching for price lookups too
+  const findByExactId = (tier: string, period: string) => {
+    const exactId = `${tier}_${period}`;
+    return offerings.find((o) => {
+      const id = o.product.identifier.toLowerCase();
+      return (
+        id === exactId ||
+        id === exactId.replace('_', '-') ||
+        id.startsWith(exactId)
+      );
+    });
+  };
+
+  const monthlyPrice =
+    findByExactId(selectedTier, 'monthly')?.product.priceString ??
+    `$${fallbackPrices.monthly.toFixed(2)}`;
+  const yearlyPrice =
+    findByExactId(selectedTier, 'yearly')?.product.priceString ??
+    `$${fallbackPrices.yearly.toFixed(2)}`;
 
   // Memoize benefits filtering
   const filteredBenefits = useMemo(() => {
@@ -247,16 +277,7 @@ export const PricingSection = ({
     }
   };
 
-  if (!isReady) {
-    return (
-      <YStack padding="$5" alignItems="center" justifyContent="center">
-        <ActivityIndicator size="small" color={colors.tint} />
-        <Text fontSize="$2" color="$gray9" marginTop="$2">
-          {t('pricing_loading')}
-        </Text>
-      </YStack>
-    );
-  }
+  // Note: Removed isReady loading gate — fallback prices display immediately
 
   return (
     <YStack gap="$5" marginBottom="$6">
@@ -461,12 +482,7 @@ export const PricingSection = ({
                     fontWeight="800"
                     color={!isYearly ? '#ffffff' : colors.text}
                   >
-                    {/* HACK: We find the monthly offering for the current tier */}
-                    {offerings.find(
-                      (o) =>
-                        o.product.identifier ===
-                        (isPro ? 'pro_monthly' : 'personal_monthly')
-                    )?.product.priceString || '...'}
+                    {monthlyPrice}
                   </Text>
                 </YStack>
               </AnimatedPricingCard>
@@ -528,11 +544,7 @@ export const PricingSection = ({
                     fontWeight="800"
                     color={isYearly ? '#ffffff' : colors.text}
                   >
-                    {offerings.find(
-                      (o) =>
-                        o.product.identifier ===
-                        (isPro ? 'pro_yearly' : 'personal_yearly')
-                    )?.product.priceString || '...'}
+                    {yearlyPrice}
                   </Text>
                 </YStack>
               </AnimatedPricingCard>
@@ -545,13 +557,15 @@ export const PricingSection = ({
               label={
                 currentPackage
                   ? `${t('pricing_get_premium').toUpperCase()} ${currentPackage.product.priceString}`
-                  : t('pricing_select_plan')
+                  : `${t('pricing_get_premium').toUpperCase()} ${isYearly ? yearlyPrice : monthlyPrice}`
               }
               onPress={() => {
                 haptics.success();
                 // Pass the selected package to parent upgrade handler
                 if (currentPackage) {
                   onUpgrade(currentPackage);
+                } else {
+                  onUpgrade(); // trigger without package - parent handles fallback
                 }
               }}
               size="large"
@@ -559,7 +573,6 @@ export const PricingSection = ({
               backgroundColor={isPro ? PRO_COLOR : colors.tint}
               textColor="white"
               backgroundOpacity={1}
-              disabled={!currentPackage}
             />
           </Animated.View>
 

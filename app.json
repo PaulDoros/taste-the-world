@@ -35,13 +35,6 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "transpilePackages": [
-      "convex",
-      "nativewind",
-      "react-native-reanimated",
-      "react-native-markdown-display",
-      "markdown-it"
-    ],
     "plugins": [
       "expo-router",
       [
@@ -72,7 +65,8 @@
           "color": "#ffffff",
           "sounds": ["./assets/sounds/notification.wav"]
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true
