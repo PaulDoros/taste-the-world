@@ -17,78 +17,132 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const PRIVACY_POLICY = `
 # Privacy Policy
 
-**Last Updated:** February 15, 2026
+This privacy policy applies to the Taste The World app (hereby referred to as "Application") for mobile devices that was created by Paul Doros (hereby referred to as "Service Provider") as a Freemium service. This service is intended for use "AS IS".
 
-## 1. Introduction
-"Taste the World" ("we," "our," or "us") respects your privacy. This Privacy Policy describes how we collect, use, process, and disclose your information, including personal information, in conjunction with your access to and use of our mobile application.
+**Information Collection and Use**
 
-## 2. Information We Collect
+The Application collects information when you download and use it. This information may include information such as
 
-### 2.1 Information You Give to Us
-- **Account Information:** When you sign up, we collect your email address, name, and profile photo.
-- **User Content:** Ingredients, recipes, photos, meal preferences, and other content you generate or upload.
+*   Your device's Internet Protocol address (e.g. IP address)
+*   The pages of the Application that you visit, the time and date of your visit, the time spent on those pages
+*   The time spent on the Application
+*   The operating system you use on your mobile device
 
-### 2.2 Information Automatically Collected
-- **Usage Data:** Pages or content you view, your searches for recipes/travel, features you use, and timestamps.
-- **Device Information:** Device model, operating system, unique device identifiers (e.g., IDFA/AAID), and mobile network information.
-- **Location Information:** General location data (IP address) to provide localized content.
+The Application does not gather precise information about the location of your mobile device.
 
-## 3. How We Use Information
-We use your information to:
-- Provide, improve, and develop the App (e.g., generating AI recipes).
-- Provide, personalize, measure, and improve our advertising and marketing.
-- Process payments and manage subscriptions via RevenueCat.
+The Application collects your device's location, which helps the Service Provider determine your approximate geographical location and make use of in below ways:
 
-## 4. Sharing & Disclosure
-We may share information with service providers to help us operate our business:
-- **Convex:** Backend database and serverless functions.
-- **Google Gemini / OpenAI:** Artificial Intelligence services.
-- **RevenueCat:** In-app purchase and subscription infrastructure.
-- **Google AdMob:** Advertising services.
+*   Geolocation Services: The Service Provider utilizes location data to provide features such as personalized content, relevant recommendations, and location-based services.
+*   Analytics and Improvements: Aggregated and anonymized location data helps the Service Provider to analyze user behavior, identify trends, and improve the overall performance and functionality of the Application.
+*   Third-Party Services: Periodically, the Service Provider may transmit anonymized location data to external services. These services assist them in enhancing the Application and optimizing their offerings.
 
-## 5. Your Rights (GDPR & CCPA)
-Depending on your location, you may have the right to:
-- **Access:** Request a copy of your data.
-- **Delete:** Request deletion of your account and data.
-- **Opt-out:** Opt-out of marketing communications.
+The Service Provider may use the information you provided to contact you from time to time to provide you with important information, required notices and marketing promotions.
 
-To exercise these rights, please contact us via the App settings.
+For a better experience, while using the Application, the Service Provider may require you to provide us with certain personally identifiable information, including but not limited to Email Address, User ID, Device ID, Advertising Data, Purchase History, Photos, Crash Data, Approximate Location. The information that the Service Provider request will be retained by them and used as described in this privacy policy.
 
-## 6. Data Security
-We implement appropriate technical and organizational measures to protect your personal data.
+**Third Party Access**
 
-## 7. Contact Us
-**support@tastetheworld.app**
+Only aggregated, anonymized data is periodically transmitted to external services to aid the Service Provider in improving the Application and their service. The Service Provider may share your information with third parties in the ways that are described in this privacy statement.
+
+Please note that the Application utilizes third-party services that have their own Privacy Policy about handling data. Below are the links to the Privacy Policy of the third-party service providers used by the Application:
+
+*   [Google Play Services](https://www.google.com/policies/privacy/)
+*   [AdMob](https://support.google.com/admob/answer/6128543?hl=en)
+*   [Expo](https://expo.io/privacy)
+*   [RevenueCat](https://www.revenuecat.com/privacy)
+
+The Service Provider may disclose User Provided and Automatically Collected Information:
+
+*   as required by law, such as to comply with a subpoena, or similar legal process;
+*   when they believe in good faith that disclosure is necessary to protect their rights, protect your safety or the safety of others, investigate fraud, or respond to a government request;
+*   with their trusted services providers who work on their behalf, do not have an independent use of the information we disclose to them, and have agreed to adhere to the rules set forth in this privacy statement.
+
+**Use of Artificial Intelligence**
+
+The Application uses Artificial Intelligence (AI) technologies to enhance user experience and provide certain features. The AI components may process user data to deliver personalized content, recommendations, or automated functionalities. All AI processing is performed in accordance with this privacy policy and applicable laws. If you have questions about the AI features or data processing, please contact the Service Provider.
+
+**Opt-Out Rights**
+
+You can stop all collection of information by the Application easily by uninstalling it. You may use the standard uninstall processes as may be available as part of your mobile device or via the mobile application marketplace or network.
+
+**Data Retention Policy**
+
+The Service Provider will retain User Provided data for as long as you use the Application and for a reasonable time thereafter. If you'd like them to delete User Provided Data that you have provided via the Application, please contact them at dorospaul26@gmail.com and they will respond in a reasonable time.
+
+**Children**
+
+The Service Provider does not use the Application to knowingly solicit data from or market to children under the age of 13.
+
+The Application does not address anyone under the age of 13. The Service Provider does not knowingly collect personally identifiable information from children under 13 years of age. In the case the Service Provider discover that a child under 13 has provided personal information, the Service Provider will immediately delete this from their servers. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact the Service Provider (dorospaul26@gmail.com) so that they will be able to take the necessary actions.
+
+**Security**
+
+The Service Provider is concerned about safeguarding the confidentiality of your information. The Service Provider provides physical, electronic, and procedural safeguards to protect information the Service Provider processes and maintains.
+
+**Changes**
+
+This Privacy Policy may be updated from time to time for any reason. The Service Provider will notify you of any changes to the Privacy Policy by updating this page with the new Privacy Policy. You are advised to consult this Privacy Policy regularly for any changes, as continued use is deemed approval of all changes.
+
+This privacy policy is effective as of 2026-02-18
+
+**Your Consent**
+
+By using the Application, you are consenting to the processing of your information as set forth in this Privacy Policy now and as amended by us.
+
+**Contact Us**
+
+If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at dorospaul26@gmail.com.
+
+---
+
+This privacy policy page was generated by [App Privacy Policy Generator](https://app-privacy-policy-generator.nisrulz.com/)
 `;
 
 const TERMS_CONDITIONS = `
-# Terms and Conditions (EULA)
+# Terms & Conditions
 
-**Last Updated:** February 15, 2026
+These terms and conditions apply to the Taste The World app (hereby referred to as "Application") for mobile devices that was created by Paul Doros (hereby referred to as "Service Provider") as a Freemium service.
 
-## 1. Acknowledgment
-These Terms cover your use of "Taste the World". By creating an account or using the App, you agree to these terms.
+Upon downloading or utilizing the Application, you are automatically agreeing to the following terms. It is strongly advised that you thoroughly read and understand these terms prior to using the Application.
 
-## 2. Artificial Intelligence (AI) Disclaimer
-- **No Professional Advice:** The App uses AI to generate recipes, nutritional info, and travel advice. This is for informational purposes only.
-- **Accuracy:** AI may generate incorrect or dangerous information. **ALWAYS use common sense and verify food safety.**
-- **Allergies:** You are solely responsible for checking ingredients for allergies.
+Unauthorized copying, modification of the Application, any part of the Application, or our trademarks is strictly prohibited. Any attempts to extract the source code of the Application, translate the Application into other languages, or create derivative versions are not permitted. All trademarks, copyrights, database rights, and other intellectual property rights related to the Application remain the property of the Service Provider.
 
-## 3. Subscriptions & Payments
-- **Billing:** Subscriptions ("Premium") are billed to your Apple ID or Google Play Account.
-- **Auto-Renewal:** Subscriptions automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period.
-- **Cancellation:** Manage and cancel subscriptions in your Account Settings on the App Store / Play Store.
-- **Refunds:** Directed to Apple or Google.
+The Service Provider is dedicated to ensuring that the Application is as beneficial and efficient as possible. As such, they reserve the right to modify the Application or charge for their services at any time and for any reason. The Service Provider assures you that any charges for the Application or its services will be clearly communicated to you.
 
-## 4. User Content
-- **License:** By uploading content, you grant us a non-exclusive license to use it in connection with the App.
-- **Prohibited:** Illegal or offensive content is prohibited.
+The Application stores and processes personal data that you have provided to the Service Provider in order to provide the Service. It is your responsibility to maintain the security of your phone and access to the Application. The Service Provider strongly advise against jailbreaking or rooting your phone, which involves removing software restrictions and limitations imposed by the official operating system of your device. Such actions could expose your phone to malware, viruses, malicious programs, compromise your phone's security features, and may result in the Application not functioning correctly or at all.
 
-## 5. Limitation of Liability
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, "TASTE THE WORLD" SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.
+Please note that the Application utilizes third-party services that have their own Terms and Conditions. Below are the links to the Terms and Conditions of the third-party service providers used by the Application:
 
-## 6. Contact Us
-support@tastetheworld.app
+*   [Google Play Services](https://policies.google.com/terms)
+*   [AdMob](https://developers.google.com/admob/terms)
+*   [Expo](https://expo.io/terms)
+*   [RevenueCat](https://www.revenuecat.com/terms)
+
+Please be aware that the Service Provider does not assume responsibility for certain aspects. Some functions of the Application require an active internet connection, which can be Wi-Fi or provided by your mobile network provider. The Service Provider cannot be held responsible if the Application does not function at full capacity due to lack of access to Wi-Fi or if you have exhausted your data allowance.
+
+If you are using the application outside of a Wi-Fi area, please be aware that your mobile network provider's agreement terms still apply. Consequently, you may incur charges from your mobile provider for data usage during the connection to the application, or other third-party charges. By using the application, you accept responsibility for any such charges, including roaming data charges if you use the application outside of your home territory (i.e., region or country) without disabling data roaming. If you are not the bill payer for the device on which you are using the application, they assume that you have obtained permission from the bill payer.
+
+Similarly, the Service Provider cannot always assume responsibility for your usage of the application. For instance, it is your responsibility to ensure that your device remains charged. If your device runs out of battery and you are unable to access the Service, the Service Provider cannot be held responsible.
+
+In terms of the Service Provider's responsibility for your use of the application, it is important to note that while they strive to ensure that it is updated and accurate at all times, they do rely on third parties to provide information to them so that they can make it available to you. The Service Provider accepts no liability for any loss, direct or indirect, that you experience as a result of relying entirely on this functionality of the application.
+
+The Application incorporates Artificial Intelligence (AI) technologies to provide certain features or services. By using the Application, you acknowledge and agree that AI may be used to process data and deliver functionalities. The Service Provider ensures that all AI usage complies with applicable laws and is designed to benefit the user experience.
+
+The Service Provider may wish to update the application at some point. The application is currently available as per the requirements for the operating system (and for any additional systems they decide to extend the availability of the application to) may change, and you will need to download the updates if you want to continue using the application. The Service Provider does not guarantee that it will always update the application so that it is relevant to you and/or compatible with the particular operating system version installed on your device. However, you agree to always accept updates to the application when offered to you. The Service Provider may also wish to cease providing the application and may terminate its use at any time without providing termination notice to you. Unless they inform you otherwise, upon any termination, (a) the rights and licenses granted to you in these terms will end; (b) you must cease using the application, and (if necessary) delete it from your device.
+
+**Changes to These Terms and Conditions**
+
+The Service Provider may periodically update their Terms and Conditions. Therefore, you are advised to review this page regularly for any changes. The Service Provider will notify you of any changes by posting the new Terms and Conditions on this page.
+
+These terms and conditions are effective as of 2026-02-18
+
+**Contact Us**
+
+If you have any questions or suggestions about the Terms and Conditions, please do not hesitate to contact the Service Provider at dorospaul26@gmail.com.
+
+---
+
+This Terms and Conditions page was generated by [App Privacy Policy Generator](https://app-privacy-policy-generator.nisrulz.com/)
 `;
 
 export default function LegalScreen() {
