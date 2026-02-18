@@ -12,9 +12,11 @@ type FeatureType =
   | 'planner';
 
 export const useTierLimit = () => {
-  const usageStatus = useQuery(api.monetization.getUsageStatus);
+  const { user, token } = useAuthStore();
+  const usageStatus = useQuery(api.monetization.getUsageStatus, {
+    token: token || undefined,
+  });
   const incrementUsageMutation = useMutation(api.monetization.incrementUsage);
-  const { user } = useAuthStore();
 
   const isLoading = usageStatus === undefined;
 
@@ -98,11 +100,11 @@ export const useTierLimit = () => {
   };
 
   const incrementAiUsage = async () => {
-    await incrementUsageMutation({ type: 'ai' });
+    await incrementUsageMutation({ type: 'ai', token: token || undefined });
   };
 
   const incrementTravelUsage = async () => {
-    await incrementUsageMutation({ type: 'travel' });
+    await incrementUsageMutation({ type: 'travel', token: token || undefined });
   };
 
   return {

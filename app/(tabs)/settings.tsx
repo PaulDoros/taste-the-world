@@ -230,6 +230,7 @@ export default function SettingsScreen() {
     subscriptionType,
     isPremium,
     cancelSubscription,
+    offerings,
     purchasePackage,
     restorePurchases,
     isReady,
@@ -340,7 +341,23 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleUpgrade = async (pack?: any) => {
-    if (!pack) return;
+    if (!pack) {
+      haptics.error();
+      if (!offerings || offerings.length === 0) {
+        Alert.alert(
+          'Store Error',
+          'No subscription offerings were found from the store. Please check your internet connection or try again later.'
+        );
+      } else {
+        const ids = offerings.map((o) => o.product.identifier).join(', ');
+        Alert.alert(
+          'Package Not Found',
+          `The selected subscription package could not be matched.\n\nFound IDs: ${ids}\n\nWanted: ${selectedTier}_${selectedSubscription}`
+        );
+      }
+      return;
+    }
+
     setLoadingPurchase(true);
     haptics.selection();
     try {
@@ -638,62 +655,66 @@ export default function SettingsScreen() {
                   </XStack>
 
                   {/* Premium Status Banner */}
-                  <GlassCard
-                    intensity={20}
-                    borderRadius={16}
-                    backgroundColor={
-                      colorScheme === 'dark' ? '#fbbf24' : '#F59E0B'
-                    }
-                    backgroundOpacity={0.1}
-                    style={{
-                      marginBottom: 20,
-                      padding: 12,
-                      borderWidth: 1,
-                      borderColor:
-                        colorScheme === 'dark'
-                          ? 'rgba(251, 191, 36, 0.3)'
-                          : 'rgba(245, 158, 11, 0.2)',
-                    }}
-                  >
-                    <XStack alignItems="center" gap="$3">
-                      <View
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          backgroundColor:
-                            colorScheme === 'dark'
-                              ? 'rgba(251, 191, 36, 0.2)'
-                              : 'rgba(245, 158, 11, 0.2)',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <FontAwesome5
-                          name="crown"
-                          size={20}
-                          color={colorScheme === 'dark' ? '#fbbf24' : '#d97706'}
-                        />
-                      </View>
-                      <YStack flex={1}>
-                        <Text
-                          fontSize="$4"
-                          fontWeight="700"
-                          color={colors.text}
+                  {isPremium && (
+                    <GlassCard
+                      intensity={20}
+                      borderRadius={16}
+                      backgroundColor={
+                        colorScheme === 'dark' ? '#fbbf24' : '#F59E0B'
+                      }
+                      backgroundOpacity={0.1}
+                      style={{
+                        marginBottom: 20,
+                        padding: 12,
+                        borderWidth: 1,
+                        borderColor:
+                          colorScheme === 'dark'
+                            ? 'rgba(251, 191, 36, 0.3)'
+                            : 'rgba(245, 158, 11, 0.2)',
+                      }}
+                    >
+                      <XStack alignItems="center" gap="$3">
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor:
+                              colorScheme === 'dark'
+                                ? 'rgba(251, 191, 36, 0.2)'
+                                : 'rgba(245, 158, 11, 0.2)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
                         >
-                          {t('settings_premium_active')}
-                        </Text>
-                        <Text fontSize="$3" opacity={0.7} color={colors.text}>
-                          {t('settings_plan_desc', {
-                            plan:
-                              subscriptionType === 'monthly'
-                                ? t('common_monthly')
-                                : t('common_yearly'),
-                          })}
-                        </Text>
-                      </YStack>
-                    </XStack>
-                  </GlassCard>
+                          <FontAwesome5
+                            name="crown"
+                            size={20}
+                            color={
+                              colorScheme === 'dark' ? '#fbbf24' : '#d97706'
+                            }
+                          />
+                        </View>
+                        <YStack flex={1}>
+                          <Text
+                            fontSize="$4"
+                            fontWeight="700"
+                            color={colors.text}
+                          >
+                            {t('settings_premium_active')}
+                          </Text>
+                          <Text fontSize="$3" opacity={0.7} color={colors.text}>
+                            {t('settings_plan_desc', {
+                              plan:
+                                subscriptionType === 'monthly'
+                                  ? t('common_monthly')
+                                  : t('common_yearly'),
+                            })}
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </GlassCard>
+                  )}
 
                   <GlassButton
                     shadowRadius={2}

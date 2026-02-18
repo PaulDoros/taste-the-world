@@ -48,31 +48,37 @@ export const unlockCountry = mutation({
 });
 
 export const incrementUsage = mutation({
-  args: { type: v.union(v.literal('ai'), v.literal('travel')) },
+  args: {
+    type: v.union(v.literal('ai'), v.literal('travel')),
+    token: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Unauthenticated');
+    let user = null;
 
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', (q) => q.eq('email', identity.email!))
-      .first();
+    if (args.token) {
+      const session = await ctx.db
+        .query('sessions')
+        .withIndex('by_token', (q) => q.eq('token', args.token!))
+        .first();
 
-    if (!user) throw new Error('User not found');
+      if (session && Date.now() < session.expiresAt) {
+        user = await ctx.db.get(session.userId);
+      }
+    }
+
+    if (!user) throw new Error('Unauthenticated');
 
     const now = Date.now();
     const lastReset = user.lastAiReset || 0;
-    const isNewDay = now - lastReset > 24 * 60 * 60 * 1000; // Simple 24h check
+    const isNewDay = now - lastReset > 24 * 60 * 60 * 1000;
 
     if (isNewDay) {
-      // Reset count and increment to 1
       await ctx.db.patch(user._id, {
         dailyAiCount: args.type === 'ai' ? 1 : 0,
         dailyTravelCount: args.type === 'travel' ? 1 : 0,
         lastAiReset: now,
       });
     } else {
-      // Increment existing count
       if (args.type === 'ai') {
         await ctx.db.patch(user._id, {
           dailyAiCount: (user.dailyAiCount || 0) + 1,
@@ -89,22 +95,26 @@ export const incrementUsage = mutation({
 });
 
 export const getUsageStatus = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
+  args: { token: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    let user = null;
 
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', (q) => q.eq('email', identity.email!))
-      .first();
+    if (args.token) {
+      const session = await ctx.db
+        .query('sessions')
+        .withIndex('by_token', (q) => q.eq('token', args.token!))
+        .first();
+
+      if (session && Date.now() < session.expiresAt) {
+        user = await ctx.db.get(session.userId);
+      }
+    }
 
     if (!user) return null;
 
     const tier = (user.tier as 'free' | 'personal' | 'pro' | 'guest') || 'free';
     const limits = TIER_LIMITS[tier];
 
-    // Check if reset needed (for display accuracy)
     const now = Date.now();
     const lastReset = user.lastAiReset || 0;
     const isNewDay = now - lastReset > 24 * 60 * 60 * 1000;

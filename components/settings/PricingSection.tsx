@@ -133,24 +133,43 @@ export const PricingSection = ({
   const currentPackage = useMemo(() => {
     if (!offerings.length) return null;
 
-    // Construct identifier based on selection
-    // e.g. "pro_yearly" or "personal_monthly" (assuming "monthly" is default for personal)
-    // The user said identifiers are:
-    // weekly, monthly, yearly
-    // pro_weekly, pro_monthly, pro_yearly
-    // personal_weekly, personal_monthly, personal_yearly
+    const term = selectedSubscription.toLowerCase();
+    const tier = selectedTier.toLowerCase();
 
-    let identifier = selectedTier === 'pro' ? 'pro_' : 'personal_';
-    identifier += selectedSubscription; // monthly or yearly
+    // 1. Try exact matches first (personal_monthly, personal-monthly, pro_yearly, etc.)
+    const compoundId = `${tier}_${term}`;
+    const compoundIdAlt = `${tier}-${term}`;
 
-    return offerings.find((o) => {
+    const match = offerings.find((o) => {
       const id = o.product.identifier.toLowerCase();
       return (
-        id === identifier ||
-        id === identifier.replace('_', '-') ||
-        id.startsWith(identifier)
+        id === compoundId ||
+        id === compoundIdAlt ||
+        id.startsWith(compoundId) ||
+        id.startsWith(compoundIdAlt)
       );
     });
+
+    if (match) return match;
+
+    // 2. Fallback for simple identifiers if only one set exists
+    // If we are looking for 'pro' and see 'pro_monthly', that's handled above.
+    // If we are looking for 'personal' and only 'monthly' exists, pick it.
+    if (tier === 'personal' || tier === 'free') {
+      const simpleMatch = offerings.find(
+        (o) => o.product.identifier.toLowerCase() === term
+      );
+      if (simpleMatch) return simpleMatch;
+    }
+
+    // 3. Last resort: fuzzy match
+    return (
+      offerings.find((o) => {
+        const id = o.product.identifier.toLowerCase();
+        return id.includes(tier) && id.includes(term);
+      }) ||
+      offerings.find((o) => o.product.identifier.toLowerCase().includes(term))
+    );
   }, [offerings, selectedTier, selectedSubscription]);
 
   // Fallback prices from config
@@ -158,15 +177,22 @@ export const PricingSection = ({
 
   // Use exact matching for price lookups too
   const findByExactId = (tier: string, period: string) => {
-    const exactId = `${tier}_${period}`;
-    return offerings.find((o) => {
-      const id = o.product.identifier.toLowerCase();
-      return (
-        id === exactId ||
-        id === exactId.replace('_', '-') ||
-        id.startsWith(exactId)
-      );
-    });
+    const term = period.toLowerCase();
+    const tierName = tier.toLowerCase();
+    const compoundId = `${tierName}_${term}`;
+    const compoundIdAlt = `${tierName}-${term}`;
+
+    return (
+      offerings.find((o) => {
+        const id = o.product.identifier.toLowerCase();
+        return (
+          id === compoundId ||
+          id === compoundIdAlt ||
+          id.startsWith(compoundId) ||
+          id.startsWith(compoundIdAlt)
+        );
+      }) || offerings.find((o) => o.product.identifier.toLowerCase() === term)
+    );
   };
 
   const monthlyPrice =

@@ -70,18 +70,27 @@ export function usePremium() {
   }, [user?._id]);
 
   const purchasePackage = async (pack: PurchasesPackage) => {
+    console.log(
+      '[usePremium] Initiating purchase for:',
+      pack.product.identifier
+    );
     try {
       setIsProcessing(true);
       const { customerInfo } = await Purchases.purchasePackage(pack);
+      console.log(
+        '[usePremium] Purchase result:',
+        customerInfo.entitlements.active
+      );
 
       // Check if user has ANY active entitlement
       if (Object.keys(customerInfo.entitlements.active).length > 0) {
         // Sync with Convex
-        // Ideally this happens via webhook, but we do optimistic update here
+        console.log('[usePremium] Syncing with Convex...');
         await syncSubscriptionWithConvex(pack);
         return true;
       }
     } catch (e: any) {
+      console.warn('[usePremium] Purchase error:', e);
       if (!e.userCancelled) {
         Alert.alert('Error', e.message);
       }
