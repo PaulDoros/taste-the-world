@@ -5,6 +5,7 @@ import {
   View,
   Pressable,
   LayoutChangeEvent,
+  Alert,
 } from 'react-native';
 import { YStack, XStack, Heading, Text, Button, ScrollView } from 'tamagui';
 import Animated, {
@@ -51,35 +52,41 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
   );
   const isPro = selectedTier === 'pro';
 
-  // Helper to find a package by tier + period using exact identifier
+  // Find a package by tier + period — computed fresh every render
   const findPackage = (
     tier: 'personal' | 'pro',
     period: 'weekly' | 'monthly' | 'yearly'
   ) => {
-    const exactId = `${tier}_${period}`;
-    return offerings.find((o) => {
+    const compoundId = `${tier}_${period}`;
+    const compoundIdAlt = `${tier}-${period}`;
+
+    // 1. Exact compound match
+    const exact = offerings.find((o) => {
       const id = o.product.identifier.toLowerCase();
-      // Match exact identifier (e.g. "personal_weekly", "pro_monthly")
-      // or with hyphens (e.g. "personal-weekly")
       return (
-        id === exactId ||
-        id === exactId.replace('_', '-') ||
-        id.startsWith(exactId)
+        id === compoundId ||
+        id === compoundIdAlt ||
+        id.startsWith(compoundId) ||
+        id.startsWith(compoundIdAlt)
       );
     });
+    if (exact) return exact;
+
+    // 2. Fuzzy: contains both the tier and period
+    const fuzzy = offerings.find((o) => {
+      const id = o.product.identifier.toLowerCase();
+      return id.includes(tier) && id.includes(period);
+    });
+    if (fuzzy) return fuzzy;
+
+    return null;
   };
 
-  // Memoize current packages
-  const weeklyPkg = useMemo(
-    () => findPackage(selectedTier, 'weekly'),
-    [offerings, selectedTier]
-  );
-  const yearlyPkg = useMemo(
-    () => findPackage(selectedTier, 'yearly'),
-    [offerings, selectedTier]
-  );
+  // Derive current packages directly (no memoization — always fresh)
+  const weeklyPkg = findPackage(selectedTier, 'weekly');
+  const yearlyPkg = findPackage(selectedTier, 'yearly');
 
-  // Fallback prices from config
+  // Fallback prices from config — these also change per tier
   const fallback = SUBSCRIPTION_PRICES[selectedTier];
   const weeklyPrice =
     weeklyPkg?.product.priceString ?? `$${fallback.weekly.toFixed(2)}`;
@@ -159,16 +166,30 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
     setHasInteracted(true);
     haptics.selection();
 
-    // Find the correct package using exact identifier matching
+    // Find the correct package using robust identifier matching
     const packageToBuy = findPackage(selectedTier, type);
 
     if (packageToBuy) {
-      await purchasePackage(packageToBuy);
-      haptics.success();
-      onClose();
+      console.log('[SplashOffer] Purchasing:', packageToBuy.product.identifier);
+      const success = await purchasePackage(packageToBuy);
+      if (success) {
+        haptics.success();
+        onClose();
+      }
     } else {
-      // Fallback or alert if no package found
-      console.warn(`No package found for ${selectedTier} ${type}`);
+      haptics.error();
+      if (!offerings.length) {
+        Alert.alert(
+          'Store Not Ready',
+          'No subscription offerings were found. Please check your internet connection or try again later.'
+        );
+      } else {
+        const ids = offerings.map((o) => o.product.identifier).join(', ');
+        Alert.alert(
+          'Package Not Found',
+          `Could not match a package for "${selectedTier} ${type}".\n\nAvailable IDs: ${ids}`
+        );
+      }
     }
   };
 
