@@ -21,9 +21,22 @@
     "production": {
       "channel": "production",
       "autoIncrement": true
+    },
+    "google-play-testing": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "distribution": "store",
+      "channel": "preview",
+      "autoIncrement": true
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }
