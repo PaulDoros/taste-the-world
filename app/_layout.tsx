@@ -8,14 +8,18 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 import '../global.css';
 
 // Configure Reanimated logger to disable strict mode warnings
-import {
+import Animated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
 
 configureReanimatedLogger({
@@ -24,8 +28,6 @@ configureReanimatedLogger({
 });
 
 // Suppress React Native Web deprecation warning for pointerEvents
-// This is a known issue in react-native-web that doesn't affect functionality
-// The warning appears during SSR but doesn't impact app behavior
 if (__DEV__) {
   const originalWarn = console.warn;
   console.warn = (...args: any[]) => {
@@ -34,7 +36,6 @@ if (__DEV__) {
       typeof message === 'string' &&
       message.includes('props.pointerEvents is deprecated')
     ) {
-      // Suppress this specific warning from react-native-web
       return;
     }
     originalWarn.apply(console, args);
@@ -55,7 +56,8 @@ import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
-import { AchievementToast } from '@/components/gamification/AchievementToast'; // [NEW]
+import { AchievementToast } from '@/components/gamification/AchievementToast';
+import LottieView from 'lottie-react-native';
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
@@ -76,14 +78,14 @@ SplashScreen.preventAutoHideAsync();
 
 import Purchases from 'react-native-purchases';
 
-// RevenueCat API Key (should be in .env but hardcoding for now as requested)
-
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
   const [isReady, setIsReady] = useState(false);
+  const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
+  const splashOpacity = useSharedValue(1);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -92,7 +94,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
+      // Hide native splash immediately so we see our custom Lottie view
       SplashScreen.hideAsync();
+
       configureNotifications(); // Setup notifications
 
       // Initialize RevenueCat
@@ -115,24 +119,47 @@ export default function RootLayout() {
           apiKey = testKey || customKey;
         }
 
-        if (apiKey) {
+        if (apiKey && !apiKey.includes('placeholder')) {
           Purchases.configure({ apiKey });
         } else {
-          console.warn('RevenueCat API Key not found in env vars');
+          console.warn('RevenueCat API Key not found or invalid in env vars');
         }
       }
       setIsReady(true);
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || !isReady) {
+  const animatedSplashStyle = useAnimatedStyle(() => {
+    return { opacity: splashOpacity.value };
+  });
+
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
     <ConvexProvider client={convex}>
       <AppThemeProvider>
+        {/* Main App */}
         <RootLayoutNav />
+
+        {/* Custom Lottie Splash Overlay */}
+        {!splashAnimationFinished && (
+          <Animated.View style={[styles.splashContainer, animatedSplashStyle]}>
+            <LottieView
+              source={require('../assets/animations/loading.json')}
+              autoPlay
+              loop={false}
+              resizeMode="contain"
+              style={styles.lottie}
+              onAnimationFinish={() => {
+                splashOpacity.value = withTiming(0, { duration: 500 }, () => {
+                  runOnJS(setSplashAnimationFinished)(true);
+                });
+              }}
+            />
+          </Animated.View>
+        )}
       </AppThemeProvider>
     </ConvexProvider>
   );
@@ -169,10 +196,6 @@ function RootLayoutNav() {
     // If user is authenticated (has token + user data loaded)
     if (isAuthenticated && user) {
       // If they are a GUEST, they are allowed to be on auth screens (to sign up/login)
-      // BUT if they are on welcome screen specifically, we might want to redirect them to tabs?
-      // Actually, existing logic said: "Guests ARE allowed to visit auth screens"
-
-      // If they are a REAL user (not guest), they shouldn't be in auth group
       const isGuest =
         user.tier === 'guest' || user.email?.includes('@guest.local');
       const isRealUser = !isGuest;
@@ -202,12 +225,6 @@ function RootLayoutNav() {
     // @ts-ignore
     if (global.hasShownSplashSession) return;
 
-    // Show splash offer if:
-    // 1. User is authenticated (or we decide to show to guests too)
-    // 2. User is NOT premium
-    // 3. User is on the main tabs (not auth screens)
-    // 4. We haven't shown it yet this session (handled by local state)
-    // 5. Short delay to let things load
     const inTabs = segments[0] === '(tabs)';
 
     // Double check premium status wasn't just delayed
@@ -285,6 +302,7 @@ function RootLayoutNav() {
               options={{
                 presentation: 'modal',
                 headerShown: false,
+                gestureEnabled: true,
               }}
             />
           </Stack>
@@ -298,3 +316,17 @@ function RootLayoutNav() {
     </LanguageProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99999, // Ensure it is on top of everything
+  },
+  lottie: {
+    width: 200,
+    height: 200,
+  },
+});
