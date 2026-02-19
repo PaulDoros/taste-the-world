@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useRouter, usePathname, useSegments } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -20,7 +20,6 @@ import Animated, {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
-import { playSound } from '@/utils/sounds';
 import { BlurView } from 'expo-blur';
 import { glassTokens } from '@/theme/colors';
 import { StyleSheet } from 'react-native';
@@ -78,7 +77,6 @@ const TAB_CONFIG = [
 export const PersistentTabBar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const segments = useSegments();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = Colors[colorScheme ?? 'light'];
@@ -131,24 +129,30 @@ export const PersistentTabBar = () => {
 
   // Initialize pulse animations once on mount
   useEffect(() => {
-    // 💫 Continuous pulse while active (only initialize once)
-    pulseScale.value = withRepeat(
-      withSequence(
-        withTiming(1.2, { duration: 500 }),
-        withTiming(1, { duration: 500 })
-      ),
-      -1,
-      true
-    );
+    if (Platform.OS !== 'android') {
+      // 💫 Continuous pulse while active (keep this effect on iOS where it's smooth)
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: 500 }),
+          withTiming(1, { duration: 500 })
+        ),
+        -1,
+        true
+      );
 
-    pulseOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.6, { duration: 1000 }),
-        withTiming(0.3, { duration: 1000 })
-      ),
-      -1,
-      true
-    );
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.6, { duration: 1000 }),
+          withTiming(0.3, { duration: 1000 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      // Android perf: avoid infinite pulse loops on the tab bar
+      pulseScale.value = 1;
+      pulseOpacity.value = 0;
+    }
 
     // Set initial bubble position on mount
     const initialActiveTabIndex = getActiveTabIndex();
@@ -232,8 +236,8 @@ export const PersistentTabBar = () => {
       setLastActiveTabIndex(tabIndex);
     }
 
-    // Navigate
-    router.push(tab.path as any);
+    // Navigate without stacking duplicate routes (faster tab switching on Android)
+    router.navigate(tab.path as any);
   };
 
   // Hide on auth screens (check after all hooks are called)
@@ -253,12 +257,24 @@ export const PersistentTabBar = () => {
       }}
     >
       {/* Glass Background Layers */}
-      <BlurView
-        intensity={100}
-        tint={isDark ? 'dark' : 'light'}
-        style={StyleSheet.absoluteFill}
-        
-      />
+      {Platform.OS === 'android' ? (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: isDark
+                ? 'rgba(15, 23, 42, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
+            },
+          ]}
+        />
+      ) : (
+        <BlurView
+          intensity={100}
+          tint={isDark ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
       <View
         style={[
           StyleSheet.absoluteFill,
