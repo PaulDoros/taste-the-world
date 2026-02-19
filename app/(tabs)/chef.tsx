@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Linking,
+  LayoutChangeEvent,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -90,6 +91,7 @@ export default function ChefScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const [mode, setMode] = useState<'chef' | 'travel'>('chef');
+  const [modeTabWidth, setModeTabWidth] = useState(0);
   const [showRecipeSetup, setShowRecipeSetup] = useState(false);
   const [showCountrySelector, setShowCountrySelector] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -147,9 +149,18 @@ export default function ChefScreen() {
 
   const animatedTabStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: tabPosition.value * 100 }], // Adjust 100 based on width
+      transform: [{ translateX: modeTabWidth * tabPosition.value }],
+      width: modeTabWidth,
     };
   });
+
+  const handleModeSwitcherLayout = useCallback((e: LayoutChangeEvent) => {
+    const nextWidth = (e.nativeEvent.layout.width - 8) / 2;
+    if (nextWidth <= 0) return;
+    setModeTabWidth((prev) =>
+      prev === 0 || Math.abs(prev - nextWidth) > 1 ? nextWidth : prev
+    );
+  }, []);
 
   // Quick Action Animations
   const activeQuickAction = useSharedValue<number | null>(null);
@@ -613,6 +624,7 @@ export default function ChefScreen() {
 
             {/* Mode Switcher */}
             <XStack
+              onLayout={handleModeSwitcherLayout}
               backgroundColor="$gray4"
               padding={4}
               borderRadius={12}
@@ -620,35 +632,34 @@ export default function ChefScreen() {
               position="relative"
             >
               {/* Animated Background Indicator */}
-              <Animated.View
-                style={[
-                  {
-                    position: 'absolute',
-                    top: 4,
-                    left: 4,
-                    width: '50%',
-                    height: 40,
-                    backgroundColor: theme.backgroundHover?.get() || '#F5F5F5',
-                    borderRadius: 10,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  },
-                  useAnimatedStyle(() => ({
-                    transform: [
-                      { translateX: withSpring(mode === 'chef' ? 0 : 200) },
-                    ], // Approximate width calculation, better to use onLayout
-                  })),
-                ]}
-              />
+              {modeTabWidth > 0 && (
+                <Animated.View
+                  style={[
+                    {
+                      position: 'absolute',
+                      top: 4,
+                      left: 4,
+                      height: 40,
+                      backgroundColor:
+                        theme.backgroundHover?.get() || '#F5F5F5',
+                      borderRadius: 10,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    },
+                    animatedTabStyle,
+                  ]}
+                />
+              )}
 
               <Pressable
                 style={{
                   flex: 1,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  paddingHorizontal: 6,
                   zIndex: 1,
                 }}
                 onPress={() => setMode('chef')}
@@ -656,6 +667,7 @@ export default function ChefScreen() {
                 <Text
                   fontWeight={mode === 'chef' ? '700' : '500'}
                   color={mode === 'chef' ? '$color' : '$gray11'}
+                  numberOfLines={1}
                 >
                   {t('chef_tab_chef')}
                 </Text>
@@ -665,6 +677,7 @@ export default function ChefScreen() {
                   flex: 1,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  paddingHorizontal: 6,
                   zIndex: 1,
                 }}
                 onPress={() => setMode('travel')}
@@ -672,6 +685,7 @@ export default function ChefScreen() {
                 <Text
                   fontWeight={mode === 'travel' ? '700' : '500'}
                   color={mode === 'travel' ? '$color' : '$gray11'}
+                  numberOfLines={1}
                 >
                   {t('chef_tab_travel')}
                 </Text>

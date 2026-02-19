@@ -21,14 +21,14 @@ export default function TabLayout() {
   return (
     <Tabs
       tabBar={renderTabBar}
-      detachInactiveScreens={Platform.OS === 'android' ? false : true}
+      detachInactiveScreens={true}
       screenOptions={{
         headerShown: false,
         // Tabs are usually smoothest on Android without screen animation.
         animation: Platform.OS === 'android' ? 'none' : 'fade',
-        lazy: Platform.OS === 'android' ? false : true,
-        // Prevent resume-jump artifacts from frozen inactive screens.
-        freezeOnBlur: Platform.OS === 'android' ? false : true,
+        lazy: true,
+        // Freeze inactive Android tabs to cut background re-renders.
+        freezeOnBlur: Platform.OS === 'android',
         tabBarHideOnKeyboard: true,
       }}
     >

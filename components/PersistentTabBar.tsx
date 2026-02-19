@@ -125,16 +125,13 @@ const PersistentTabBarComponent = () => {
   const colors = Colors[colorScheme ?? 'light'];
   const glass = glassTokens[isDark ? 'dark' : 'light'];
   const [barWidth, setBarWidth] = useState(0);
-  const tabBarBottomOffset = isAndroid ? Math.max(10, insets.bottom) : 0;
-  const supportsAndroidBoxShadow =
-    isAndroid && typeof Platform.Version === 'number' && Platform.Version >= 28;
   const inactiveTabColor = !isAndroid
     ? isDark
       ? 'rgba(226, 232, 240, 0.92)'
       : '#1e293b'
     : colors.tabIconDefault;
   const inactiveTabOpacity = !isAndroid ? 0.82 : 0.6;
-  const bubbleElevation = Platform.OS === 'android' ? 0 : 10;
+  const bubbleElevation = Platform.OS === 'android' ? 0 : 20;
 
   const tabWidth = barWidth > 0 ? barWidth / TAB_CONFIG.length : 0;
 
@@ -303,10 +300,10 @@ const PersistentTabBarComponent = () => {
       onLayout={handleBarLayout}
       style={{
         position: 'absolute',
-        bottom: tabBarBottomOffset,
+        bottom: 0,
         left: 0,
         right: 0,
-        height: 90,
+        height: isAndroid ? 120 : 90,
       }}
     >
       {/* Glass Background Layers */}
@@ -329,7 +326,6 @@ const PersistentTabBarComponent = () => {
         <BlurView
           intensity={100}
           tint={isDark ? 'dark' : 'light'}
-          experimentalBlurMethod={isAndroid ? 'dimezisBlurView' : undefined}
           style={StyleSheet.absoluteFill}
         />
       )}
@@ -368,11 +364,11 @@ const PersistentTabBarComponent = () => {
             style={[
               {
                 position: 'absolute',
-                top: 8,
+                top: 5,
                 left: 0,
                 width: 80,
-                height: 54,
-                borderRadius: 27,
+                height: 64,
+                borderRadius: 29,
                 backgroundColor: activeBgColor,
                 zIndex: 0,
               },
@@ -388,10 +384,10 @@ const PersistentTabBarComponent = () => {
             style={[
               {
                 position: 'absolute',
-                top: 11,
+                top: 4,
                 left: 0,
                 width: 72,
-                height: 48,
+                height: 64,
                 borderRadius: 24,
                 overflow: 'hidden',
                 backgroundColor: activeBgColor,
@@ -414,8 +410,8 @@ const PersistentTabBarComponent = () => {
                 top: 1,
                 left: 1,
                 right: 1,
-                height: 18,
-                borderRadius: 18,
+                height: 28,
+                borderRadius: 58,
                 backgroundColor: bubbleTopSheenColor,
                 opacity: isAndroid ? 0.42 : 0.34,
               }}
@@ -444,8 +440,8 @@ const PersistentTabBarComponent = () => {
               style={{
                 flex: 1,
                 alignItems: 'center',
-                justifyContent: 'center',
-                paddingTop: isAndroid ? 0 : 4,
+
+                paddingTop: isAndroid ? 6 : 4,
                 minHeight: 48,
                 zIndex: 10,
               }}
