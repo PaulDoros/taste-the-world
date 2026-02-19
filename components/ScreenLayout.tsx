@@ -19,6 +19,8 @@ interface ScreenLayoutProps {
   backgroundStyle?: 'plain' | 'gradient';
 }
 
+import { ScreenWithBlurTarget } from '@/components/ui/ScreenWithBlurTarget';
+
 export const ScreenLayout = ({
   children,
   style,
@@ -32,10 +34,12 @@ export const ScreenLayout = ({
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      {!disableGradient && !disableBackground && <AmbientBackground />}
-      <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
-        {children}
-      </SafeAreaView>
+      <ScreenWithBlurTarget style={{ flex: 1 }}>
+        {!disableGradient && !disableBackground && <AmbientBackground />}
+        <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
+          {children}
+        </SafeAreaView>
+      </ScreenWithBlurTarget>
     </YStack>
   );
 };

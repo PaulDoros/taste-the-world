@@ -1,5 +1,12 @@
 import React from 'react';
-import { Image, StyleSheet, Animated, Pressable } from 'react-native'; // Added Animated, Pressable
+import {
+  Image,
+  StyleSheet,
+  Animated,
+  Pressable,
+  Platform,
+  View as RNView,
+} from 'react-native'; // Added Animated, Pressable, Platform, View
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { FadeInUp } from 'react-native-reanimated'; // Removed default Animated import to avoid conflict
@@ -240,11 +247,21 @@ export const RecipeOfTheWeek = React.memo<RecipeOfTheWeekProps>(
 
                 {/* Glassmorphic Action Bar */}
                 <YStack borderRadius="$4" overflow="hidden" marginTop="$2">
-                  <BlurView
-                    intensity={30}
-                    tint="dark"
-                    style={StyleSheet.absoluteFill}
-                  />
+                  {/* Glassmorphic Action Bar - simplified for Android */}
+                  {Platform.OS === 'ios' ? (
+                    <BlurView
+                      intensity={30}
+                      tint="dark"
+                      style={StyleSheet.absoluteFill}
+                    />
+                  ) : (
+                    <RNView
+                      style={[
+                        StyleSheet.absoluteFill,
+                        { backgroundColor: 'rgba(20,20,20, 0.8)' },
+                      ]}
+                    />
+                  )}
                   <XStack
                     padding="$3"
                     backgroundColor="rgba(255,255,255,0.1)"

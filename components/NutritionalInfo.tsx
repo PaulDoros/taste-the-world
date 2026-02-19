@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
@@ -124,28 +124,54 @@ export const NutritionalInfo: React.FC<NutritionalInfoProps> = ({
         {/* Lock Overlay */}
         {!isUnlocked && (
           <View style={[StyleSheet.absoluteFill, { zIndex: 10 }]}>
-            <BlurView
-              intensity={20}
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                },
-              ]}
-              tint={colorScheme === 'dark' ? 'dark' : 'light'}
-            >
-              <GlassButton
-                label="Upgrade to View"
-                icon="lock"
-                onPress={handlePressLocked}
-                size="medium"
-                backgroundColor={colors.tint}
-                textColor="#FFFFFF"
-                backgroundOpacity={0.9}
-              />
-            </BlurView>
+            {Platform.OS === 'ios' ? (
+              <BlurView
+                intensity={20}
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                  },
+                ]}
+                tint={colorScheme === 'dark' ? 'dark' : 'light'}
+              >
+                <GlassButton
+                  label="Upgrade to View"
+                  icon="lock"
+                  onPress={handlePressLocked}
+                  size="medium"
+                  backgroundColor={colors.tint}
+                  textColor="#FFFFFF"
+                  backgroundOpacity={0.9}
+                />
+              </BlurView>
+            ) : (
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor:
+                      colorScheme === 'dark'
+                        ? 'rgba(0,0,0,0.8)'
+                        : 'rgba(255,255,255,0.8)',
+                  },
+                ]}
+              >
+                <GlassButton
+                  label="Upgrade to View"
+                  icon="lock"
+                  onPress={handlePressLocked}
+                  size="medium"
+                  backgroundColor={colors.tint}
+                  textColor="#FFFFFF"
+                  backgroundOpacity={0.9}
+                />
+              </View>
+            )}
           </View>
         )}
       </GlassCard>

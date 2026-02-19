@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl, Platform } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -8,6 +8,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 import { CountryCard } from '@/components/CountryCard';
 import { SearchBar } from '@/components/SearchBar';
@@ -114,6 +115,116 @@ export default function ExploreScreen() {
       return true;
     });
   }, [countries, tier, searchQuery, selectedRegion, selectedPremium]);
+
+  // Render sticky header content (Memoized) - MOVED HERE TO BE BEFORE EARLY RETURNS
+  const StickyHeader = useMemo(() => {
+    return (
+      <GlassCard
+        intensity={90}
+        style={{
+          marginBottom: 20,
+        }}
+        borderRadius={0}
+        contentContainerStyle={{
+          overflow: 'hidden',
+          borderBottomWidth: 1,
+          borderBottomColor:
+            colorScheme === 'dark'
+              ? 'rgba(255,255,255,0.1)'
+              : 'rgba(0,0,0,0.05)',
+        }}
+      >
+        {/* Header */}
+        <Animated.View
+          entering={
+            Platform.OS === 'android'
+              ? undefined
+              : FadeInDown.delay(50).springify()
+          }
+          style={{
+            paddingHorizontal: 16,
+            paddingTop: insets.top + 16, // Unsafe area compensation
+            paddingBottom: 12,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <View>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 32,
+                fontWeight: '700',
+                letterSpacing: -0.5,
+                marginBottom: 4,
+              }}
+            >
+              {t('explore_title')}
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+              {t('explore_subtitle')}
+            </Text>
+          </View>
+          {/* Lottie can be heavy on list headers */}
+          <LottieView
+            source={require('@/assets/animations/travel.json')}
+            autoPlay
+            loop
+            style={{ width: 80, height: 80 }}
+            renderMode={Platform.OS === 'android' ? 'SOFTWARE' : 'HARDWARE'}
+          />
+        </Animated.View>
+
+        <Animated.View
+          entering={
+            Platform.OS === 'android'
+              ? undefined
+              : FadeInDown.delay(150).springify()
+          }
+        >
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t('explore_search_placeholder')}
+          />
+
+          <FilterBar
+            selectedRegion={selectedRegion}
+            selectedPremium={selectedPremium}
+            onRegionChange={setSelectedRegion}
+            onPremiumChange={setSelectedPremium}
+            onClearAll={handleClearAllFilters}
+          />
+
+          {(searchQuery ||
+            selectedRegion !== 'All' ||
+            selectedPremium !== 'All') && (
+            <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+              <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+                {filteredCountries.length === 1
+                  ? t('explore_results_count', {
+                      count: filteredCountries.length,
+                    })
+                  : t('explore_results_count_plural', {
+                      count: filteredCountries.length,
+                    })}
+              </Text>
+            </View>
+          )}
+        </Animated.View>
+      </GlassCard>
+    );
+  }, [
+    colorScheme,
+    colors,
+    insets.top,
+    searchQuery,
+    selectedRegion,
+    selectedPremium,
+    filteredCountries.length,
+    t,
+  ]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Country; index: number }) => {
@@ -222,89 +333,6 @@ export default function ExploreScreen() {
     );
   }
 
-  // Render sticky header content
-  const renderStickyHeader = () => (
-    <BlurView
-      intensity={90}
-      tint={colorScheme === 'dark' ? 'dark' : 'light'}
-      style={{
-        overflow: 'hidden',
-        borderBottomWidth: 1,
-        marginBottom: 20,
-        borderBottomColor:
-          colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-      }}
-    >
-      {/* Header */}
-      <Animated.View
-        entering={FadeInDown.delay(50).springify()}
-        style={{
-          paddingHorizontal: 16,
-          paddingTop: insets.top + 16, // Unsafe area compensation
-          paddingBottom: 12,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <View>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 32,
-              fontWeight: '700',
-              letterSpacing: -0.5,
-              marginBottom: 4,
-            }}
-          >
-            {t('explore_title')}
-          </Text>
-          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-            {t('explore_subtitle')}
-          </Text>
-        </View>
-        <LottieView
-          source={require('@/assets/animations/travel.json')}
-          autoPlay
-          loop
-          style={{ width: 80, height: 80 }}
-        />
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(150).springify()}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder={t('explore_search_placeholder')}
-        />
-
-        <FilterBar
-          selectedRegion={selectedRegion}
-          selectedPremium={selectedPremium}
-          onRegionChange={setSelectedRegion}
-          onPremiumChange={setSelectedPremium}
-          onClearAll={handleClearAllFilters}
-        />
-
-        {(searchQuery ||
-          selectedRegion !== 'All' ||
-          selectedPremium !== 'All') && (
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
-              {filteredCountries.length === 1
-                ? t('explore_results_count', {
-                    count: filteredCountries.length,
-                  })
-                : t('explore_results_count_plural', {
-                    count: filteredCountries.length,
-                  })}
-            </Text>
-          </View>
-        )}
-      </Animated.View>
-    </BlurView>
-  );
-
   return (
     <ScreenLayout edges={['left', 'right']} disableBackground>
       <AmbientBackground />
@@ -334,10 +362,8 @@ export default function ExploreScreen() {
           data={filteredCountries}
           keyExtractor={(item) => item.cca2}
           numColumns={2}
-          ListHeaderComponent={() => <View>{renderStickyHeader()}</View>}
-          stickyHeaderIndices={[0]} // If I wrap, the WHOLE wrapper is sticky.
-          // So I can't separate them easily.
-
+          ListHeaderComponent={StickyHeader}
+          stickyHeaderIndices={[0]} // Sticky Header
           contentContainerStyle={{
             paddingBottom: bottomPadding,
           }}

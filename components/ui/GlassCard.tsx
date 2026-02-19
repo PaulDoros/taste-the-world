@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
+import { BlurTargetContext } from './ScreenWithBlurTarget';
 
 interface GlassCardProps extends ViewProps {
   children: React.ReactNode;
@@ -23,6 +24,11 @@ interface GlassCardProps extends ViewProps {
   backgroundColor?: string;
   backgroundOpacity?: number;
   borderRadiusInside?: number;
+  // New props for Android tuning
+  blurTarget?: React.RefObject<View>;
+  overlayColor?: string;
+  borderColor?: string;
+  androidFallbackBase?: string;
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({
@@ -37,14 +43,35 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   backgroundColor,
   backgroundOpacity,
   borderRadiusInside = 25,
+  blurTarget,
+  overlayColor,
+  borderColor: customBorderColor,
+  androidFallbackBase,
   ...props
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const glass = glassTokens[isDark ? 'dark' : 'light'];
 
+  // Context fallback for blurTarget
+  const contextBlurTarget = useContext(BlurTargetContext);
+  const effectiveBlurTarget = blurTarget || contextBlurTarget;
+
   // Override intensity if provided, else use token
   const blurIntensity = intensity ?? glass.blurIntensity;
+
+  // Check for Android 12+ (API 31+)
+  const canUseAndroidBlur = Platform.OS === 'android' && Platform.Version >= 31;
+
+  // Colors
+  const activeOverlayColor = overlayColor || backgroundColor || glass.overlay;
+  const activeBorderColor = customBorderColor || glass.border;
+
+  // Fallback base for Android < 31 or when no blur target is available
+  // Making it slightly more opaque/colored than the glass overlay to simulate the "material"
+  const fallbackBase =
+    androidFallbackBase ||
+    (isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)');
 
   return (
     <View
@@ -55,7 +82,8 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: shadowOpacity ?? glass.shadowOpacity,
           shadowRadius: shadowRadius ?? 12,
-          elevation: Platform.select({ android: 4, default: 8 }),
+          // Android Shadow: Elevation is still the best bet for shadows on Android
+          elevation: Platform.select({ android: 4, default: 0 }),
           backgroundColor: 'transparent',
         },
         style,
@@ -66,19 +94,44 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       <View
         style={[StyleSheet.absoluteFill, { borderRadius, overflow: 'hidden' }]}
       >
-        <BlurView
-          intensity={blurIntensity}
-          tint={isDark ? 'dark' : 'light'}
-          style={StyleSheet.absoluteFill}
-        />
-        {/* Overlay & Border */}
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            intensity={blurIntensity}
+            tint={isDark ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : canUseAndroidBlur ? (
+          // Android 12+ (SDK 54 uses experimentalBlurMethod='dimezisBlurView')
+          // The 'blurTarget' prop is not available in SDK 54 types, so we don't pass it to BlurView.
+          // However, 'dimezisBlurView' implementation in SDK 54 might implicitly blur what's behind it
+          // or requires the view hierarchy to be structured a specific way.
+          // Given the error, we revert to the supported enum value.
+          <BlurView
+            experimentalBlurMethod="dimezisBlurView"
+            intensity={blurIntensity}
+            blurReductionFactor={4}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : (
+          // Android Fallback (Old Device or No Target)
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: fallbackBase,
+              },
+            ]}
+          />
+        )}
+
+        {/* Overlay & Border (Common for all) */}
         <View
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: backgroundColor || glass.overlay,
+              backgroundColor: activeOverlayColor,
               borderWidth: 1,
-              borderColor: glass.border,
+              borderColor: activeBorderColor,
               borderRadius,
               opacity: backgroundOpacity,
             },
@@ -86,12 +139,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         />
       </View>
 
-      {/* Content (Natural Sizing) */}
+      {/* Content */}
       <View
         style={[
           {
             borderRadius: borderRadiusInside,
-            overflow: 'hidden', // Ensure content (like Images) doesn't bleed out of rounded corners
+            overflow: 'hidden',
           },
           contentContainerStyle,
         ]}

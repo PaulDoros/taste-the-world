@@ -3,6 +3,7 @@ import { BlurView } from 'expo-blur';
 import { XStack, YStack, Heading, Paragraph, Stack } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { EdgeInsets } from 'react-native-safe-area-context';
 
 interface PlannerHeaderProps {
@@ -21,11 +22,11 @@ export const PlannerHeader = ({
   onHistoryPress,
 }: PlannerHeaderProps) => {
   return (
-    <BlurView
+    <GlassCard
       intensity={80}
-      tint={colorScheme === 'dark' ? 'dark' : 'light'}
-      style={{
-        zIndex: 10,
+      borderRadius={0}
+      style={{ zIndex: 10 }}
+      contentContainerStyle={{
         overflow: 'hidden',
         borderBottomWidth: 1,
         borderBottomColor:
@@ -63,6 +64,6 @@ export const PlannerHeader = ({
           label=""
         />
       </XStack>
-    </BlurView>
+    </GlassCard>
   );
 };

@@ -25,6 +25,10 @@ export default function AchievementsScreen() {
   const { token } = useAuth();
   const { t } = useLanguage();
 
+  const [selectedBadge, setSelectedBadge] = React.useState<
+    (typeof BADGES)[0] | null
+  >(null);
+
   const stats = useQuery(api.gamification.getStats, {
     token: token || undefined,
   });
@@ -73,10 +77,6 @@ export default function AchievementsScreen() {
   const xpIntoLevel = stats.xp % 100;
   const progressPercent = Math.round((xpIntoLevel / 100) * 100);
   const unlockedIds = stats.badges || [];
-
-  const [selectedBadge, setSelectedBadge] = React.useState<
-    (typeof BADGES)[0] | null
-  >(null);
 
   const renderBadgeDetails = () => {
     if (!selectedBadge) return null;

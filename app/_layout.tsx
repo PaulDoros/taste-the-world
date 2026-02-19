@@ -7,6 +7,7 @@ import {
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useEffect, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
@@ -108,23 +109,40 @@ export default function RootLayout() {
         const appleKey = process.env.EXPO_PUBLIC_RC_APPLE_KEY;
         const googleKey = process.env.EXPO_PUBLIC_RC_GOOGLE_KEY;
         const testKey = process.env.EXPO_PUBLIC_RC_TEST_API_KEY;
+        // Legacy fallback
         const customKey = process.env.EXPO_PUBLIC_REVENUECAT_Test;
 
         let apiKey: string | undefined;
 
-        if (Platform.OS === 'ios') {
-          apiKey = appleKey;
-        } else if (Platform.OS === 'android') {
-          apiKey = googleKey;
-        }
+        // Detect Expo Go
+        const isExpoGo =
+          Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-        // Fallback to test key if specific keys are missing or placeholders
-        if (!apiKey || apiKey.includes('placeholder')) {
+        if (isExpoGo) {
           apiKey = testKey || customKey;
+          if (!apiKey || apiKey.includes('placeholder')) {
+            console.warn('RevenueCat Test API Key is missing for Expo Go!');
+          }
+        } else {
+          // Native / Dev Build / Production
+          if (Platform.OS === 'ios') {
+            apiKey = appleKey;
+          } else if (Platform.OS === 'android') {
+            apiKey = googleKey;
+          }
+
+          // Fallback to test key if specific keys are missing
+          if (!apiKey || apiKey.includes('placeholder')) {
+            apiKey = testKey || customKey;
+          }
         }
 
         if (apiKey && !apiKey.includes('placeholder')) {
-          Purchases.configure({ apiKey });
+          try {
+            Purchases.configure({ apiKey });
+          } catch (e: any) {
+            console.warn(`RevenueCat Init Error: ${e.message}`);
+          }
         } else {
           console.warn('RevenueCat API Key not found or invalid in env vars');
         }

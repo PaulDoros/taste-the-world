@@ -66,16 +66,73 @@ export default function MapScreen() {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
-
       try {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Permission to access location was denied');
+          // Fallback to a default location (e.g., Paris) so map still loads
+          setLocation({
+            coords: {
+              latitude: 48.8566,
+              longitude: 2.3522,
+              altitude: 0,
+              accuracy: 0,
+              altitudeAccuracy: 0,
+              heading: 0,
+              speed: 0,
+            },
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
+        // Try last known position first for speed
+        const lastKnown = await Location.getLastKnownPositionAsync({});
+        if (lastKnown) {
+          setLocation(lastKnown);
+        }
+
+        // Then try to get fresh high accuracy location
+        // We set a timeout so it doesn't hang forever
+        const freshLocation = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+        ]);
+
+        if (freshLocation) {
+          setLocation(freshLocation as Location.LocationObject);
+        } else if (!lastKnown) {
+          // If both failed/timed out and no lastKnown, verify we haven't set it yet
+          setLocation({
+            coords: {
+              latitude: 48.8566,
+              longitude: 2.3522,
+              altitude: 0,
+              accuracy: 0,
+              altitudeAccuracy: 0,
+              heading: 0,
+              speed: 0,
+            },
+            timestamp: Date.now(),
+          });
+        }
       } catch (e) {
-        console.warn('Location unavailable:', e);
+        console.warn('Location error:', e);
+        // Fallback if everything explodes
+        setLocation({
+          coords: {
+            latitude: 48.8566,
+            longitude: 2.3522,
+            altitude: 0,
+            accuracy: 0,
+            altitudeAccuracy: 0,
+            heading: 0,
+            speed: 0,
+          },
+          timestamp: Date.now(),
+        });
       }
     })();
   }, []);

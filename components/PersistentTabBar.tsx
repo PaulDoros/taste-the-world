@@ -24,6 +24,7 @@ import { playSound } from '@/utils/sounds';
 import { BlurView } from 'expo-blur';
 import { glassTokens } from '@/theme/colors';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Tab Configuration - 5 Primary Tabs
@@ -84,6 +85,7 @@ export const PersistentTabBar = () => {
   const colors = Colors[colorScheme ?? 'light'];
   const glass = glassTokens[isDark ? 'dark' : 'light'];
   const { width: SCREEN_WIDTH } = useWindowDimensions(); // Dynamic width that updates on resize/rotation
+  const insets = useSafeAreaInsets();
 
   const tabWidth = SCREEN_WIDTH / TAB_CONFIG.length;
 
@@ -249,26 +251,29 @@ export const PersistentTabBar = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        height: 90,
+        height: 80 + insets.bottom, // Dynamic height: base height + safe area
+        paddingBottom: insets.bottom, // Push content up
       }}
     >
       {/* Glass Background Layers */}
-      <BlurView
-        intensity={100}
-        tint={isDark ? 'dark' : 'light'}
-        style={StyleSheet.absoluteFill}
-        
-      />
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            backgroundColor: glass.overlay, // Use glass token for overlay
-            borderTopWidth: 1,
-            borderTopColor: glass.border,
-          },
-        ]}
-      />
+      {Platform.OS === 'ios' ? (
+        <BlurView
+          intensity={100}
+          tint={isDark ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: isDark ? '#0f172a' : '#ffffff', // Solid background for Android nav
+              borderTopWidth: 1,
+              borderTopColor: glass.border,
+            },
+          ]}
+        />
+      )}
 
       {/* Content Container */}
       <View

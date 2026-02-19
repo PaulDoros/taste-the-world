@@ -4,6 +4,7 @@ import {
   View,
   Modal,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { Sheet, Text, XStack, YStack, ScrollView, Button } from 'tamagui';
 import LottieView from 'lottie-react-native';
@@ -92,7 +93,16 @@ export const AvatarSelector = ({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+        ) : (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(0,0,0,0.5)' },
+            ]}
+          />
+        )}
 
         <View
           style={[

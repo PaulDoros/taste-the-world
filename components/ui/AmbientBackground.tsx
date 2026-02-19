@@ -16,6 +16,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // --- Configuration Constants ---
+import { Platform } from 'react-native';
+
 const BUBBLE_CONFIG = {
   MIN_SIZE: 100,
   MAX_SIZE_VARIANCE: 300,
@@ -28,8 +30,8 @@ const BUBBLE_CONFIG = {
   MAX_OPACITY_VARIANCE: 0.7,
 
   // Density
-  DENSITY_MULTIPLIER: 0.00001,
-  MAX_BUBBLE_COUNT: 20,
+  DENSITY_MULTIPLIER: Platform.OS === 'android' ? 0.000005 : 0.00001, // Reduced density on Android
+  MAX_BUBBLE_COUNT: Platform.OS === 'android' ? 10 : 20, // Limit max bubbles on Android
   MIN_BUBBLE_COUNT: 3,
 };
 

@@ -1,270 +1,241 @@
 import React from 'react';
-import { Pressable, StyleSheet, View, Platform } from 'react-native';
+import {
+  Pressable,
+  Platform,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+  ActivityIndicator,
+  View,
+} from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Text, XStack } from 'tamagui';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { Text, useTheme } from 'tamagui';
-import { haptics } from '@/utils/haptics';
-import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
 
 interface GlassButtonProps {
   onPress: () => void;
-  icon?: string;
-  iconComponent?: React.ReactNode;
-  label?: string | React.ReactNode;
-  size?: 'small' | 'medium' | 'large';
-  variant?: 'default' | 'active';
-  disabled?: boolean;
+  label?: string;
+  icon?: React.ComponentProps<typeof FontAwesome5>['name'];
+  size?: 'large' | 'medium' | 'small';
   backgroundColor?: string;
-  backgroundOpacity?: number;
-  intensity?: number;
-  shadowOpacity?: number;
-  shadowColor?: string;
-  shadowRadius?: number;
   textColor?: string;
-  style?: any;
-  rightIcon?: React.ReactNode;
-  solid?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
+  style?: StyleProp<ViewStyle>;
+  backgroundOpacity?: number;
+  blurIntensity?: number;
+  shadowRadius?: number;
+  shadowOpacity?: number; // Added
+  iconComponent?: React.ReactNode; // Added for custom icons
+
+  // Android specific (safe to ignore on iOS)
+  blurTarget?: any; // Avoiding strict type for now
+  androidFallbackBase?: string;
 }
 
-export const GlassButton = ({
+export const GlassButton: React.FC<GlassButtonProps> = ({
   onPress,
+  label,
   icon,
   iconComponent,
-  label,
   size = 'medium',
-  variant = 'default',
-  disabled = false,
   backgroundColor,
-  backgroundOpacity,
-  intensity,
-  shadowOpacity,
-  shadowColor,
-  shadowRadius,
-  textColor: customTextColor,
+  textColor,
+  disabled = false,
+  loading = false,
   style,
-  rightIcon,
-  solid,
-}: GlassButtonProps) => {
-  const theme = useTheme();
-
+  backgroundOpacity,
+  blurIntensity = 20,
+  shadowRadius = 8,
+  shadowOpacity,
+  blurTarget,
+  androidFallbackBase,
+}) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const glass = glassTokens[isDark ? 'dark' : 'light'];
 
+  // Animation state
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(1); // Standard button opacity (disabled state)
+  const opacity = useSharedValue(1);
 
-  const isActive = variant === 'active';
-
-  // Size configurations
-  const sizes = {
-    small: {
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      fontSize: 12,
-      iconSize: 12,
-      borderRadius: 12,
-    },
-    medium: {
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      fontSize: 14,
-      iconSize: 14,
-      borderRadius: 16,
-    },
-    large: {
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      fontSize: 16,
-      iconSize: 16,
-      borderRadius: 20,
-    },
+  // Dimensions based on size
+  const getDimensions = () => {
+    switch (size) {
+      case 'large':
+        return {
+          height: 56,
+          paddingHorizontal: 24,
+          fontSize: 18,
+          iconSize: 20,
+        };
+      case 'small':
+        return {
+          height: 36,
+          paddingHorizontal: 12,
+          fontSize: 13,
+          iconSize: 14,
+        };
+      case 'medium':
+      default:
+        return {
+          height: 48,
+          paddingHorizontal: 20,
+          fontSize: 16,
+          iconSize: 18,
+        };
+    }
   };
 
-  const currentSize = sizes[size];
+  const dims = getDimensions();
 
-  // Animation Shared Values
-  const translateY = useSharedValue(0);
-  const shadowHeight = useSharedValue(4);
-  const shadowOpacityVal = useSharedValue(shadowOpacity ?? glass.shadowOpacity);
-  const shadowRadiusVal = useSharedValue(shadowRadius ?? 3);
-
-  // Inner Shadow Opacity Shared Value
-  const innerShadowOpacity = useSharedValue(0);
-
+  // Styles
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+    transform: [{ scale: scale.value }],
     opacity: opacity.value,
-    shadowOffset: { width: 0, height: shadowHeight.value },
-    shadowOpacity: shadowOpacityVal.value,
-    shadowRadius: shadowRadiusVal.value,
-    elevation: withTiming(shadowHeight.value, { duration: 50 }),
-  }));
-
-  const innerShadowStyle = useAnimatedStyle(() => ({
-    opacity: innerShadowOpacity.value,
   }));
 
   const handlePressIn = () => {
-    if (disabled) return;
-    scale.value = withSpring(0.98, { damping: 10, stiffness: 400 });
-    translateY.value = withTiming(2, { duration: 150 });
-
-    // Outer Shadow disappears (pressed in)
-    shadowHeight.value = withTiming(0, { duration: 150 });
-    shadowRadiusVal.value = withTiming(0, { duration: 150 });
-    shadowOpacityVal.value = withTiming(0, { duration: 150 });
-
-    // Inner Shadow appears
-    innerShadowOpacity.value = withTiming(1, { duration: 150 });
+    if (disabled || loading) return;
+    scale.value = withSpring(0.96);
+    opacity.value = withTiming(0.8);
   };
 
   const handlePressOut = () => {
-    if (disabled) return;
-    scale.value = withSpring(1, { damping: 10, stiffness: 400 });
-    translateY.value = withTiming(0, { duration: 450 });
-
-    // Outer Shadow returns
-    shadowHeight.value = withTiming(4, { duration: 450 });
-    shadowRadiusVal.value = withTiming(shadowRadius ?? 12, { duration: 450 });
-    shadowOpacityVal.value = withTiming(shadowOpacity ?? glass.shadowOpacity, {
-      duration: 450,
-    });
-
-    // Inner Shadow disappears
-    innerShadowOpacity.value = withTiming(0, { duration: 200 });
+    if (disabled || loading) return;
+    scale.value = withSpring(1);
+    opacity.value = withTiming(1);
   };
 
-  const handlePress = () => {
-    if (disabled) return;
-    haptics.selection();
-    onPress();
-  };
+  // Resolve colors
+  const activeBackgroundColor =
+    backgroundColor ||
+    (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)');
+  const activeTextColor = textColor || (isDark ? '#FFF' : '#000');
+  const activeBorderColor = isDark
+    ? 'rgba(255,255,255,0.1)'
+    : 'rgba(0,0,0,0.05)';
 
-  // Determine Background Colors
-  const activeBg = theme.tint?.get() || '$tint';
-
-  // Base Color: Custom -> Active Variant -> Fallback (undefined) leads to default overlay
-  const baseColor = backgroundColor || (isActive ? activeBg : undefined);
-
-  // Overlay Color: Uses baseColor if present, else standard glass overlay
-  const glassOverlayColor = baseColor || glass.overlay;
-
-  // Opacity: Custom -> Active (0.8) -> Default (undefined, falls back to style logic)
-  const overlayOpacity = backgroundOpacity ?? (baseColor ? 0.8 : undefined);
-
-  const finalTextColor =
-    customTextColor ||
-    (baseColor ? '#FFFFFF' : theme.color?.get() || '#000000');
-  const borderColor = baseColor ? 'transparent' : glass.border;
+  // Fallback base for Android
+  const fallbackBase =
+    androidFallbackBase ||
+    (isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)');
 
   return (
-    <Animated.View
-      style={[
-        animatedStyle,
-        disabled && { opacity: 0.5 },
-        {
-          borderRadius: currentSize.borderRadius,
-          shadowColor: shadowColor ?? '#000',
-          // shadowRadius, shadowOffset, shadowOpacity handled by animatedStyle
-          backgroundColor: 'transparent', // Container is transparent
-        },
-        style,
-      ]}
-    >
+    <Animated.View style={[animatedStyle, style]}>
       <Pressable
-        onPress={handlePress}
+        onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: currentSize.paddingVertical,
-          paddingHorizontal: currentSize.paddingHorizontal,
-          borderRadius: currentSize.borderRadius,
-          gap: 8,
-        }}
+        disabled={disabled || loading}
+        style={[
+          styles.container,
+          {
+            height: dims.height,
+            borderRadius: dims.height / 2, // Pill shape
+            shadowOpacity: shadowOpacity ?? (disabled ? 0 : 0.1),
+            shadowRadius: shadowRadius,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            elevation: Platform.OS === 'android' ? 4 : 0,
+          },
+        ]}
       >
-        {/* Glass Background Layer (Absolute) */}
         <View
           style={[
             StyleSheet.absoluteFill,
-            { borderRadius: currentSize.borderRadius, overflow: 'hidden' },
+            { borderRadius: dims.height / 2, overflow: 'hidden' },
           ]}
         >
-          <BlurView
-            intensity={intensity ?? glass.blurIntensity}
-            tint={isDark ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-          {/* Color/Overlay Layer */}
+          {Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={blurIntensity}
+              tint={isDark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : (
+            // Android Fallback - No experimental blur for performance
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: fallbackBase },
+              ]}
+            />
+          )}
+
+          {/* Color Overlay */}
           <View
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: glassOverlayColor,
-                opacity: overlayOpacity,
-                borderWidth: 1,
-                borderColor: borderColor,
-                borderRadius: currentSize.borderRadius,
+                backgroundColor: activeBackgroundColor,
+                opacity: backgroundOpacity ?? 0.8,
               },
             ]}
           />
-          {/* Simulated Inner Shadow Layer */}
-          <Animated.View
+
+          {/* Border */}
+          <View
             style={[
               StyleSheet.absoluteFill,
-              innerShadowStyle,
               {
-                borderRadius: currentSize.borderRadius,
-                borderTopWidth: 4, // Top shadow
-                borderLeftWidth: 3, // Left shadow
-                borderRightWidth: 1, // Right shadow
-                borderBottomWidth: 1, // Bottom shadow
-                borderTopColor: 'rgba(0, 0, 0, 0.5)',
-                borderLeftColor: 'rgba(0, 0, 0, 0.5)',
-                borderRightColor: 'rgba(0, 0, 0, 0.5)',
-                borderBottomColor: 'rgba(0, 0, 0, 0.5)', // Darker bottom shadow
-                backgroundColor: 'transparent',
+                borderWidth: 1,
+                borderColor: activeBorderColor,
+                borderRadius: dims.height / 2,
               },
             ]}
           />
         </View>
 
-        {/* Content (Z-Index implicit by order) */}
-        {iconComponent ? (
-          iconComponent
-        ) : icon ? (
-          <FontAwesome5
-            name={icon}
-            size={currentSize.iconSize}
-            color={finalTextColor}
-            solid={solid}
-          />
-        ) : null}
-        {typeof label === 'string' ? (
-          label ? (
-            <Text
-              color={finalTextColor}
-              fontSize={currentSize.fontSize}
-              fontWeight="600"
-            >
-              {label}
-            </Text>
-          ) : null
-        ) : (
-          label
-        )}
-        {rightIcon}
+        {/* Content */}
+        <XStack
+          paddingHorizontal={dims.paddingHorizontal}
+          alignItems="center"
+          justifyContent="center"
+          height="100%"
+          space="$2"
+        >
+          {loading ? (
+            <ActivityIndicator color={activeTextColor} size="small" />
+          ) : (
+            <>
+              {iconComponent
+                ? iconComponent
+                : icon && (
+                    <FontAwesome5
+                      name={icon}
+                      size={dims.iconSize}
+                      color={activeTextColor}
+                      style={{ opacity: disabled ? 0.6 : 1 }}
+                    />
+                  )}
+              {label && (
+                <Text
+                  color={activeTextColor}
+                  fontSize={dims.fontSize}
+                  fontWeight="600"
+                  opacity={disabled ? 0.6 : 1}
+                >
+                  {label}
+                </Text>
+              )}
+            </>
+          )}
+        </XStack>
       </Pressable>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    overflow: 'visible', // Allow shadows
+  },
+});
