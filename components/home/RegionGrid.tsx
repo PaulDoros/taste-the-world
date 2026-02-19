@@ -54,7 +54,7 @@ export const RegionGrid = React.memo<RegionGridProps>(
           <GlassCard
             borderRadius={24}
             shadowOpacity={0.3}
-            shadowRadius={8}
+            shadowRadius={2}
             style={{ marginBottom: 24, marginHorizontal: 20 }}
           >
             <YStack padding="$4">
@@ -95,7 +95,7 @@ export const RegionGrid = React.memo<RegionGridProps>(
                     <GlassCard
                       borderRadius={24}
                       shadowOpacity={0.3}
-                      shadowRadius={8}
+                      shadowRadius={4}
                       contentContainerStyle={{ alignItems: 'center' }}
                       style={{
                         width: cardWidth,

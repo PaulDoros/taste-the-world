@@ -92,7 +92,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
       >
         <GlassCard
           borderRadius={28}
-          shadowRadius={16}
+          shadowRadius={4}
           contentContainerStyle={{
             paddingVertical: 24,
             paddingHorizontal: 16,

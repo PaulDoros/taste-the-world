@@ -1,11 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { View, Text, FlatList, RefreshControl, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
 
@@ -14,22 +12,20 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterBar } from '@/components/FilterBar';
 import { StaggeredListItem } from '@/components/StaggeredList';
 import { SkeletonGrid } from '@/components/SkeletonLoader';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import LottieView from 'lottie-react-native';
 import { Country } from '@/types';
 import { Colors } from '@/constants/Colors';
-import { useTheme } from 'tamagui';
 import { isFreeCountry } from '@/constants/Config';
 import { useCountries } from '@/hooks/useCountries';
 import { useUserStore } from '@/store/useUserStore';
-import { canAccessCountry, TIER_LIMITS } from '@/utils/userTiers';
+import { canAccessCountry } from '@/utils/userTiers';
 import { haptics } from '@/utils/haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
+import { shouldUseGlassBlur } from '@/constants/Performance';
 
 // Define filter types
 type RegionFilter =
@@ -56,10 +52,9 @@ export default function ExploreScreen() {
   const [selectedPremium, setSelectedPremium] = useState<PremiumFilter>('All');
 
   const router = useRouter();
-  const theme = useTheme();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { showError } = useAlertDialog();
+  const useBlur = shouldUseGlassBlur;
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const bottomPadding = tabBarHeight + insets.bottom + 16;
@@ -81,8 +76,14 @@ export default function ExploreScreen() {
     haptics.light();
   };
 
-  // Calculate tier limits
-  const tierLimit = TIER_LIMITS[tier].countries;
+  // Access lookup avoids repeated O(n) scans in each rendered card.
+  const countryAccessMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    countries.forEach((country, index) => {
+      map.set(country.cca2, canAccessCountry(tier, index));
+    });
+    return map;
+  }, [countries, tier]);
 
   // Filter countries based on search, region, and tier
   const filteredCountries = useMemo(() => {
@@ -113,12 +114,11 @@ export default function ExploreScreen() {
 
       return true;
     });
-  }, [countries, tier, searchQuery, selectedRegion, selectedPremium]);
+  }, [countries, searchQuery, selectedRegion, selectedPremium]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Country; index: number }) => {
-      const originalIndex = countries.findIndex((c) => c.cca2 === item.cca2);
-      const isLocked = !canAccessCountry(tier, originalIndex);
+      const isLocked = !(countryAccessMap.get(item.cca2) ?? false);
 
       return (
         <StaggeredListItem index={index} staggerDelay={50}>
@@ -142,7 +142,205 @@ export default function ExploreScreen() {
         </StaggeredListItem>
       );
     },
-    [countries, tier, router, t]
+    [countryAccessMap, router, t]
+  );
+
+  const headerContainerStyle = useMemo(
+    () => ({
+      overflow: 'hidden' as const,
+      borderBottomWidth: 1,
+      marginBottom: 20,
+      borderBottomColor:
+        colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+      backgroundColor: !useBlur
+        ? colorScheme === 'dark'
+          ? 'rgba(15, 23, 42, 0.92)'
+          : 'rgba(255, 255, 255, 0.94)'
+        : 'transparent',
+    }),
+    [colorScheme, useBlur]
+  );
+
+  // Sticky header (memoized so FlatList doesn't remount it repeatedly)
+  const stickyHeader = useMemo(
+    () => (
+      useBlur ? (
+        <BlurView
+          intensity={85}
+          tint={colorScheme === 'dark' ? 'dark' : 'light'}
+          experimentalBlurMethod={
+            Platform.OS === 'android' ? 'dimezisBlurView' : undefined
+          }
+          style={headerContainerStyle}
+        >
+          {/* Header */}
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: insets.top + 16,
+              paddingBottom: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: 32,
+                  fontWeight: '700',
+                  letterSpacing: -0.5,
+                  marginBottom: 4,
+                }}
+              >
+                {t('explore_title')}
+              </Text>
+              <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+                {t('explore_subtitle')}
+              </Text>
+            </View>
+            {Platform.OS === 'ios' ? (
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FontAwesome5 name="compass" size={30} color={colors.tint} solid />
+              </View>
+            ) : (
+              <LottieView
+                source={require('@/assets/animations/travel.json')}
+                autoPlay
+                loop
+                style={{ width: 80, height: 80 }}
+              />
+            )}
+          </View>
+
+          <View>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('explore_search_placeholder')}
+            />
+
+            <FilterBar
+              selectedRegion={selectedRegion}
+              selectedPremium={selectedPremium}
+              onRegionChange={setSelectedRegion}
+              onPremiumChange={setSelectedPremium}
+              onClearAll={handleClearAllFilters}
+            />
+
+            {(searchQuery ||
+              selectedRegion !== 'All' ||
+              selectedPremium !== 'All') && (
+              <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+                <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+                  {filteredCountries.length === 1
+                    ? t('explore_results_count', {
+                        count: filteredCountries.length,
+                      })
+                    : t('explore_results_count_plural', {
+                        count: filteredCountries.length,
+                      })}
+                </Text>
+              </View>
+            )}
+          </View>
+        </BlurView>
+      ) : (
+        <View style={headerContainerStyle}>
+          {/* Header */}
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: insets.top + 16,
+              paddingBottom: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: 32,
+                  fontWeight: '700',
+                  letterSpacing: -0.5,
+                  marginBottom: 4,
+                }}
+              >
+                {t('explore_title')}
+              </Text>
+              <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
+                {t('explore_subtitle')}
+              </Text>
+            </View>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FontAwesome5 name="compass" size={30} color={colors.tint} solid />
+            </View>
+          </View>
+
+          <View>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('explore_search_placeholder')}
+            />
+
+            <FilterBar
+              selectedRegion={selectedRegion}
+              selectedPremium={selectedPremium}
+              onRegionChange={setSelectedRegion}
+              onPremiumChange={setSelectedPremium}
+              onClearAll={handleClearAllFilters}
+            />
+
+            {(searchQuery ||
+              selectedRegion !== 'All' ||
+              selectedPremium !== 'All') && (
+              <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+                <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+                  {filteredCountries.length === 1
+                    ? t('explore_results_count', {
+                        count: filteredCountries.length,
+                      })
+                    : t('explore_results_count_plural', {
+                        count: filteredCountries.length,
+                      })}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )
+    ),
+    [
+      useBlur,
+      headerContainerStyle,
+      colorScheme,
+      colors.text,
+      colors.tint,
+      insets.top,
+      searchQuery,
+      selectedRegion,
+      selectedPremium,
+      filteredCountries.length,
+      t,
+    ]
   );
 
   // Error state
@@ -159,185 +357,27 @@ export default function ExploreScreen() {
     );
   }
 
-  // Loading state with header/search always visible
+  // Loading state
   if (loading && countries.length === 0) {
     return (
       <ScreenLayout edges={['left', 'right']}>
-        {/* Header - Always visible */}
-        <Animated.View
-          entering={FadeInDown.delay(50).springify()}
-          style={{
-            paddingHorizontal: 16,
-            paddingTop: insets.top + 16, // Use unsafe area for header
-            paddingBottom: 12,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <View>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 32,
-                fontWeight: '700',
-                letterSpacing: -0.5,
-                marginBottom: 4,
-              }}
-            >
-              {t('explore_title')}
-            </Text>
-            <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-              {t('explore_subtitle')}
-            </Text>
-          </View>
-          <LottieView
-            source={require('@/assets/animations/travel.json')}
-            autoPlay
-            loop
-            style={{ width: 80, height: 80 }}
-          />
-        </Animated.View>
-
-        {/* Search Bar - Always visible */}
-        <Animated.View entering={FadeInDown.delay(150).springify()}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={t('explore_search_placeholder')}
-          />
-
-          <FilterBar
-            selectedRegion={selectedRegion}
-            selectedPremium={selectedPremium}
-            onRegionChange={setSelectedRegion}
-            onPremiumChange={setSelectedPremium}
-            onClearAll={handleClearAllFilters}
-          />
-        </Animated.View>
-
-        {/* Skeleton Loader - Only cards */}
+        {/* Keep loading UI simple to avoid header remount flicker on tab entry */}
         <SkeletonGrid count={6} />
       </ScreenLayout>
     );
   }
-
-  // Render sticky header content
-  const renderStickyHeader = () => (
-    <BlurView
-      intensity={90}
-      tint={colorScheme === 'dark' ? 'dark' : 'light'}
-      style={{
-        overflow: 'hidden',
-        borderBottomWidth: 1,
-        marginBottom: 20,
-        borderBottomColor:
-          colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-      }}
-    >
-      {/* Header */}
-      <Animated.View
-        entering={FadeInDown.delay(50).springify()}
-        style={{
-          paddingHorizontal: 16,
-          paddingTop: insets.top + 16, // Unsafe area compensation
-          paddingBottom: 12,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <View>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 32,
-              fontWeight: '700',
-              letterSpacing: -0.5,
-              marginBottom: 4,
-            }}
-          >
-            {t('explore_title')}
-          </Text>
-          <Text style={{ color: colors.text, fontSize: 15, opacity: 0.6 }}>
-            {t('explore_subtitle')}
-          </Text>
-        </View>
-        <LottieView
-          source={require('@/assets/animations/travel.json')}
-          autoPlay
-          loop
-          style={{ width: 80, height: 80 }}
-        />
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(150).springify()}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder={t('explore_search_placeholder')}
-        />
-
-        <FilterBar
-          selectedRegion={selectedRegion}
-          selectedPremium={selectedPremium}
-          onRegionChange={setSelectedRegion}
-          onPremiumChange={setSelectedPremium}
-          onClearAll={handleClearAllFilters}
-        />
-
-        {(searchQuery ||
-          selectedRegion !== 'All' ||
-          selectedPremium !== 'All') && (
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
-              {filteredCountries.length === 1
-                ? t('explore_results_count', {
-                    count: filteredCountries.length,
-                  })
-                : t('explore_results_count_plural', {
-                    count: filteredCountries.length,
-                  })}
-            </Text>
-          </View>
-        )}
-      </Animated.View>
-    </BlurView>
-  );
 
   return (
     <ScreenLayout edges={['left', 'right']} disableBackground>
       <AmbientBackground />
       {/* Countries Grid with Sticky Header */}
       <View style={{ flex: 1 }}>
-        {/* Background hack: Put it in a scrollview behind the list? No. 
-             For now, just putting it absolute in the screen layout for explore might be static. 
-             But user wants scrolling.
-             I will add it to ScreenLayout and let it be static for Explore IF I can't make it scroll.
-             Actually, for Explore, let's try putting it inside a "background" render item.
-          */}
-        {/* 
-             Strategy Switch: Since FlatList + Sticky Header + Scrolling BG is hard,
-             I will put it as absolute in ScreenLayout (static) but taller? No.
-             I will try to mimic Settings behavior:
-             If I wrap the FlatList in a view?
-             
-             Let's just disable global and use the updated AmbientBackground. 
-             If it's inside FlatList's scroll content, it moves.
-             I'll add it to the renderStickyHeader but with zIndex -1 and absolute positioning relative to the *header's container*?
-             If header is sticky, it stays.
-             
-             Let's just disable background for Explore for a moment to verify Home/Settings.
-             Wait, I will add it to the component tree below.
-          */}
         <FlatList
           data={filteredCountries}
           keyExtractor={(item) => item.cca2}
           numColumns={2}
-          ListHeaderComponent={() => <View>{renderStickyHeader()}</View>}
-          stickyHeaderIndices={[0]} // If I wrap, the WHOLE wrapper is sticky.
-          // So I can't separate them easily.
-
+          ListHeaderComponent={stickyHeader}
+          stickyHeaderIndices={[0]}
           contentContainerStyle={{
             paddingBottom: bottomPadding,
           }}
@@ -348,6 +388,11 @@ export default function ExploreScreen() {
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          removeClippedSubviews={Platform.OS === 'android'}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={7}
+          updateCellsBatchingPeriod={50}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

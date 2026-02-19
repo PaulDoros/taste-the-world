@@ -523,7 +523,7 @@ export default function ChefScreen() {
   };
 
   return (
-    <ScreenLayout edges={['bottom']}>
+    <ScreenLayout edges={['bottom']} disableBackground>
       <AmbientBackground />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

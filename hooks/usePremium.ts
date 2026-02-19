@@ -25,7 +25,16 @@ export function usePremium() {
   useEffect(() => {
     const setup = async () => {
       try {
-        if (Platform.OS === 'web') return;
+        if (Platform.OS === 'web') {
+          setIsReady(true);
+          return;
+        }
+
+        const configured = await Purchases.isConfigured();
+        if (!configured) {
+          setIsReady(true);
+          return;
+        }
 
         // Get offerings
         const offerings = await Purchases.getOfferings();
@@ -75,6 +84,15 @@ export function usePremium() {
       pack.product.identifier
     );
     try {
+      const configured = await Purchases.isConfigured();
+      if (!configured) {
+        Alert.alert(
+          'Unavailable',
+          'Purchases require a development build or RevenueCat Test Store key in Expo Go.'
+        );
+        return false;
+      }
+
       setIsProcessing(true);
       const { customerInfo } = await Purchases.purchasePackage(pack);
       console.log(
@@ -102,6 +120,15 @@ export function usePremium() {
 
   const restorePurchases = async () => {
     try {
+      const configured = await Purchases.isConfigured();
+      if (!configured) {
+        Alert.alert(
+          'Unavailable',
+          'Purchases require a development build or RevenueCat Test Store key in Expo Go.'
+        );
+        return false;
+      }
+
       const customerInfo = await Purchases.restorePurchases();
       if (Object.keys(customerInfo.entitlements.active).length > 0) {
         Alert.alert('Success', 'Purchases restored successfully!');

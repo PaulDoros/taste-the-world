@@ -103,7 +103,7 @@ export default function MoreScreen() {
   ];
 
   return (
-    <ScreenLayout edges={['top', 'left', 'right']}>
+    <ScreenLayout edges={['top', 'left', 'right']} disableBackground>
       <View
         style={{
           paddingHorizontal: 16,

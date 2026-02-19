@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View, Platform } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -12,6 +11,7 @@ import { haptics } from '@/utils/haptics';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
+import { isAndroidLowPerf, shouldUseGlassBlur } from '@/constants/Performance';
 
 interface GlassButtonProps {
   onPress: () => void;
@@ -33,6 +33,24 @@ interface GlassButtonProps {
   solid?: boolean;
 }
 
+const isTranslucentColor = (color?: string) => {
+  if (!color) return false;
+
+  if (/^#[0-9a-fA-F]{8}$/.test(color)) {
+    return color.slice(7, 9).toLowerCase() !== 'ff';
+  }
+
+  const rgbaMatch = color.match(
+    /rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([0-9.]+)\s*\)/i
+  );
+  if (rgbaMatch) {
+    const alpha = Number(rgbaMatch[1]);
+    return !Number.isNaN(alpha) && alpha < 1;
+  }
+
+  return false;
+};
+
 export const GlassButton = ({
   onPress,
   icon,
@@ -44,9 +62,9 @@ export const GlassButton = ({
   backgroundColor,
   backgroundOpacity,
   intensity,
-  shadowOpacity,
+  shadowOpacity = 0.8,
   shadowColor,
-  shadowRadius,
+  shadowRadius = 2,
   textColor: customTextColor,
   style,
   rightIcon,
@@ -56,10 +74,13 @@ export const GlassButton = ({
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const isAndroid = Platform.OS === 'android';
+  const useBlur = shouldUseGlassBlur;
   const glass = glassTokens[isDark ? 'dark' : 'light'];
 
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(1); // Standard button opacity (disabled state)
+  const translateY = useSharedValue(0);
+  const innerShadowOpacity = useSharedValue(0);
 
   const isActive = variant === 'active';
 
@@ -90,22 +111,8 @@ export const GlassButton = ({
 
   const currentSize = sizes[size];
 
-  // Animation Shared Values
-  const translateY = useSharedValue(0);
-  const shadowHeight = useSharedValue(4);
-  const shadowOpacityVal = useSharedValue(shadowOpacity ?? glass.shadowOpacity);
-  const shadowRadiusVal = useSharedValue(shadowRadius ?? 3);
-
-  // Inner Shadow Opacity Shared Value
-  const innerShadowOpacity = useSharedValue(0);
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { translateY: translateY.value }],
-    opacity: opacity.value,
-    shadowOffset: { width: 0, height: shadowHeight.value },
-    shadowOpacity: shadowOpacityVal.value,
-    shadowRadius: shadowRadiusVal.value,
-    elevation: withTiming(shadowHeight.value, { duration: 50 }),
   }));
 
   const innerShadowStyle = useAnimatedStyle(() => ({
@@ -114,37 +121,47 @@ export const GlassButton = ({
 
   const handlePressIn = () => {
     if (disabled) return;
-    scale.value = withSpring(0.98, { damping: 10, stiffness: 400 });
-    translateY.value = withTiming(2, { duration: 150 });
+    if (isAndroidLowPerf) {
+      scale.value = 1;
+      translateY.value = 0;
+      innerShadowOpacity.value = 0;
+      return;
+    }
 
-    // Outer Shadow disappears (pressed in)
-    shadowHeight.value = withTiming(0, { duration: 150 });
-    shadowRadiusVal.value = withTiming(0, { duration: 150 });
-    shadowOpacityVal.value = withTiming(0, { duration: 150 });
+    scale.value = withTiming(0.97, {
+      duration: isAndroid ? 80 : 120,
+    });
+    translateY.value = withTiming(isAndroid ? 1 : 2, {
+      duration: isAndroid ? 80 : 120,
+    });
 
-    // Inner Shadow appears
-    innerShadowOpacity.value = withTiming(1, { duration: 150 });
+    if (!isAndroid) {
+      innerShadowOpacity.value = withTiming(1, { duration: 120 });
+    }
   };
 
   const handlePressOut = () => {
     if (disabled) return;
-    scale.value = withSpring(1, { damping: 10, stiffness: 400 });
-    translateY.value = withTiming(0, { duration: 450 });
+    if (isAndroidLowPerf) {
+      scale.value = 1;
+      translateY.value = 0;
+      innerShadowOpacity.value = 0;
+      return;
+    }
 
-    // Outer Shadow returns
-    shadowHeight.value = withTiming(4, { duration: 450 });
-    shadowRadiusVal.value = withTiming(shadowRadius ?? 12, { duration: 450 });
-    shadowOpacityVal.value = withTiming(shadowOpacity ?? glass.shadowOpacity, {
-      duration: 450,
-    });
+    scale.value = withTiming(1, { duration: isAndroid ? 100 : 180 });
+    translateY.value = withTiming(0, { duration: isAndroid ? 100 : 200 });
 
-    // Inner Shadow disappears
-    innerShadowOpacity.value = withTiming(0, { duration: 200 });
+    if (!isAndroid) {
+      innerShadowOpacity.value = withTiming(0, { duration: 140 });
+    }
   };
 
   const handlePress = () => {
     if (disabled) return;
-    haptics.selection();
+    if (!isAndroidLowPerf) {
+      haptics.selection();
+    }
     onPress();
   };
 
@@ -153,17 +170,90 @@ export const GlassButton = ({
 
   // Base Color: Custom -> Active Variant -> Fallback (undefined) leads to default overlay
   const baseColor = backgroundColor || (isActive ? activeBg : undefined);
+  const isGhost = !baseColor && backgroundOpacity === 0;
 
   // Overlay Color: Uses baseColor if present, else standard glass overlay
-  const glassOverlayColor = baseColor || glass.overlay;
+  const androidSurface = isDark
+    ? 'rgba(15, 23, 42, 0.78)'
+    : 'rgba(255, 255, 255, 0.8)';
+  const androidBorder = isDark
+    ? 'rgba(148, 163, 184, 0.24)'
+    : 'rgba(15, 23, 42, 0.12)';
+  const glassOverlayColor =
+    baseColor || (isAndroidLowPerf ? androidSurface : glass.overlay);
+
+  const hasTranslucentBase = isTranslucentColor(baseColor);
 
   // Opacity: Custom -> Active (0.8) -> Default (undefined, falls back to style logic)
-  const overlayOpacity = backgroundOpacity ?? (baseColor ? 0.8 : undefined);
+  const overlayOpacity =
+    backgroundOpacity ??
+    (isAndroidLowPerf
+      ? baseColor
+        ? 0.92
+        : 0.82
+      : baseColor
+        ? 0.86
+        : undefined);
+  const effectiveOverlayOpacity = isGhost ? 0 : overlayOpacity;
+
+  const supportsAndroidBoxShadow =
+    isAndroid && typeof Platform.Version === 'number' && Platform.Version >= 28;
+  const isChip = size === 'small';
+  const isSolidSurface = !!baseColor && !hasTranslucentBase;
+  const defaultAndroidShadowStrength = isChip
+    ? 0.12
+    : isSolidSurface
+      ? 0.2
+      : 0.14;
+  const androidShadowStrength = Math.max(
+    0,
+    Math.min(1, shadowOpacity ?? defaultAndroidShadowStrength)
+  );
+  const androidShadowColor = isDark
+    ? `rgba(0, 0, 0, ${(0.5 * androidShadowStrength).toFixed(3)})`
+    : `rgba(15, 23, 42, ${(0.22 * androidShadowStrength).toFixed(3)})`;
+  const androidShadowRadius = isChip
+    ? 4
+    : isSolidSurface
+      ? isAndroidLowPerf
+        ? 8
+        : 10
+      : isAndroidLowPerf
+        ? 6
+        : 7;
+  const androidShadowYOffset = isChip ? 1 : 3;
+  const androidElevation = isChip
+    ? 2
+    : isSolidSurface
+      ? isAndroidLowPerf
+        ? 4
+        : 5
+      : isAndroidLowPerf
+        ? 3
+        : 3;
+  const androidBoxShadow = isGhost
+    ? undefined
+    : `0px ${androidShadowYOffset}px ${androidShadowRadius}px 0px ${androidShadowColor}`;
+  const androidDefaultBorder = isDark
+    ? 'rgba(148, 163, 184, 0.22)'
+    : 'rgba(15, 23, 42, 0.1)';
 
   const finalTextColor =
     customTextColor ||
-    (baseColor ? '#FFFFFF' : theme.color?.get() || '#000000');
-  const borderColor = baseColor ? 'transparent' : glass.border;
+    (baseColor && !hasTranslucentBase
+      ? '#FFFFFF'
+      : theme.color?.get() || '#000000');
+  const borderColor = isGhost
+    ? 'transparent'
+    : baseColor
+      ? isAndroidLowPerf && hasTranslucentBase
+        ? androidBorder
+        : 'transparent'
+      : isAndroid
+        ? androidDefaultBorder
+        : isAndroidLowPerf
+          ? androidBorder
+          : glass.border;
 
   return (
     <Animated.View
@@ -172,8 +262,30 @@ export const GlassButton = ({
         disabled && { opacity: 0.5 },
         {
           borderRadius: currentSize.borderRadius,
-          shadowColor: shadowColor ?? '#000',
-          // shadowRadius, shadowOffset, shadowOpacity handled by animatedStyle
+          boxShadow: supportsAndroidBoxShadow ? androidBoxShadow : undefined,
+          shadowColor: shadowColor ?? (isDark ? '#000000' : '#0f172a'),
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isAndroid
+            ? supportsAndroidBoxShadow
+              ? 0
+              : isGhost
+                ? 0
+                : Math.min(0.22, androidShadowStrength * (isDark ? 0.28 : 0.2))
+            : (shadowOpacity ?? glass.shadowOpacity),
+          shadowRadius: isAndroid
+            ? supportsAndroidBoxShadow
+              ? 0
+              : isGhost
+                ? 0
+                : androidShadowRadius
+            : (shadowRadius ?? 12),
+          elevation: isAndroid
+            ? supportsAndroidBoxShadow
+              ? 0
+              : isGhost
+                ? 0
+                : androidElevation
+            : 6,
           backgroundColor: 'transparent', // Container is transparent
         },
         style,
@@ -183,6 +295,11 @@ export const GlassButton = ({
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        android_ripple={
+          isAndroid
+            ? { color: 'rgba(255,255,255,0.08)', borderless: false }
+            : undefined
+        }
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -190,6 +307,7 @@ export const GlassButton = ({
           paddingVertical: currentSize.paddingVertical,
           paddingHorizontal: currentSize.paddingHorizontal,
           borderRadius: currentSize.borderRadius,
+          overflow: 'hidden',
           gap: 8,
         }}
       >
@@ -200,43 +318,49 @@ export const GlassButton = ({
             { borderRadius: currentSize.borderRadius, overflow: 'hidden' },
           ]}
         >
-          <BlurView
-            intensity={intensity ?? glass.blurIntensity}
-            tint={isDark ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
+          {useBlur && (
+            <BlurView
+              intensity={intensity ?? glass.blurIntensity}
+              tint={isDark ? 'dark' : 'light'}
+              experimentalBlurMethod={isAndroid ? 'dimezisBlurView' : undefined}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
           {/* Color/Overlay Layer */}
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: glassOverlayColor,
-                opacity: overlayOpacity,
-                borderWidth: 1,
-                borderColor: borderColor,
-                borderRadius: currentSize.borderRadius,
-              },
-            ]}
-          />
-          {/* Simulated Inner Shadow Layer */}
-          <Animated.View
-            style={[
-              StyleSheet.absoluteFill,
-              innerShadowStyle,
-              {
-                borderRadius: currentSize.borderRadius,
-                borderTopWidth: 4, // Top shadow
-                borderLeftWidth: 3, // Left shadow
-                borderRightWidth: 1, // Right shadow
-                borderBottomWidth: 1, // Bottom shadow
-                borderTopColor: 'rgba(0, 0, 0, 0.5)',
-                borderLeftColor: 'rgba(0, 0, 0, 0.5)',
-                borderRightColor: 'rgba(0, 0, 0, 0.5)',
-                borderBottomColor: 'rgba(0, 0, 0, 0.5)', // Darker bottom shadow
-                backgroundColor: 'transparent',
-              },
-            ]}
-          />
+          {!isGhost && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: glassOverlayColor,
+                  opacity: effectiveOverlayOpacity,
+                  borderWidth: 1,
+                  borderColor: borderColor,
+                  borderRadius: currentSize.borderRadius,
+                },
+              ]}
+            />
+          )}
+          {!isAndroid && (
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                innerShadowStyle,
+                {
+                  borderRadius: currentSize.borderRadius,
+                  borderTopWidth: 4,
+                  borderLeftWidth: 3,
+                  borderRightWidth: 1,
+                  borderBottomWidth: 1,
+                  borderTopColor: 'rgba(0, 0, 0, 0.5)',
+                  borderLeftColor: 'rgba(0, 0, 0, 0.5)',
+                  borderRightColor: 'rgba(0, 0, 0, 0.5)',
+                  borderBottomColor: 'rgba(0, 0, 0, 0.5)',
+                  backgroundColor: 'transparent',
+                },
+              ]}
+            />
+          )}
         </View>
 
         {/* Content (Z-Index implicit by order) */}
