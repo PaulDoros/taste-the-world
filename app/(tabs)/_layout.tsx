@@ -1,6 +1,8 @@
+import React, { useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { PersistentTabBar } from '@/components/PersistentTabBar';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -14,19 +16,20 @@ function TabBarIcon(props: {
  * Uses PersistentTabBar for navigation (defined in app/_layout.tsx)
  */
 export default function TabLayout() {
+  const renderTabBar = useCallback(() => <PersistentTabBar />, []);
+
   return (
     <Tabs
-      tabBar={() => <PersistentTabBar />}
+      tabBar={renderTabBar}
+      detachInactiveScreens={true}
       screenOptions={{
         headerShown: false,
-        // Tab transition animations
-        animation: 'shift',
-        transitionSpec: {
-          animation: 'timing',
-          config: {
-            duration: 200,
-          },
-        },
+        // Tabs are usually smoothest on Android without screen animation.
+        animation: Platform.OS === 'android' ? 'none' : 'fade',
+        lazy: true,
+        // Freeze inactive Android tabs to cut background re-renders.
+        freezeOnBlur: Platform.OS === 'android',
+        tabBarHideOnKeyboard: true,
       }}
     >
       {/* Home Tab */}
@@ -42,6 +45,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Explore',
+          lazy: Platform.OS === 'ios' ? false : true,
         }}
       />
 

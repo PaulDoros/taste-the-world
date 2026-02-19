@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -45,10 +45,14 @@ export const FilterBar = ({
   onClearAll,
 }: FilterBarProps) => {
   const colorScheme = useColorScheme();
+  const isAndroid = Platform.OS === 'android';
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const hasActiveFilters =
     selectedRegion !== 'All' || selectedPremium !== 'All';
+  const chipActiveShadow = isAndroid ? 0.24 : 0.7;
+  const chipInactiveShadow = isAndroid ? 0.08 : 0.3;
+  const chipShadowRadius = isAndroid ? 4 : 2;
 
   const regions: {
     label: string;
@@ -188,6 +192,7 @@ export const FilterBar = ({
               key={region.value}
               label={region.label}
               icon={region.icon}
+              shadowRadius={chipShadowRadius}
               onPress={() => onRegionChange(region.value)}
               size="small"
               // Active: Solid color, White text
@@ -195,7 +200,7 @@ export const FilterBar = ({
               backgroundColor={isActive ? region.color : `${region.color}15`}
               textColor={isActive ? '#FFFFFF' : region.color}
               backgroundOpacity={isActive ? 0.9 : 0.8} // Slightly more solid for active
-              shadowOpacity={isActive ? 0.3 : 0} // Only shadow when active
+              shadowOpacity={isActive ? chipActiveShadow : chipInactiveShadow}
             />
           );
         })}
@@ -221,10 +226,11 @@ export const FilterBar = ({
               icon={filter.icon}
               onPress={() => onPremiumChange(filter.value)}
               size="small"
+              shadowRadius={chipShadowRadius}
               backgroundColor={isActive ? filter.color : `${filter.color}15`}
               textColor={isActive ? '#FFFFFF' : filter.color}
               backgroundOpacity={isActive ? 0.9 : 0.8}
-              shadowOpacity={isActive ? 0.3 : 0}
+              shadowOpacity={isActive ? chipActiveShadow : chipInactiveShadow}
             />
           );
         })}

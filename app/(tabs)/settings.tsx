@@ -257,8 +257,6 @@ export default function SettingsScreen() {
 
   const handleUpdateAvatar = () => {
     haptics.selection();
-    console.log('[Settings] Gamification Stats:', gamificationStats);
-    console.log('[Settings] Badges:', gamificationStats?.badges);
     setAvatarSelectorVisible(true);
   };
 
@@ -286,7 +284,6 @@ export default function SettingsScreen() {
   };
 
   const handleSelectAvatar = async (avatarId: string) => {
-    console.log('[Settings] Selecting avatar:', avatarId);
     setAvatarSelectorVisible(false);
     if (user && token) {
       try {
@@ -294,16 +291,13 @@ export default function SettingsScreen() {
         setSelectedAvatar(avatarId);
 
         const result = await setCurrentAvatar({ token, avatarId });
-        console.log('[Settings] Avatar update result:', result);
         showSuccess('Avatar Updated!');
       } catch (error) {
-        console.error('[Settings] Failed to update avatar:', error);
         // Revert local state on error
         setSelectedAvatar(undefined);
         showError('Failed to update avatar. Please try again.');
       }
     } else {
-      console.error('[Settings] No user or token available');
       showError('Please sign in to update your avatar');
     }
   };
@@ -315,16 +309,6 @@ export default function SettingsScreen() {
     ? AVATARS.find((a) => a.id === currentAvatarId) ||
       BADGES.find((b) => b.id === currentAvatarId)
     : null;
-
-  // Debug logging
-  console.log('[Settings] Selected Avatar (local):', selectedAvatar);
-  console.log('[Settings] User Avatar (server):', (user as any)?.currentAvatar);
-  console.log('[Settings] Current Avatar ID (effective):', currentAvatarId);
-  console.log('[Settings] Current Avatar Def:', currentAvatarDef);
-  console.log(
-    '[Settings] Has Lottie?:',
-    (currentAvatarDef as any)?.lottie || (currentAvatarDef as any)?.lottieSource
-  );
 
   // Determine if the user is a "Guest" (even if technically authenticated with a guest token)
   const isGuest = !isAuthenticated || user?.email?.includes('@guest.local');
@@ -862,7 +846,6 @@ export default function SettingsScreen() {
                 <Switch
                   value={isSoundEnabled}
                   onValueChange={(value) => {
-                    console.log('[Settings] Toggling Sound:', value);
                     haptics.light();
                     setSoundEnabled(value);
                   }}

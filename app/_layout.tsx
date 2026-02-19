@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
+import Constants from 'expo-constants';
 import '../global.css';
 
 // Configure Reanimated logger to disable strict mode warnings
@@ -105,29 +106,51 @@ export default function RootLayout() {
 
       // Initialize RevenueCat
       if (Platform.OS === 'ios' || Platform.OS === 'android') {
-        const appleKey = process.env.EXPO_PUBLIC_RC_APPLE_KEY;
-        const googleKey = process.env.EXPO_PUBLIC_RC_GOOGLE_KEY;
-        const testKey = process.env.EXPO_PUBLIC_RC_TEST_API_KEY;
-        const customKey = process.env.EXPO_PUBLIC_REVENUECAT_Test;
+        const setupRevenueCat = async () => {
+          const appleKey = process.env.EXPO_PUBLIC_RC_APPLE_KEY;
+          const googleKey = process.env.EXPO_PUBLIC_RC_GOOGLE_KEY;
+          const testKey = process.env.EXPO_PUBLIC_RC_TEST_API_KEY;
+          const customKey = process.env.EXPO_PUBLIC_REVENUECAT_Test;
+          const isExpoGo =
+            Constants.executionEnvironment === 'storeClient' ||
+            Constants.appOwnership === 'expo';
 
-        let apiKey: string | undefined;
+          let apiKey: string | undefined;
 
-        if (Platform.OS === 'ios') {
-          apiKey = appleKey;
-        } else if (Platform.OS === 'android') {
-          apiKey = googleKey;
-        }
+          if (isExpoGo) {
+            // Expo Go cannot access native stores, so only the RC Test Store key is valid.
+            apiKey = testKey || customKey;
+          } else if (Platform.OS === 'ios') {
+            apiKey = appleKey;
+          } else {
+            apiKey = googleKey;
+          }
 
-        // Fallback to test key if specific keys are missing or placeholders
-        if (!apiKey || apiKey.includes('placeholder')) {
-          apiKey = testKey || customKey;
-        }
+          // Fallback to test key when native key is missing in dev builds.
+          if (!apiKey || apiKey.includes('placeholder')) {
+            apiKey = testKey || customKey;
+          }
 
-        if (apiKey && !apiKey.includes('placeholder')) {
-          Purchases.configure({ apiKey });
-        } else {
-          console.warn('RevenueCat API Key not found or invalid in env vars');
-        }
+          if (!apiKey || apiKey.includes('placeholder')) {
+            console.warn(
+              isExpoGo
+                ? 'RevenueCat skipped: Expo Go requires a Test Store API key.'
+                : 'RevenueCat skipped: API key not found or placeholder.'
+            );
+            return;
+          }
+
+          try {
+            const configured = await Purchases.isConfigured();
+            if (!configured) {
+              Purchases.configure({ apiKey });
+            }
+          } catch (e) {
+            console.warn('Error configuring Purchases:', e);
+          }
+        };
+
+        void setupRevenueCat();
       }
       setIsReady(true);
     }

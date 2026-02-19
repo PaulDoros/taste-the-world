@@ -71,7 +71,7 @@ export const CountryCard = ({
       style={{ marginBottom: 16 }}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
-        <GlassCard borderRadius={24} shadowOpacity={0.3} shadowRadius={8}>
+        <GlassCard borderRadius={24} shadowOpacity={0.3} shadowRadius={3}>
           <View height={200}>
             <Image
               source={{ uri: country.flags.png }}

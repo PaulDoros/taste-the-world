@@ -24,7 +24,7 @@ export const SectionHeader = React.memo<SectionHeaderProps>(
     return (
       <GlassCard
         borderRadius={24}
-        shadowRadius={8}
+        shadowRadius={3}
         style={{ marginBottom: 24, marginHorizontal: 20 }}
       >
         <XStack alignItems="center" justifyContent="space-between" padding="$4">

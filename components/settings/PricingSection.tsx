@@ -1,5 +1,11 @@
-import { View, LayoutChangeEvent, StyleSheet } from 'react-native';
-import { useState, useEffect, useMemo } from 'react';
+import {
+  View,
+  LayoutChangeEvent,
+  StyleSheet,
+  Platform,
+  Pressable,
+} from 'react-native';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { YStack, XStack, Text, Button, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +17,7 @@ import Animated, {
   withSequence,
   withSpring,
   interpolateColor,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { PREMIUM_BENEFITS, SUBSCRIPTION_PRICES } from '@/constants/Config';
 import { haptics } from '@/utils/haptics';
@@ -20,9 +27,10 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { Pressable, ActivityIndicator } from 'react-native';
 import { usePremium } from '@/hooks/usePremium';
 import { PurchasesPackage } from 'react-native-purchases';
+import { isAndroidLowPerf } from '@/constants/Performance';
+import { useIsFocused } from '@react-navigation/native';
 
 interface PricingSectionProps {
   selectedSubscription: 'monthly' | 'yearly';
@@ -51,7 +59,9 @@ const AnimatedPricingCard = ({
   const progress = useSharedValue(isSelected ? 1 : 0);
 
   useEffect(() => {
-    progress.value = withTiming(isSelected ? 1 : 0, { duration: 300 });
+    progress.value = withTiming(isSelected ? 1 : 0, {
+      duration: Platform.OS === 'android' ? 220 : 300,
+    });
   }, [isSelected]);
 
   const animatedBgStyle = useAnimatedStyle(() => {
@@ -66,7 +76,7 @@ const AnimatedPricingCard = ({
 
   const animatedBorderStyle = useAnimatedStyle(() => {
     return {
-      borderWidth: 2,
+      borderWidth: Platform.OS === 'android' ? 1 : 2,
       borderColor: interpolateColor(
         progress.value,
         [0, 1],
@@ -120,8 +130,15 @@ export const PricingSection = ({
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
+  const isFocused = useIsFocused();
+  const isPerformanceMode = Platform.OS === 'android' && isAndroidLowPerf;
+  const isAndroidUi = Platform.OS === 'android';
+  const androidShadowBase = colorScheme === 'dark' ? '#000000' : '#0f172a';
+  const androidBorderSoft = colorScheme === 'dark'
+    ? 'rgba(148, 163, 184, 0.2)'
+    : 'rgba(15, 23, 42, 0.08)';
   const [showAllBenefits, setShowAllBenefits] = useState(false);
-  const { offerings, isReady } = usePremium();
+  const { offerings } = usePremium();
 
   // Track user interaction to stop auto-toggling
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -129,24 +146,10 @@ export const PricingSection = ({
   const isYearly = selectedSubscription === 'yearly';
   const isPro = selectedTier === 'pro';
 
-  // Debug: What packages are ACTUALLY available?
-  useEffect(() => {
-    if (offerings.length > 0) {
-      console.log(
-        '[PricingSection] Available Packages:',
-        offerings.map((o) => o.product.identifier)
-      );
-    } else {
-      console.log('[PricingSection] No offerings loaded yet.');
-    }
-  }, [offerings]);
-
   // Robust helper to find a package by tier + period — computed fresh every render
-  const findPackage = (tier: string, period: string) => {
+  const findPackage = useCallback((tier: string, period: string) => {
     const term = period.toLowerCase();
     const tierName = tier.toLowerCase();
-    const compoundId = `${tierName}_${term}`;
-    const compoundIdAlt = `${tierName}-${term}`;
 
     // 1. Explicit known formats based on RevenueCat setup
     const knownIds: string[] = [];
@@ -188,7 +191,7 @@ export const PricingSection = ({
       }) ||
       offerings.find((o) => o.product.identifier.toLowerCase().includes(term))
     );
-  };
+  }, [offerings]);
 
   // Derive current package directly
   const currentPackage = findPackage(selectedTier, selectedSubscription);
@@ -215,7 +218,15 @@ export const PricingSection = ({
   // Colors
   const PRO_COLOR = '#6366f1';
   const ACTIVE_COLOR = isPro ? PRO_COLOR : colors.tint;
-  const INACTIVE_COLOR = `${colors.text}10`;
+  const INACTIVE_COLOR = isAndroidUi
+    ? colorScheme === 'dark'
+      ? isAndroidLowPerf
+        ? 'rgba(30, 41, 59, 0.55)'
+        : 'rgba(30, 41, 59, 0.45)'
+      : isAndroidLowPerf
+        ? 'rgba(255, 255, 255, 0.6)'
+        : 'rgba(255, 255, 255, 0.5)'
+    : `${colors.text}10`;
 
   // Animations
   const pulseScale = useSharedValue(1);
@@ -227,11 +238,11 @@ export const PricingSection = ({
   // Tab Switcher Logic
   useEffect(() => {
     tabPosition.value = withSpring(selectedTier === 'pro' ? 1 : 0, {
-      damping: 150,
-      stiffness: 150,
+      damping: isPerformanceMode ? 36 : 24,
+      stiffness: isPerformanceMode ? 240 : 180,
       mass: 1,
     });
-  }, [selectedTier]);
+  }, [selectedTier, isPerformanceMode]);
 
   const animatedTabStyle = useAnimatedStyle(() => {
     const translateX = tabWidth * tabPosition.value;
@@ -243,17 +254,25 @@ export const PricingSection = ({
 
   // Auto-Toggle Loop
   useEffect(() => {
-    if (hasInteracted) return;
+    if (hasInteracted || isPerformanceMode || !isFocused) {
+      return;
+    }
 
     const interval = setInterval(() => {
       onSelectTier(selectedTier === 'pro' ? 'personal' : 'pro');
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [hasInteracted, selectedTier, onSelectTier]);
+  }, [hasInteracted, selectedTier, onSelectTier, isPerformanceMode, isFocused]);
 
   // Badge Loop
   useEffect(() => {
+    if (isPerformanceMode || !isFocused) {
+      badgeScale.value = 1;
+      badgeRotate.value = 0;
+      return;
+    }
+
     const interval = setInterval(() => {
       badgeScale.value = withSequence(
         withSpring(1.2, { damping: 10, stiffness: 200 }),
@@ -265,8 +284,9 @@ export const PricingSection = ({
         withTiming(0, { duration: 100 })
       );
     }, 4000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [isPerformanceMode, isFocused]);
 
   const animatedBadgeStyle = useAnimatedStyle(() => ({
     transform: [
@@ -276,16 +296,27 @@ export const PricingSection = ({
   }));
 
   // CTA Pulse
-  useState(() => {
+  useEffect(() => {
+    if (isPerformanceMode || !isFocused) {
+      pulseScale.value = 1;
+      cancelAnimation(pulseScale);
+      return;
+    }
+
     pulseScale.value = withRepeat(
       withSequence(
-        withTiming(1.02, { duration: 1000 }),
-        withTiming(1, { duration: 1000 })
+        withTiming(1.02, { duration: 1100 }),
+        withTiming(1, { duration: 1100 })
       ),
       -1,
       true
     );
-  });
+
+    return () => {
+      cancelAnimation(pulseScale);
+      pulseScale.value = 1;
+    };
+  }, [isPerformanceMode, isFocused]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
@@ -299,7 +330,9 @@ export const PricingSection = ({
 
   const stopAutoToggle = () => {
     if (!hasInteracted) {
-      haptics.selection();
+      if (!isPerformanceMode) {
+        haptics.selection();
+      }
       setHasInteracted(true);
     }
   };
@@ -329,11 +362,23 @@ export const PricingSection = ({
                 backgroundColor: isPro ? PRO_COLOR : colors.tint,
                 padding: 12,
                 borderRadius: 25,
-                shadowColor: isPro ? PRO_COLOR : colors.tint,
+                shadowColor: isAndroidUi
+                  ? androidShadowBase
+                  : isPro
+                    ? PRO_COLOR
+                    : colors.tint,
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 5,
+                shadowOpacity: isAndroidUi
+                  ? isAndroidLowPerf
+                    ? 0.15
+                    : 0.12
+                  : 0.3,
+                shadowRadius: isAndroidUi
+                  ? isAndroidLowPerf
+                    ? 8
+                    : 6
+                  : 8,
+                elevation: isAndroidUi ? (isAndroidLowPerf ? 4 : 3) : 5,
               }}
             >
               <FontAwesome5
@@ -360,7 +405,14 @@ export const PricingSection = ({
           <View
             onLayout={handleLayout}
             style={{
-              backgroundColor: colorScheme === 'dark' ? '#1e293b' : '#f1f5f9',
+              backgroundColor:
+                Platform.OS === 'android' && isAndroidLowPerf
+                  ? colorScheme === 'dark'
+                    ? 'rgba(30, 41, 59, 0.6)'
+                    : 'rgba(248, 250, 252, 0.82)'
+                  : colorScheme === 'dark'
+                    ? '#1e293b'
+                    : '#f1f5f9',
               borderRadius: 12,
               padding: 4,
               flexDirection: 'row',
@@ -378,11 +430,21 @@ export const PricingSection = ({
                     height: 40,
                     borderRadius: 10,
                     backgroundColor: isPro ? PRO_COLOR : 'white',
-                    shadowColor: '#000',
+                    shadowColor: isAndroidUi ? androidShadowBase : '#000',
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
+                    shadowOpacity: isAndroidUi
+                      ? isAndroidLowPerf
+                        ? 0.14
+                        : 0.1
+                      : 0.1,
+                    shadowRadius: isAndroidUi
+                      ? isAndroidLowPerf
+                        ? 7
+                        : 5
+                      : 4,
+                    elevation: isAndroidUi ? (isAndroidLowPerf ? 4 : 3) : 3,
+                    borderWidth: isAndroidUi ? 1 : 0,
+                    borderColor: isAndroidUi ? androidBorderSoft : 'transparent',
                   },
                   animatedTabStyle,
                 ]}
