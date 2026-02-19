@@ -1,11 +1,17 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Pressable,
   Text,
-  useWindowDimensions,
   Platform,
   StyleSheet,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -15,6 +21,7 @@ import Animated, {
   useAnimatedStyle,
   withSequence,
   withTiming,
+  withSpring,
   Easing,
 } from 'react-native-reanimated';
 
@@ -107,17 +114,17 @@ const isTabPathMatch = (currentPath: string, tabPath: string) => {
  * Persistent Tab Bar Component
  * Shows on all screens for easy navigation
  */
-export const PersistentTabBar = () => {
+const PersistentTabBarComponent = () => {
   const router = useRouter();
   const pathname = usePathname();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isAndroid = Platform.OS === 'android';
   const insets = useSafeAreaInsets();
-  const useBlur = shouldUseGlassBlur;
+  const useBlur = Platform.OS === 'ios' && shouldUseGlassBlur;
   const colors = Colors[colorScheme ?? 'light'];
   const glass = glassTokens[isDark ? 'dark' : 'light'];
-  const { width: SCREEN_WIDTH } = useWindowDimensions(); // Dynamic width that updates on resize/rotation
+  const [barWidth, setBarWidth] = useState(0);
   const tabBarBottomOffset = isAndroid ? Math.max(10, insets.bottom) : 0;
   const supportsAndroidBoxShadow =
     isAndroid && typeof Platform.Version === 'number' && Platform.Version >= 28;
@@ -127,8 +134,9 @@ export const PersistentTabBar = () => {
       : '#1e293b'
     : colors.tabIconDefault;
   const inactiveTabOpacity = !isAndroid ? 0.82 : 0.6;
+  const bubbleElevation = Platform.OS === 'android' ? 0 : 10;
 
-  const tabWidth = SCREEN_WIDTH / TAB_CONFIG.length;
+  const tabWidth = barWidth > 0 ? barWidth / TAB_CONFIG.length : 0;
 
   const normalizedPath = useMemo(() => normalizePath(pathname), [pathname]);
 
@@ -148,34 +156,86 @@ export const PersistentTabBar = () => {
   const displayTabIndex =
     activeTabIndex >= 0 ? activeTabIndex : lastActiveTabRef.current;
 
-  const bubbleX = useSharedValue(displayTabIndex * tabWidth);
+  const bubbleX = useSharedValue(0);
   const bubbleScale = useSharedValue(1);
   const activeTabConfig = TAB_CONFIG[Math.max(0, displayTabIndex)];
   const activeColor = activeTabConfig.color;
   const activeBgColor = activeTabConfig.backgroundColor;
+  const androidHaloRestOpacity = isAndroidLowPerf ? 0.2 : 0.27;
+  const androidSpringDamping = isAndroidLowPerf ? 38 : 26;
+  const androidSpringStiffness = isAndroidLowPerf ? 250 : 195;
+  const haloOpacity = useSharedValue(isAndroid ? androidHaloRestOpacity : 0.3);
+  const bubbleBorderColor = isDark
+    ? 'rgba(148, 163, 184, 0.24)'
+    : 'rgba(15, 23, 42, 0.09)';
+  const bubbleTopSheenColor = isDark
+    ? 'rgba(255, 255, 255, 0.1)'
+    : 'rgba(255, 255, 255, 0.34)';
+  const bubbleInnerLayerColor = isDark
+    ? 'rgba(15, 23, 42, 0.08)'
+    : 'rgba(255, 255, 255, 0.18)';
+
+  const handleBarLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextWidth = Math.round(event.nativeEvent.layout.width);
+    if (nextWidth <= 0) return;
+    setBarWidth((prev) => {
+      if (prev === 0 || Math.abs(prev - nextWidth) > 24) {
+        return nextWidth;
+      }
+      return prev;
+    });
+  }, []);
 
   // Keep tab motion lightweight and deterministic.
   useEffect(() => {
+    if (tabWidth <= 0) {
+      return;
+    }
+
     const targetX = displayTabIndex * tabWidth;
 
-    if (isAndroidLowPerf) {
-      bubbleX.value = targetX;
-      bubbleScale.value = 1;
+    if (isAndroid) {
+      bubbleX.value = withSpring(targetX, {
+        damping: androidSpringDamping,
+        stiffness: androidSpringStiffness,
+        mass: 1,
+      });
       return;
     }
 
     bubbleX.value = withTiming(targetX, {
-      duration: isAndroid ? 130 : 190,
+      duration: 190,
       easing: Easing.out(Easing.cubic),
     });
 
-    if (!isAndroid && activeTabIndex >= 0) {
+    if (activeTabIndex >= 0 && !isAndroid) {
       bubbleScale.value = withSequence(
         withTiming(1.04, { duration: 90, easing: Easing.out(Easing.quad) }),
-        withTiming(1, { duration: 130, easing: Easing.out(Easing.quad) })
+        withTiming(1, {
+          duration: 130,
+          easing: Easing.out(Easing.quad),
+        })
       );
     }
-  }, [displayTabIndex, activeTabIndex, tabWidth, isAndroid]);
+
+    haloOpacity.value = withSequence(
+      withTiming(0.36, {
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+      }),
+      withTiming(0.3, {
+        duration: 230,
+        easing: Easing.out(Easing.quad),
+      })
+    );
+  }, [
+    displayTabIndex,
+    activeTabIndex,
+    tabWidth,
+    isAndroid,
+    androidSpringDamping,
+    androidSpringStiffness,
+  ]);
 
   const bubbleStyle = useAnimatedStyle(() => ({
     transform: [
@@ -186,6 +246,7 @@ export const PersistentTabBar = () => {
 
   const haloStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: bubbleX.value + (tabWidth - 80) / 2 }],
+    opacity: haloOpacity.value,
   }));
 
   const handleTabPress = (tab: (typeof TAB_CONFIG)[0], tabIndex: number) => {
@@ -199,8 +260,32 @@ export const PersistentTabBar = () => {
       return;
     }
 
-    if (isAndroidLowPerf) {
-      bubbleX.value = tabIndex * tabWidth;
+    if (isAndroid && tabWidth > 0) {
+      bubbleX.value = withSpring(tabIndex * tabWidth, {
+        damping: androidSpringDamping,
+        stiffness: androidSpringStiffness,
+        mass: 1,
+      });
+      bubbleScale.value = withSequence(
+        withTiming(isAndroidLowPerf ? 1.012 : 1.024, {
+          duration: isAndroidLowPerf ? 70 : 90,
+          easing: Easing.out(Easing.quad),
+        }),
+        withTiming(1, {
+          duration: isAndroidLowPerf ? 110 : 135,
+          easing: Easing.out(Easing.quad),
+        })
+      );
+      haloOpacity.value = withSequence(
+        withTiming(isAndroidLowPerf ? 0.28 : 0.36, {
+          duration: isAndroidLowPerf ? 100 : 120,
+          easing: Easing.out(Easing.quad),
+        }),
+        withTiming(androidHaloRestOpacity, {
+          duration: isAndroidLowPerf ? 140 : 190,
+          easing: Easing.out(Easing.quad),
+        })
+      );
     }
 
     lastActiveTabRef.current = tabIndex;
@@ -215,6 +300,7 @@ export const PersistentTabBar = () => {
 
   return (
     <View
+      onLayout={handleBarLayout}
       style={{
         position: 'absolute',
         bottom: tabBarBottomOffset,
@@ -276,7 +362,7 @@ export const PersistentTabBar = () => {
           zIndex: 1000,
         }}
       >
-        {!isAndroidLowPerf && (
+        {!isAndroidLowPerf && tabWidth > 0 && (
           <Animated.View
             pointerEvents="none"
             style={[
@@ -288,7 +374,6 @@ export const PersistentTabBar = () => {
                 height: 54,
                 borderRadius: 27,
                 backgroundColor: activeBgColor,
-                opacity: 0.32,
                 zIndex: 0,
               },
               haloStyle,
@@ -297,56 +382,55 @@ export const PersistentTabBar = () => {
         )}
 
         {/* 🫧 Sliding Bubble Background */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            {
-              position: 'absolute',
-              top: 11,
-              left: 0,
-              width: 72,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: activeBgColor,
-              boxShadow:
-                supportsAndroidBoxShadow && !isAndroidLowPerf
-                  ? `0px 4px 10px 0px ${isDark ? 'rgba(0, 0, 0, 0.16)' : 'rgba(15, 23, 42, 0.11)'}`
-                  : undefined,
-              shadowColor: activeColor,
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: isAndroid
-                ? supportsAndroidBoxShadow
-                  ? 0
-                  : isAndroidLowPerf
-                    ? 0.12
-                    : 0.09
-                : 0.6,
-              shadowRadius: isAndroid
-                ? supportsAndroidBoxShadow
-                  ? 0
-                  : isAndroidLowPerf
-                    ? 6
-                    : 5
-                : 12,
-              elevation: Platform.select({
-                android: supportsAndroidBoxShadow
-                  ? 0
-                  : isAndroidLowPerf
-                    ? 4
-                    : 3,
-                default: 10,
-              }),
-              borderWidth: isAndroidLowPerf ? 1 : 0,
-              borderColor: isAndroidLowPerf
-                ? isDark
-                  ? 'rgba(148, 163, 184, 0.25)'
-                  : 'rgba(15, 23, 42, 0.08)'
-                : 'transparent',
-              zIndex: 0,
-            },
-            bubbleStyle,
-          ]}
-        />
+        {tabWidth > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: 'absolute',
+                top: 11,
+                left: 0,
+                width: 72,
+                height: 48,
+                borderRadius: 24,
+                overflow: 'hidden',
+                backgroundColor: activeBgColor,
+                shadowColor: activeColor,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: bubbleElevation,
+                shadowOpacity: Platform.OS === 'ios' ? 0.6 : 0,
+                shadowRadius: Platform.OS === 'ios' ? 12 : 0,
+                borderWidth: 1,
+                borderColor: bubbleBorderColor,
+                zIndex: 0,
+              },
+              bubbleStyle,
+            ]}
+          >
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: 1,
+                left: 1,
+                right: 1,
+                height: 18,
+                borderRadius: 18,
+                backgroundColor: bubbleTopSheenColor,
+                opacity: isAndroid ? 0.42 : 0.34,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                borderRadius: 24,
+                backgroundColor: bubbleInnerLayerColor,
+                opacity: 0.22,
+              }}
+            />
+          </Animated.View>
+        )}
 
         {/* Tab Icons */}
         {TAB_CONFIG.map((tab, index) => {
@@ -356,11 +440,7 @@ export const PersistentTabBar = () => {
             <Pressable
               key={tab.name}
               onPress={() => handleTabPress(tab, index)}
-              android_ripple={
-                isAndroid
-                  ? { color: 'rgba(255,255,255,0.08)', borderless: false }
-                  : undefined
-              }
+              android_ripple={undefined}
               style={{
                 flex: 1,
                 alignItems: 'center',
@@ -406,3 +486,6 @@ export const PersistentTabBar = () => {
     </View>
   );
 };
+
+export const PersistentTabBar = React.memo(PersistentTabBarComponent);
+PersistentTabBar.displayName = 'PersistentTabBar';

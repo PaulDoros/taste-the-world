@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { PersistentTabBar } from '@/components/PersistentTabBar';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -15,21 +16,20 @@ function TabBarIcon(props: {
  * Uses PersistentTabBar for navigation (defined in app/_layout.tsx)
  */
 export default function TabLayout() {
+  const renderTabBar = useCallback(() => <PersistentTabBar />, []);
+
   return (
     <Tabs
-      tabBar={() => <PersistentTabBar />}
-      detachInactiveScreens={Platform.OS === 'android'}
+      tabBar={renderTabBar}
+      detachInactiveScreens={Platform.OS === 'android' ? false : true}
       screenOptions={{
         headerShown: false,
-        // Fade on iOS avoids page overlay artifacts from shift transitions.
-        animation: Platform.OS === 'ios' ? 'fade' : 'none',
-        lazy: true,
-        // On Android, pause inactive tabs to stop hidden animations from consuming frames.
-        freezeOnBlur: Platform.OS === 'android',
+        // Tabs are usually smoothest on Android without screen animation.
+        animation: Platform.OS === 'android' ? 'none' : 'fade',
+        lazy: Platform.OS === 'android' ? false : true,
+        // Prevent resume-jump artifacts from frozen inactive screens.
+        freezeOnBlur: Platform.OS === 'android' ? false : true,
         tabBarHideOnKeyboard: true,
-        sceneStyle: {
-          backgroundColor: Platform.OS === 'android' ? '#00000000' : undefined,
-        },
       }}
     >
       {/* Home Tab */}
