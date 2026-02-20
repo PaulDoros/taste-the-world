@@ -3,6 +3,8 @@ import { Tabs } from 'expo-router';
 import { PersistentTabBar } from '@/components/PersistentTabBar';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -16,19 +18,24 @@ function TabBarIcon(props: {
  * Uses PersistentTabBar for navigation (defined in app/_layout.tsx)
  */
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const renderTabBar = useCallback(() => <PersistentTabBar />, []);
 
   return (
     <Tabs
       tabBar={renderTabBar}
-      detachInactiveScreens={true}
+      detachInactiveScreens={Platform.OS === 'android' ? false : true}
       screenOptions={{
         headerShown: false,
         // Tabs are usually smoothest on Android without screen animation.
         animation: Platform.OS === 'android' ? 'none' : 'fade',
         lazy: true,
-        // Freeze inactive Android tabs to cut background re-renders.
-        freezeOnBlur: Platform.OS === 'android',
+        // Android: freeze inactive tabs to stop background work after visiting many tabs.
+        freezeOnBlur: Platform.OS === 'android' ? true : undefined,
+        sceneStyle: {
+          backgroundColor: colors.background,
+        },
         tabBarHideOnKeyboard: true,
       }}
     >

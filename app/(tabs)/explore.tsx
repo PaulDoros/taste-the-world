@@ -21,6 +21,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { canAccessCountry } from '@/utils/userTiers';
 import { haptics } from '@/utils/haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -52,6 +53,7 @@ export default function ExploreScreen() {
   const [selectedPremium, setSelectedPremium] = useState<PremiumFilter>('All');
 
   const router = useRouter();
+  const isFocused = useIsFocused();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const useBlur = shouldUseGlassBlur;
@@ -163,7 +165,7 @@ export default function ExploreScreen() {
 
   // Sticky header (memoized so FlatList doesn't remount it repeatedly)
   const stickyHeader = useMemo(
-    () => (
+    () =>
       useBlur ? (
         <BlurView
           intensity={85}
@@ -200,7 +202,7 @@ export default function ExploreScreen() {
                 {t('explore_subtitle')}
               </Text>
             </View>
-            {Platform.OS === 'ios' ? (
+            {Platform.OS === 'ios' || !isFocused ? (
               <View
                 style={{
                   width: 80,
@@ -209,7 +211,12 @@ export default function ExploreScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <FontAwesome5 name="compass" size={30} color={colors.tint} solid />
+                <FontAwesome5
+                  name="compass"
+                  size={30}
+                  color={colors.tint}
+                  solid
+                />
               </View>
             ) : (
               <LottieView
@@ -240,7 +247,9 @@ export default function ExploreScreen() {
               selectedRegion !== 'All' ||
               selectedPremium !== 'All') && (
               <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-                <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+                <Text
+                  style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}
+                >
                   {filteredCountries.length === 1
                     ? t('explore_results_count', {
                         count: filteredCountries.length,
@@ -290,7 +299,12 @@ export default function ExploreScreen() {
                 justifyContent: 'center',
               }}
             >
-              <FontAwesome5 name="compass" size={30} color={colors.tint} solid />
+              <FontAwesome5
+                name="compass"
+                size={30}
+                color={colors.tint}
+                solid
+              />
             </View>
           </View>
 
@@ -313,7 +327,9 @@ export default function ExploreScreen() {
               selectedRegion !== 'All' ||
               selectedPremium !== 'All') && (
               <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-                <Text style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}>
+                <Text
+                  style={{ color: colors.text, fontSize: 14, opacity: 0.6 }}
+                >
                   {filteredCountries.length === 1
                     ? t('explore_results_count', {
                         count: filteredCountries.length,
@@ -326,8 +342,7 @@ export default function ExploreScreen() {
             )}
           </View>
         </View>
-      )
-    ),
+      ),
     [
       useBlur,
       headerContainerStyle,
@@ -335,6 +350,7 @@ export default function ExploreScreen() {
       colors.text,
       colors.tint,
       insets.top,
+      isFocused,
       searchQuery,
       selectedRegion,
       selectedPremium,

@@ -49,6 +49,7 @@ import Animated, {
 import LottieView from 'lottie-react-native';
 import { haptics } from '@/utils/haptics';
 import { playSound } from '@/utils/sounds';
+import { useIsFocused } from '@react-navigation/native';
 
 import { useRouter } from 'expo-router';
 import Markdown from 'react-native-markdown-display';
@@ -102,6 +103,7 @@ export default function ChefScreen() {
     useState<IngredientSource>('random');
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   // Reset selected chat when mode changes
   useEffect(() => {
@@ -167,6 +169,14 @@ export default function ChefScreen() {
   const quickActionAnim = useSharedValue(0);
 
   useEffect(() => {
+    if (!isFocused) {
+      activeQuickAction.value = null;
+      quickActionAnim.value = 0;
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     const triggerAnimation = () => {
       // Randomly select one of the 3 buttons (0, 1, 2)
       const randomIndex = Math.floor(Math.random() * 3);
@@ -187,10 +197,10 @@ export default function ChefScreen() {
       timeoutId = setTimeout(triggerAnimation, nextDelay);
     };
 
-    let timeoutId = setTimeout(triggerAnimation, 2000); // Start after 2s
+    timeoutId = setTimeout(triggerAnimation, 2000); // Start after 2s
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [isFocused]);
 
   const handleRecipeGenerate = (config: {
     style: CookingStyle;
@@ -362,6 +372,10 @@ export default function ChefScreen() {
 
   // Auto-scroll to bottom
   useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
     if (messages.length > 0) {
       const lastMsg = messages[messages.length - 1];
       // Only play if it's AI and likely a "new" one (we could improve this with timestamp check)
@@ -376,7 +390,7 @@ export default function ChefScreen() {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [messages, isTyping]);
+  }, [isFocused, messages, isTyping]);
 
   const addToShoppingList = useMutation(
     api.shoppingList.addMultipleShoppingListItems

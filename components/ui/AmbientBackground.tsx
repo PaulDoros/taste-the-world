@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, Dimensions, Platform } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { useColorScheme } from '@/components/useColorScheme';
 import Animated, {
   useSharedValue,
@@ -40,14 +41,7 @@ const PALETTES = {
     '#FB7185',
     '#34D399',
   ],
-  LIGHT: [
-    '#3b82f6',
-    '#8B5CF6',
-    '#38BDF8',
-    '#A78BFA',
-    '#F472B6',
-    '#34D399',
-  ],
+  LIGHT: ['#3b82f6', '#8B5CF6', '#38BDF8', '#A78BFA', '#F472B6', '#34D399'],
 };
 
 interface BubbleDescriptor {
@@ -90,7 +84,8 @@ const buildBubble = (
   const delay = seededRandom(id + 6) * 2200;
   const maxOpacity =
     BUBBLE_CONFIG.MIN_OPACITY +
-    seededRandom(id + 7) * (BUBBLE_CONFIG.MAX_OPACITY - BUBBLE_CONFIG.MIN_OPACITY);
+    seededRandom(id + 7) *
+      (BUBBLE_CONFIG.MAX_OPACITY - BUBBLE_CONFIG.MIN_OPACITY);
 
   return { id, top, left, size, color, duration, delay, maxOpacity };
 };
@@ -149,6 +144,7 @@ export const AmbientBackground = ({
   height,
 }: AmbientBackgroundProps) => {
   const colorScheme = useColorScheme();
+  const isFocused = useIsFocused();
   const isDark = colorScheme === 'dark';
   const { isAmbientBackgroundEnabled } = useSettingsStore();
 
@@ -189,6 +185,9 @@ export const AmbientBackground = ({
 
   if (!isAmbientBackgroundEnabled) return null;
 
+  // Android: stop background bubbles for non-focused tabs to avoid accumulated jank.
+  if (Platform.OS === 'android' && !isFocused) return null;
+
   return (
     <View
       style={{
@@ -218,7 +217,9 @@ export const AmbientBackground = ({
               }}
             />
           ))
-        : bubbles.map((bubble) => <PulsingBubble key={bubble.id} bubble={bubble} />)}
+        : bubbles.map((bubble) => (
+            <PulsingBubble key={bubble.id} bubble={bubble} />
+          ))}
     </View>
   );
 };

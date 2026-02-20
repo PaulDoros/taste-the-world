@@ -146,6 +146,7 @@ const PersistentTabBarComponent = () => {
 
   // Track last visited tab (for detail screens where no tab matches).
   const lastActiveTabRef = useRef(0);
+  const pendingPressedTabRef = useRef<number | null>(null);
   if (activeTabIndex >= 0) {
     lastActiveTabRef.current = activeTabIndex;
   }
@@ -192,6 +193,10 @@ const PersistentTabBarComponent = () => {
     const targetX = displayTabIndex * tabWidth;
 
     if (isAndroid) {
+      if (pendingPressedTabRef.current === displayTabIndex) {
+        pendingPressedTabRef.current = null;
+        return;
+      }
       bubbleX.value = withSpring(targetX, {
         damping: androidSpringDamping,
         stiffness: androidSpringStiffness,
@@ -245,6 +250,7 @@ const PersistentTabBarComponent = () => {
     transform: [{ translateX: bubbleX.value + (tabWidth - 80) / 2 }],
     opacity: haloOpacity.value,
   }));
+  const shouldRenderHalo = !isAndroid && !isAndroidLowPerf && tabWidth > 0;
 
   const handleTabPress = (tab: (typeof TAB_CONFIG)[0], tabIndex: number) => {
     if (!isAndroidLowPerf) {
@@ -258,6 +264,7 @@ const PersistentTabBarComponent = () => {
     }
 
     if (isAndroid && tabWidth > 0) {
+      pendingPressedTabRef.current = tabIndex;
       bubbleX.value = withSpring(tabIndex * tabWidth, {
         damping: androidSpringDamping,
         stiffness: androidSpringStiffness,
@@ -358,7 +365,7 @@ const PersistentTabBarComponent = () => {
           zIndex: 1000,
         }}
       >
-        {!isAndroidLowPerf && tabWidth > 0 && (
+        {shouldRenderHalo && (
           <Animated.View
             pointerEvents="none"
             style={[
