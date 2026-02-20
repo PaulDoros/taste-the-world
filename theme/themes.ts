@@ -80,7 +80,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  background: zinc[950], // #09090b - The "Modern Black"
+  background: sky[880], // #09090b - The "Modern Black"
   backgroundHover: zinc[900],
   backgroundPress: zinc[800],
   backgroundFocus: zinc[900], // Ensure focus state exists

@@ -1,16 +1,16 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
 
 /**
  * Get all favorites for a user
  */
 export const getFavorites = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("favorites")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .order("desc")
+      .query('favorites')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .order('desc')
       .collect();
   },
 });
@@ -20,14 +20,14 @@ export const getFavorites = query({
  */
 export const isFavorite = query({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     recipeId: v.string(),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query("favorites")
-      .withIndex("by_user_and_recipe", (q) =>
-        q.eq("userId", args.userId).eq("recipeId", args.recipeId)
+      .query('favorites')
+      .withIndex('by_user_and_recipe', (q) =>
+        q.eq('userId', args.userId).eq('recipeId', args.recipeId)
       )
       .first();
     return !!favorite;
@@ -39,7 +39,7 @@ export const isFavorite = query({
  */
 export const addFavorite = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     recipeId: v.string(),
     recipeName: v.string(),
     recipeImage: v.optional(v.string()),
@@ -49,9 +49,9 @@ export const addFavorite = mutation({
   handler: async (ctx, args) => {
     // Check if already favorited
     const existing = await ctx.db
-      .query("favorites")
-      .withIndex("by_user_and_recipe", (q) =>
-        q.eq("userId", args.userId).eq("recipeId", args.recipeId)
+      .query('favorites')
+      .withIndex('by_user_and_recipe', (q) =>
+        q.eq('userId', args.userId).eq('recipeId', args.recipeId)
       )
       .first();
 
@@ -59,7 +59,7 @@ export const addFavorite = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("favorites", {
+    return await ctx.db.insert('favorites', {
       userId: args.userId,
       recipeId: args.recipeId,
       recipeName: args.recipeName,
@@ -76,14 +76,14 @@ export const addFavorite = mutation({
  */
 export const removeFavorite = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     recipeId: v.string(),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query("favorites")
-      .withIndex("by_user_and_recipe", (q) =>
-        q.eq("userId", args.userId).eq("recipeId", args.recipeId)
+      .query('favorites')
+      .withIndex('by_user_and_recipe', (q) =>
+        q.eq('userId', args.userId).eq('recipeId', args.recipeId)
       )
       .first();
 
@@ -97,14 +97,13 @@ export const removeFavorite = mutation({
  * Clear all favorites
  */
 export const clearFavorites = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query("favorites")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('favorites')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .collect();
 
     await Promise.all(favorites.map((favorite) => ctx.db.delete(favorite._id)));
   },
 });
-

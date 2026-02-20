@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  LayoutChangeEvent,
-} from 'react-native';
+import { Pressable, StyleSheet, View, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,7 +12,6 @@ import { haptics } from '@/utils/haptics';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
-import { Shadow } from 'react-native-shadow-2';
 import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 interface GlassButtonProps {
@@ -82,9 +76,6 @@ export const GlassButton = ({
   const glass = glassTokens[isDark ? 'dark' : 'light'];
   const isAndroid = IS_ANDROID;
 
-  // ✅ Press state just for Android shadow collapse (no "jump up")
-  const [pressed, setPressed] = React.useState(false);
-
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   const translateY = useSharedValue(0);
@@ -145,15 +136,6 @@ export const GlassButton = ({
     opacity: innerPressedOpacity.value,
   }));
 
-  // ✅ measure size so absolutely-positioned Shadow has real width/height
-  const [measured, setMeasured] = React.useState({ w: 0, h: 0 });
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    if (width !== measured.w || height !== measured.h) {
-      setMeasured({ w: width, h: height });
-    }
-  };
-
   const handlePressIn = () => {
     if (disabled) return;
 
@@ -171,9 +153,6 @@ export const GlassButton = ({
     elevationVal.value = withTiming(0, { duration: 150 });
 
     innerPressedOpacity.value = withTiming(1, { duration: 150 });
-
-    // ✅ Android shadow-2: collapse via `pressed` state (NO translation)
-    if (isAndroid) setPressed(true);
   };
 
   const handlePressOut = () => {
@@ -193,9 +172,6 @@ export const GlassButton = ({
     elevationVal.value = withTiming(baseAndroidElevation, { duration: 300 });
 
     innerPressedOpacity.value = withTiming(0, { duration: 200 });
-
-    // ✅ Android shadow-2 restore
-    if (isAndroid) setPressed(false);
   };
 
   const handlePress = () => {
@@ -253,55 +229,17 @@ export const GlassButton = ({
     ? 'rgba(255,255,255,0.08)'
     : 'rgba(255,255,255,0.20)';
 
-  // Android Shadow-2 params
-  const shadowDistance =
-    androidShadowDistance ??
-    (size === 'large' ? 14 : size === 'medium' ? 12 : 10);
-
-  const shadowOffsetY = androidShadowOffsetY ?? 2;
-
-  const shadowAlpha = androidShadowOpacityProp ?? (isDark ? 0.55 : 0.25);
-  const startColor = `rgba(0,0,0,${shadowAlpha})`;
-
-  const shadow2Offset: [number, number] = pressed ? [0, 0] : [0, shadowOffsetY];
-  const shadow2StartColor = pressed ? 'rgba(0,0,0,0)' : startColor;
-
   return (
     <Animated.View
-      onLayout={onLayout}
       style={[
         animatedStyle,
         {
           borderRadius: r,
-          backgroundColor: isAndroid ? 'rgba(0,0,0,0.01)' : 'transparent',
+          backgroundColor: isAndroid ? fallbackBase : 'transparent',
         },
         style,
       ]}
     >
-      {/* ✅ Android shadow as absolute background (no layout impact, no translate) */}
-      {isAndroid && measured.w > 0 && measured.h > 0 && (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { zIndex: -1 }]}
-        >
-          <Shadow
-            distance={1}
-            startColor={shadow2StartColor}
-            endColor="rgba(0,0,0,0)"
-            offset={shadow2Offset}
-            style={{
-              width: measured.w,
-              height: measured.h,
-              borderRadius: r,
-            }}
-          >
-            <View
-              style={{ width: measured.w, height: measured.h, borderRadius: r }}
-            />
-          </Shadow>
-        </View>
-      )}
-
       <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
@@ -322,18 +260,11 @@ export const GlassButton = ({
             { borderRadius: r, overflow: 'hidden' },
           ]}
         >
-          {IS_IOS ? (
+          {IS_IOS && (
             <BlurView
               intensity={intensity ?? glass.blurIntensity}
               tint={isDark ? 'dark' : 'light'}
               style={StyleSheet.absoluteFill}
-            />
-          ) : (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: fallbackBase },
-              ]}
             />
           )}
 

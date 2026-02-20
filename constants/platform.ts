@@ -10,6 +10,4 @@ export const IS_WEB = PLATFORM_OS === 'web';
 export const IS_NATIVE_MOBILE = IS_ANDROID || IS_IOS;
 
 export const IS_ANDROID_API_28_PLUS =
-  IS_ANDROID &&
-  typeof PLATFORM_VERSION === 'number' &&
-  PLATFORM_VERSION >= 28;
+  IS_ANDROID && typeof PLATFORM_VERSION === 'number' && PLATFORM_VERSION >= 28;

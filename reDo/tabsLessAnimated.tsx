@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, Pressable, Text, Dimensions } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import React, { useEffect, useState } from 'react';
+import { View, Pressable, Text, Dimensions } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,45 +11,45 @@ import Animated, {
   withRepeat,
   withSequence,
   runOnJS,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { haptics } from "@/utils/haptics";
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import { haptics } from '@/utils/haptics';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /**
  * Tab Configuration
  */
 const TAB_CONFIG = [
   {
-    name: "index",
-    title: "Explore",
-    icon: "globe-americas",
-    color: "#0ea5e9",
-    backgroundColor: "rgba(14, 165, 233, 0.15)",
+    name: 'index',
+    title: 'Explore',
+    icon: 'globe-americas',
+    color: '#0ea5e9',
+    backgroundColor: 'rgba(14, 165, 233, 0.15)',
   },
   {
-    name: "shopping-list",
-    title: "Shopping",
-    icon: "shopping-basket",
-    color: "#10b981",
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    name: 'shopping-list',
+    title: 'Shopping',
+    icon: 'shopping-basket',
+    color: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   {
-    name: "favorites",
-    title: "Favorites",
-    icon: "heart",
-    color: "#ef4444",
-    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    name: 'favorites',
+    title: 'Favorites',
+    icon: 'heart',
+    color: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   {
-    name: "settings",
-    title: "Settings",
-    icon: "user-circle",
-    color: "#8b5cf6",
-    backgroundColor: "rgba(139, 92, 246, 0.15)",
+    name: 'settings',
+    title: 'Settings',
+    icon: 'user-circle',
+    color: '#8b5cf6',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
 ];
 
@@ -63,10 +63,10 @@ const CustomTabBar = ({
   navigation,
 }: BottomTabBarProps) => {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
 
   // Calculate tab width (excluding hidden "two" tab)
-  const visibleTabs = state.routes.filter((route) => route.name !== "two");
+  const visibleTabs = state.routes.filter((route) => route.name !== 'two');
   const tabWidth = SCREEN_WIDTH / visibleTabs.length;
 
   // Animated values for sliding bubble
@@ -81,7 +81,7 @@ const CustomTabBar = ({
   // Get current tab color
   const [activeColor, setActiveColor] = useState(TAB_CONFIG[0].color);
   const [activeBgColor, setActiveBgColor] = useState(
-    TAB_CONFIG[0].backgroundColor,
+    TAB_CONFIG[0].backgroundColor
   );
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const CustomTabBar = ({
     if (predictedIndex !== state.index) {
       const activeRoute = state.routes[state.index];
       const tabIndex = TAB_CONFIG.findIndex(
-        (tab) => tab.name === activeRoute.name,
+        (tab) => tab.name === activeRoute.name
       );
 
       if (tabIndex !== -1) {
@@ -112,19 +112,19 @@ const CustomTabBar = ({
     pulseScale.value = withRepeat(
       withSequence(
         withTiming(1.2, { duration: 1000 }),
-        withTiming(1, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
       ),
       -1,
-      true,
+      true
     );
 
     pulseOpacity.value = withRepeat(
       withSequence(
         withTiming(0.6, { duration: 1000 }),
-        withTiming(0.3, { duration: 1000 }),
+        withTiming(0.3, { duration: 1000 })
       ),
       -1,
-      true,
+      true
     );
   }, [state.index, tabWidth]);
 
@@ -162,14 +162,14 @@ const CustomTabBar = ({
     // 5. Bounce effect
     bubbleScale.value = withSequence(
       withSpring(1.15, { damping: 10, stiffness: 500 }),
-      withSpring(1, { damping: 12, stiffness: 250 }),
+      withSpring(1, { damping: 12, stiffness: 250 })
     );
   };
 
   return (
     <View
       style={{
-        flexDirection: "row",
+        flexDirection: 'row',
         backgroundColor: colors.background,
         borderTopWidth: 1,
         borderTopColor: colors.border,
@@ -182,7 +182,7 @@ const CustomTabBar = ({
       <Animated.View
         style={[
           {
-            position: "absolute",
+            position: 'absolute',
             top: 6,
             left: (tabWidth - 80) / 2,
             width: 80,
@@ -198,7 +198,7 @@ const CustomTabBar = ({
       <Animated.View
         style={[
           {
-            position: "absolute",
+            position: 'absolute',
             top: 10,
             left: (tabWidth - 72) / 2,
             width: 72,
@@ -217,7 +217,7 @@ const CustomTabBar = ({
 
       {/* Tab Icons */}
       {state.routes.map((route, index) => {
-        if (route.name === "two") return null;
+        if (route.name === 'two') return null;
 
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -230,7 +230,7 @@ const CustomTabBar = ({
           handlePredictivePress(index, route.name);
 
           const event = navigation.emit({
-            type: "tabPress",
+            type: 'tabPress',
             target: route.key,
             canPreventDefault: true,
           });
@@ -246,14 +246,14 @@ const CustomTabBar = ({
             onPress={onPress}
             style={({ pressed }) => ({
               flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: 'center',
+              justifyContent: 'center',
               paddingTop: 4,
               opacity: pressed ? 0.7 : 1,
               transform: [{ scale: pressed ? 0.95 : 1 }],
             })}
           >
-            <View style={{ alignItems: "center", gap: 6 }}>
+            <View style={{ alignItems: 'center', gap: 6 }}>
               {/* Icon with bounce animation */}
               <View
                 style={{
@@ -275,7 +275,7 @@ const CustomTabBar = ({
               <Text
                 style={{
                   fontSize: 11,
-                  fontWeight: isFocused ? "700" : "600",
+                  fontWeight: isFocused ? '700' : '600',
                   color: isFocused ? tabConfig.color : colors.tabIconDefault,
                   opacity: isFocused ? 1 : 0.6,
                 }}
@@ -296,7 +296,7 @@ const CustomTabBar = ({
  */
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
@@ -304,9 +304,9 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         // Tab transition animations
-        animation: "shift",
+        animation: 'shift',
         transitionSpec: {
-          animation: "timing",
+          animation: 'timing',
           config: {
             duration: 200,
           },
@@ -317,7 +317,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Explore",
+          title: 'Explore',
         }}
       />
 
@@ -325,7 +325,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="shopping-list"
         options={{
-          title: "Shopping",
+          title: 'Shopping',
         }}
       />
 
@@ -333,7 +333,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="favorites"
         options={{
-          title: "Favorites",
+          title: 'Favorites',
         }}
       />
 
@@ -341,7 +341,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: 'Settings',
         }}
       />
 

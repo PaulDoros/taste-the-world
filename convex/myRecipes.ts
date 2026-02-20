@@ -38,7 +38,7 @@ export const create = mutation({
       ).length;
 
       const limit = tier === 'guest' ? 2 : 4;
-      
+
       if (existingCount >= limit) {
         throw new Error(
           `Recipe limit reached for ${tier} tier (${limit} max). Upgrade to add more.`

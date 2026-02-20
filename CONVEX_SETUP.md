@@ -27,6 +27,7 @@ npx convex dev
 ```
 
 This will:
+
 - Prompt you to login or create an account
 - Create a `.convex` folder with your deployment configuration
 - Start the Convex development server
@@ -49,6 +50,7 @@ Replace the placeholder URL in `lib/convex.ts` with your actual deployment URL.
 ### 4. Deploy Schema and Functions
 
 Once `npx convex dev` is running, it will automatically:
+
 - Deploy your schema (`convex/schema.ts`)
 - Deploy all your functions (queries and mutations)
 - Generate TypeScript types in `convex/_generated/`
@@ -91,12 +93,12 @@ function MyComponent() {
   const pantryItems = useQuery(api.pantry.getPantryItems, {
     userId: "user-id-here"
   });
-  
+
   // pantryItems will be undefined while loading, then the data
   if (pantryItems === undefined) {
     return <Text>Loading...</Text>;
   }
-  
+
   return <Text>Items: {pantryItems.length}</Text>;
 }
 ```
@@ -109,7 +111,7 @@ import { api } from "@/convex/_generated/api";
 
 function MyComponent() {
   const addItem = useMutation(api.pantry.addPantryItem);
-  
+
   const handleAdd = async () => {
     await addItem({
       userId: "user-id-here",
@@ -118,7 +120,7 @@ function MyComponent() {
       measure: "500g"
     });
   };
-  
+
   return <Button onPress={handleAdd}>Add Item</Button>;
 }
 ```
@@ -126,6 +128,7 @@ function MyComponent() {
 ## 🎯 Next Steps
 
 1. **Run Convex Dev Server:**
+
    ```bash
    npx convex dev
    ```
@@ -160,6 +163,7 @@ function MyComponent() {
 ### "Cannot find module 'convex/react'"
 
 Make sure Convex is installed:
+
 ```bash
 npm install convex
 ```
@@ -177,4 +181,3 @@ Check your `convex/schema.ts` file for syntax errors. The Convex dev server will
 ---
 
 **Ready to go!** 🎉 Run `npx convex dev` to start your backend.
-

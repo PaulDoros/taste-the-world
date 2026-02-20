@@ -20,15 +20,17 @@ export interface ShoppingListItem extends Ingredient {
  */
 interface ShoppingListStore {
   items: ShoppingListItem[];
-  
+
   // Actions
   addItem: (item: Omit<ShoppingListItem, 'id' | 'checked' | 'addedAt'>) => void;
-  addMultipleItems: (items: Omit<ShoppingListItem, 'id' | 'checked' | 'addedAt'>[]) => void;
+  addMultipleItems: (
+    items: Omit<ShoppingListItem, 'id' | 'checked' | 'addedAt'>[]
+  ) => void;
   removeItem: (id: string) => void;
   toggleItemChecked: (id: string) => void;
   clearCheckedItems: () => void;
   clearAllItems: () => void;
-  
+
   // Getters
   getItemCount: () => number;
   getCheckedItemCount: () => number;
@@ -125,12 +127,13 @@ export const useShoppingListStore = create<ShoppingListStore>()(
           // Track seen IDs to detect duplicates
           const seenIds = new Set<string>();
           const deduplicatedItems: ShoppingListItem[] = [];
-          
+
           state.items.forEach((item) => {
             // UUID format is 36 characters with specific pattern
             // Old format was: recipeId-name-timestamp (variable length, usually longer)
-            const isUUID = item.id.length === 36 && item.id.split('-').length === 5;
-            
+            const isUUID =
+              item.id.length === 36 && item.id.split('-').length === 5;
+
             // If ID is duplicate or in old format, generate a new UUID
             if (seenIds.has(item.id) || !isUUID) {
               // Reassign with new UUID
@@ -143,14 +146,15 @@ export const useShoppingListStore = create<ShoppingListStore>()(
               deduplicatedItems.push(item);
             }
           });
-          
+
           // Update state with deduplicated items
           state.items = deduplicatedItems;
-          
-          console.log(`Migration: Processed ${state.items.length} items, created ${deduplicatedItems.length} unique items`);
+
+          console.log(
+            `Migration: Processed ${state.items.length} items, created ${deduplicatedItems.length} unique items`
+          );
         }
       },
     }
   )
 );
-

@@ -8,7 +8,6 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Shadow } from 'react-native-shadow-2';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
 import { shouldUseGlassBlur } from '@/constants/Performance';
@@ -81,29 +80,19 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
   const allowIOSBlur = IS_IOS && shouldUseGlassBlur;
 
-  // --- Android absolute shadow sizing ---
-  const [measured, setMeasured] = React.useState({ w: 0, h: 0 });
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    if (width !== measured.w || height !== measured.h)
-      setMeasured({ w: width, h: height });
-  };
-
-  const shadowAlpha =
-    androidShadowOpacityProp ??
-    (isThin ? (isDark ? 0.35 : 0.18) : isDark ? 0.5 : 0.25);
-  const startColor = `rgba(0,0,0,${shadowAlpha})`;
   const resolvedAndroidShadowDistance =
     androidShadowDistance ?? (isThin ? 2 : 3);
-  const resolvedAndroidShadowOffsetY = androidShadowOffsetY ?? (isThin ? 1 : 3);
+
+  const containerBgColorAndroid = !isTransparentSurface
+    ? fallbackBase
+    : 'transparent';
 
   return (
     <View
-      onLayout={isAndroid ? onLayout : undefined}
       style={[
         {
           borderRadius,
-          backgroundColor: 'transparent',
+          backgroundColor: isAndroid ? containerBgColorAndroid : 'transparent',
           ...(IS_IOS
             ? {
                 shadowColor: shadowColor ?? (isDark ? '#000' : '#0f172a'),
@@ -111,59 +100,24 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                 shadowOpacity: shadowOpacity ?? glass.shadowOpacity,
                 shadowRadius,
               }
-            : null),
+            : !isTransparentSurface
+              ? { elevation: resolvedAndroidShadowDistance }
+              : null),
         },
         style,
       ]}
       {...props}
     >
-      {/* ✅ Android: absolute Shadow-2 layer (NO layout impact) */}
-      {isAndroid && measured.w > 0 && measured.h > 0 && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <Shadow
-            distance={resolvedAndroidShadowDistance}
-            startColor={startColor}
-            endColor="rgba(0,0,0,0)"
-            offset={[0, resolvedAndroidShadowOffsetY]}
-            style={{
-              width: measured.w,
-              height: measured.h,
-              borderRadius,
-            }}
-          >
-            {/* single measurable child */}
-            <View
-              style={{
-                width: measured.w,
-                height: measured.h,
-                borderRadius,
-                backgroundColor: 'rgba(0,0,0,0.01)',
-              }}
-            />
-          </Shadow>
-        </View>
-      )}
-
       {/* Background Layer */}
       <View
         style={[StyleSheet.absoluteFill, { borderRadius, overflow: 'hidden' }]}
       >
-        {IS_IOS && allowIOSBlur ? (
+        {IS_IOS && allowIOSBlur && (
           <BlurView
             intensity={blurIntensity}
             tint={isDark ? 'dark' : 'light'}
             style={StyleSheet.absoluteFill}
           />
-        ) : (
-          // ✅ Android: no blur (performance). Solid base only.
-          !isTransparentSurface && (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: fallbackBase },
-              ]}
-            />
-          )
         )}
 
         {!isTransparentSurface && (

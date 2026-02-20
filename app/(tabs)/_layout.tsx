@@ -29,11 +29,10 @@ export default function TabLayout() {
   return (
     <Tabs
       tabBar={renderTabBar}
-      detachInactiveScreens={IS_ANDROID ? false : true}
+      detachInactiveScreens={true}
       screenOptions={{
         headerShown: false,
-        // Android tab switches are most stable without scene animation.
-        animation: IS_ANDROID ? 'none' : 'fade',
+        // Using default navigation animations to prevent cross-fade ghosting of frozen screens
         // Keep Android lazy to avoid mounting all tabs at once.
         lazy: true,
         // Freeze inactive Android tabs to cut background JS/UI work.

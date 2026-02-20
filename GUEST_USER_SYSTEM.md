@@ -33,6 +33,7 @@ await signUp('user@example.com', 'password123', 'John Doe');
 ```
 
 **What gets linked:**
+
 - ✅ Premium purchases (subscription activated immediately)
 - ✅ Favorite recipes
 - ✅ Shopping list items
@@ -73,17 +74,21 @@ await signUpWithOAuth({
 ### Convex Functions
 
 #### `auth.signUp`
+
 - Accepts `guestPurchases` and `guestData` parameters
 - Automatically links purchases and data when creating account
 
 #### `guest.linkGuestPurchases`
+
 - Links guest purchases to user account
 - Updates subscription status
 
 #### `guest.linkGuestData`
+
 - Links favorites, shopping list, pantry, recipe history
 
 #### `oauth.signUpWithOAuth`
+
 - OAuth signup with guest data linking
 - Supports Google, Apple, Facebook
 
@@ -126,6 +131,7 @@ await signUpWithOAuth({
 To complete OAuth integration:
 
 1. Install OAuth packages:
+
    ```bash
    npx expo install expo-auth-session expo-crypto
    ```
@@ -150,10 +156,10 @@ function PurchaseScreen() {
   const handlePurchase = async (type: 'monthly' | 'yearly') => {
     // Process payment (Stripe, Apple Pay, etc.)
     const transactionId = await processPayment(type);
-    
+
     // Save purchase (works for both guests and authenticated users)
     await processPurchase(type, transactionId, getPrice(type));
-    
+
     if (!isAuthenticated) {
       // Show prompt: "Create account to sync your purchase"
       router.push('/auth/signup?fromPurchase=true');
@@ -168,4 +174,3 @@ function PurchaseScreen() {
 - Transaction IDs are verified when linking
 - Duplicate purchases are prevented
 - All data is encrypted in AsyncStorage
-

@@ -845,14 +845,16 @@ export const es = {
   country_lebanon: 'Lebanon',
   country_peru: 'Peru',
 
-
   // Backfilled Chef Prompts (English Fallback)
   chef_prompt_style: 'I want to cook a {{style}} meal.',
-  chef_prompt_quick: 'It should be ready in under 15 minutes with max 5 ingredients.',
+  chef_prompt_quick:
+    'It should be ready in under 15 minutes with max 5 ingredients.',
   chef_prompt_family: 'It should be a nice family dinner (~45 mins).',
   chef_prompt_gourmet: 'I want a full gourmet experience (1+ hour).',
   chef_prompt_cuisine: 'The cuisine/style should be {{cuisine}}.',
-  chef_prompt_pantry_empty: 'I wanted to use my pantry, but it seems empty. Please suggest a recipe with common ingredients.',
-  chef_prompt_pantry_ingredients: 'I have these ingredients in my pantry: {{ingredients}}. Please use some of them.',
+  chef_prompt_pantry_empty:
+    'I wanted to use my pantry, but it seems empty. Please suggest a recipe with common ingredients.',
+  chef_prompt_pantry_ingredients:
+    'I have these ingredients in my pantry: {{ingredients}}. Please use some of them.',
   chef_prompt_suggest_ingredients: 'Please suggest the ingredients.',
 };

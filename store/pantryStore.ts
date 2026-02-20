@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 /**
  * Pantry Item
@@ -39,12 +39,12 @@ export const usePantryStore = create<PantryStore>((set, get) => ({
   items: [],
 
   // Add an item to pantry
-  addItem: (name, measure = "as needed") => {
+  addItem: (name, measure = 'as needed') => {
     const normalizedName = name.toLowerCase().trim();
 
     // Check if item already exists
     const existingItem = get().items.find(
-      (item) => item.name === normalizedName,
+      (item) => item.name === normalizedName
     );
 
     if (existingItem) {
@@ -57,7 +57,7 @@ export const usePantryStore = create<PantryStore>((set, get) => ({
       id: `${normalizedName}-${Date.now()}`,
       name: normalizedName,
       displayName: name.trim(),
-      measure: measure || "as needed",
+      measure: measure || 'as needed',
       addedAt: Date.now(),
     };
 
@@ -82,7 +82,7 @@ export const usePantryStore = create<PantryStore>((set, get) => ({
   updateItemQuantity: (id, newMeasure) => {
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === id ? { ...item, measure: newMeasure } : item,
+        item.id === id ? { ...item, measure: newMeasure } : item
       ),
     }));
   },

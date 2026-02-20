@@ -120,7 +120,9 @@ export async function saveGuestPurchase(
 /**
  * Save guest data (favorites, shopping list, etc.)
  */
-export async function saveGuestData(data: Partial<GuestUser['pendingData']>): Promise<void> {
+export async function saveGuestData(
+  data: Partial<GuestUser['pendingData']>
+): Promise<void> {
   try {
     const guestData = await getGuestUser();
     if (!guestData) {
@@ -168,4 +170,3 @@ export async function hasPendingPurchases(): Promise<boolean> {
     return false;
   }
 }
-

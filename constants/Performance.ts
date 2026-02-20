@@ -20,8 +20,7 @@ const androidLowPerfEnabled = parseBooleanFlag(
   true
 );
 
-export const isAndroidLowPerf =
-  IS_ANDROID && androidLowPerfEnabled;
+export const isAndroidLowPerf = IS_ANDROID && androidLowPerfEnabled;
 
 // Diagnostics switch:
 // true  -> disable most motion-heavy effects on Android for A/B perf testing

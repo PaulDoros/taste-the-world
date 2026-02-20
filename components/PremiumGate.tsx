@@ -38,22 +38,30 @@ export const PremiumGate: React.FC<PremiumGateProps> = ({
   }
 
   return (
-    <Animated.View 
+    <Animated.View
       entering={FadeInUp.springify()}
-      style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
     >
-      <View style={[styles.iconContainer, { backgroundColor: colors.premium + '20' }]}>
+      <View
+        style={[
+          styles.iconContainer,
+          { backgroundColor: colors.premium + '20' },
+        ]}
+      >
         <FontAwesome5 name="crown" size={32} color={colors.premium} solid />
       </View>
-      
+
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
-      
+
       <Pressable
         onPress={() => router.push('/(tabs)/settings')}
         style={({ pressed }) => [
           styles.button,
-          { backgroundColor: colors.premium, opacity: pressed ? 0.8 : 1 }
+          { backgroundColor: colors.premium, opacity: pressed ? 0.8 : 1 },
         ]}
       >
         <Text style={styles.buttonText}>Upgrade to Premium</Text>

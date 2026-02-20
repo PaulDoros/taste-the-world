@@ -137,7 +137,8 @@ export const linkGuestData = mutation({
         await ctx.db.insert('pantry', {
           userId: args.userId,
           name: item.name || item.ingredient || 'Item',
-          displayName: item.displayName || item.name || item.ingredient || 'Item',
+          displayName:
+            item.displayName || item.name || item.ingredient || 'Item',
           measure: item.unit || item.measure || '',
           addedAt: Date.now(),
         });
@@ -145,7 +146,10 @@ export const linkGuestData = mutation({
     }
 
     // Link recipe history
-    if (args.guestData.recipeHistory && args.guestData.recipeHistory.length > 0) {
+    if (
+      args.guestData.recipeHistory &&
+      args.guestData.recipeHistory.length > 0
+    ) {
       for (const recipeId of args.guestData.recipeHistory) {
         await ctx.db.insert('recipeHistory', {
           userId: args.userId,
@@ -159,4 +163,3 @@ export const linkGuestData = mutation({
     return { success: true };
   },
 });
-

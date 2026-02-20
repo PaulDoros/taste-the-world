@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 export interface RecipeHistoryItem {
   id: string; // Recipe ID
@@ -40,4 +40,3 @@ export const useRecipeHistoryStore = create<RecipeHistoryState>((set) => ({
       history: state.history.filter((item) => item.id !== id),
     })),
 }));
-

@@ -37,16 +37,14 @@ export const googleAuthRequestConfig = {
   webClientId: webClientId ?? fallbackClientId ?? SAFE_FALLBACK_CLIENT_ID,
 };
 
-export const isGoogleOAuthConfigured =
-  IS_ANDROID
-    ? Boolean(androidClientId ?? fallbackClientId)
-    : IS_IOS
-      ? Boolean(iosClientId ?? fallbackClientId)
-      : Boolean(webClientId ?? fallbackClientId);
+export const isGoogleOAuthConfigured = IS_ANDROID
+  ? Boolean(androidClientId ?? fallbackClientId)
+  : IS_IOS
+    ? Boolean(iosClientId ?? fallbackClientId)
+    : Boolean(webClientId ?? fallbackClientId);
 
-export const googleOAuthMissingConfigMessage =
-  IS_ANDROID
-    ? 'Google sign-in is not configured for Android. Add EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID in EAS environment variables and rebuild.'
-    : IS_IOS
-      ? 'Google sign-in is not configured for iOS. Add EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID in EAS environment variables and rebuild.'
-      : 'Google sign-in is not configured. Add EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in EAS environment variables.';
+export const googleOAuthMissingConfigMessage = IS_ANDROID
+  ? 'Google sign-in is not configured for Android. Add EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID in EAS environment variables and rebuild.'
+  : IS_IOS
+    ? 'Google sign-in is not configured for iOS. Add EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID in EAS environment variables and rebuild.'
+    : 'Google sign-in is not configured. Add EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in EAS environment variables.';

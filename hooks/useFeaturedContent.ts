@@ -67,7 +67,7 @@ export function useFeaturedContent(countries: Country[]) {
     if (featured.length < MAX_FEATURED_COUNTRIES) {
       for (const country of countries) {
         if (featured.length >= MAX_FEATURED_COUNTRIES) break;
-        
+
         // Check if already added
         const alreadyAdded = featured.some((c) => c.cca2 === country.cca2);
         if (alreadyAdded) continue;
@@ -89,7 +89,10 @@ export function useFeaturedContent(countries: Country[]) {
   const getWeekNumber = () => {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 1);
-    const diff = now.getTime() - start.getTime() + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+    const diff =
+      now.getTime() -
+      start.getTime() +
+      (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000;
     const oneDay = 1000 * 60 * 60 * 24;
     const day = Math.floor(diff / oneDay);
     return Math.ceil(day / 7);
@@ -106,7 +109,7 @@ export function useFeaturedContent(countries: Country[]) {
 
       // Check local storage
       const storedData = await AsyncStorage.getItem(RECIPE_OF_THE_WEEK_KEY);
-      
+
       if (storedData) {
         const parsed = JSON.parse(storedData);
         if (parsed.weekKey === storageKey && parsed.recipe) {
@@ -117,13 +120,16 @@ export function useFeaturedContent(countries: Country[]) {
 
       // If no valid stored recipe, fetch a new random one
       const newRecipe = await getRandomRecipe();
-      
+
       // Store it
-      await AsyncStorage.setItem(RECIPE_OF_THE_WEEK_KEY, JSON.stringify({
-        weekKey: storageKey,
-        recipe: newRecipe
-      }));
-      
+      await AsyncStorage.setItem(
+        RECIPE_OF_THE_WEEK_KEY,
+        JSON.stringify({
+          weekKey: storageKey,
+          recipe: newRecipe,
+        })
+      );
+
       setRecipeOfTheWeek(newRecipe);
     } catch (err) {
       console.warn('Failed to fetch recipe of the week:', err);
@@ -219,4 +225,3 @@ export function useFeaturedContent(countries: Country[]) {
     },
   };
 }
-

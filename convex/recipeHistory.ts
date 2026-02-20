@@ -1,16 +1,16 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
 
 /**
  * Get recipe history for a user
  */
 export const getRecipeHistory = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("recipeHistory")
-      .withIndex("by_user_and_viewed", (q) => q.eq("userId", args.userId))
-      .order("desc")
+      .query('recipeHistory')
+      .withIndex('by_user_and_viewed', (q) => q.eq('userId', args.userId))
+      .order('desc')
       .collect();
   },
 });
@@ -20,7 +20,7 @@ export const getRecipeHistory = query({
  */
 export const addToHistory = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     recipeId: v.string(),
     recipeName: v.string(),
     recipeImage: v.optional(v.string()),
@@ -30,9 +30,9 @@ export const addToHistory = mutation({
   handler: async (ctx, args) => {
     // Check if already in history
     const existing = await ctx.db
-      .query("recipeHistory")
-      .withIndex("by_user_and_recipe", (q) =>
-        q.eq("userId", args.userId).eq("recipeId", args.recipeId)
+      .query('recipeHistory')
+      .withIndex('by_user_and_recipe', (q) =>
+        q.eq('userId', args.userId).eq('recipeId', args.recipeId)
       )
       .first();
 
@@ -45,7 +45,7 @@ export const addToHistory = mutation({
     }
 
     // Create new history entry
-    return await ctx.db.insert("recipeHistory", {
+    return await ctx.db.insert('recipeHistory', {
       userId: args.userId,
       recipeId: args.recipeId,
       recipeName: args.recipeName,
@@ -62,14 +62,14 @@ export const addToHistory = mutation({
  */
 export const removeFromHistory = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     recipeId: v.string(),
   },
   handler: async (ctx, args) => {
     const historyItem = await ctx.db
-      .query("recipeHistory")
-      .withIndex("by_user_and_recipe", (q) =>
-        q.eq("userId", args.userId).eq("recipeId", args.recipeId)
+      .query('recipeHistory')
+      .withIndex('by_user_and_recipe', (q) =>
+        q.eq('userId', args.userId).eq('recipeId', args.recipeId)
       )
       .first();
 
@@ -83,14 +83,13 @@ export const removeFromHistory = mutation({
  * Clear all recipe history
  */
 export const clearHistory = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     const history = await ctx.db
-      .query("recipeHistory")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('recipeHistory')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .collect();
 
     await Promise.all(history.map((item) => ctx.db.delete(item._id)));
   },
 });
-

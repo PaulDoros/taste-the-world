@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { RecipeHistoryItem } from "./recipeHistoryStore";
+import { create } from 'zustand';
+import { RecipeHistoryItem } from './recipeHistoryStore';
 
 interface FavoritesState {
   favorites: RecipeHistoryItem[];
@@ -19,7 +19,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       if (state.favorites.some((fav) => fav.id === recipe.id)) {
         return state;
       }
-      
+
       return {
         favorites: [...state.favorites, { ...recipe, timestamp: Date.now() }],
       };
@@ -43,4 +43,3 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     }
   },
 }));
-

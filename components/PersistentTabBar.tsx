@@ -38,36 +38,36 @@ const TAB_CONFIG = [
     name: 'index',
     title: 'Home',
     icon: 'home',
-    color: '#0ea5e9',
-    backgroundColor: 'rgba(14, 165, 233, 0.15)',
+    color: '#2563eb', // blue
+    backgroundColor: 'rgba(37, 99, 235, 0.15)',
   },
   {
     name: 'explore',
     title: 'Explore',
     icon: 'globe-americas',
-    color: '#10b981',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    color: '#16a34a', // green
+    backgroundColor: 'rgba(22, 163, 74, 0.15)',
   },
   {
     name: 'chef',
     title: 'AI Chat',
     icon: 'robot',
-    color: '#14b8a6',
-    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    color: '#f97316', // orange
+    backgroundColor: 'rgba(249, 115, 22, 0.15)',
   },
   {
     name: 'more',
     title: 'More',
     icon: 'th-large',
-    color: '#a855f7',
-    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+    color: '#db2777', // pink
+    backgroundColor: 'rgba(219, 39, 119, 0.15)',
   },
   {
     name: 'settings',
     title: 'Settings',
     icon: 'user-circle',
-    color: '#8b5cf6',
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    color: '#7c3aed', // violet
+    backgroundColor: 'rgba(124, 58, 237, 0.15)',
   },
 ];
 
@@ -169,19 +169,22 @@ const PersistentTabBarComponent = ({
 
     const targetX = displayTabIndex * tabWidth;
 
+    // For this test, let's allow the animations on Android too!
+    /*
     if (isAndroid) {
       bubbleX.value = targetX;
       bubbleScale.value = 1;
       haloOpacity.value = androidHaloRestOpacity;
       return;
     }
+    */
 
     bubbleX.value = withTiming(targetX, {
       duration: 190,
       easing: Easing.out(Easing.cubic),
     });
 
-    if (activeTabIndex >= 0 && !isAndroid) {
+    if (activeTabIndex >= 0) {
       bubbleScale.value = withSequence(
         withTiming(1.04, { duration: 90, easing: Easing.out(Easing.quad) }),
         withTiming(1, {
@@ -281,8 +284,8 @@ const PersistentTabBarComponent = ({
             {
               backgroundColor: isAndroidLowPerf
                 ? isDark
-                  ? 'rgba(15, 23, 42, 0.78)'
-                  : 'rgba(255, 255, 255, 0.8)'
+                  ? 'rgba(15, 23, 42, 0.98)'
+                  : 'rgba(255, 255, 255, 0.98)'
                 : isDark
                   ? 'rgba(15, 23, 42, 0.95)'
                   : 'rgba(255, 255, 255, 0.95)',
@@ -361,8 +364,8 @@ const PersistentTabBarComponent = ({
                 shadowColor: activeColor,
                 shadowOffset: { width: 0, height: 6 },
                 elevation: bubbleElevation,
-                shadowOpacity: Platform.OS === 'ios' ? 0.6 : 0,
-                shadowRadius: Platform.OS === 'ios' ? 12 : 0,
+                shadowOpacity: Platform.OS === 'ios' ? 0.9 : 0,
+                shadowRadius: Platform.OS === 'ios' ? 4 : 0,
                 borderWidth: 1,
                 borderColor: bubbleBorderColor,
                 zIndex: 0,
@@ -377,10 +380,10 @@ const PersistentTabBarComponent = ({
                 top: 1,
                 left: 1,
                 right: 1,
-                height: 28,
-                borderRadius: 58,
+                height: 59,
+                borderRadius: 20,
                 backgroundColor: bubbleTopSheenColor,
-                opacity: isAndroid ? 0.42 : 0.34,
+                opacity: isAndroid ? 0.42 : 0.4,
               }}
             />
             <View

@@ -24,10 +24,7 @@ export default function MapScreen() {
   useFocusEffect(
     useCallback(() => {
       // Delay heavy mount on Android so tab switch stays smooth
-      const t = setTimeout(
-        () => setReady(true),
-        IS_ANDROID ? 60 : 0
-      );
+      const t = setTimeout(() => setReady(true), IS_ANDROID ? 60 : 0);
 
       // Log when the screen is focused (not just mounted)
       if (token && user) {

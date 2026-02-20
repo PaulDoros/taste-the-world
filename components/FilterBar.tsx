@@ -182,7 +182,7 @@ export const FilterBar = ({
         contentContainerStyle={{
           paddingLeft: 16,
           paddingRight: 24,
-          paddingVertical: 8,
+          paddingVertical: isAndroid ? 12 : 8,
           gap: 10,
         }}
       >
@@ -214,7 +214,7 @@ export const FilterBar = ({
         contentContainerStyle={{
           paddingLeft: 16,
           paddingRight: 24,
-          paddingVertical: 8,
+          paddingVertical: isAndroid ? 12 : 8,
           gap: 10,
         }}
       >

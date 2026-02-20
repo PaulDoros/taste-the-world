@@ -37,7 +37,9 @@ export default function PantryScreen() {
   const addPantryItem = useMutation(api.pantry.addPantryItem);
   const removePantryItem = useMutation(api.pantry.removePantryItem);
   const clearPantry = useMutation(api.pantry.clearPantry);
-  const togglePantryItemChecked = useMutation(api.pantry.togglePantryItemChecked);
+  const togglePantryItemChecked = useMutation(
+    api.pantry.togglePantryItemChecked
+  );
   const logActivity = useMutation(api.gamification.logActivity);
 
   // Fetch pantry items

@@ -22,6 +22,7 @@ export const sky = {
   500: '#0ea5e9', // Brand Blue (Light Mode Primary)
   600: '#0284c7', // Deep Blue (Interactive/Hover)
   700: '#0369a1',
+  880: '#0F172A',
 } as const;
 
 // Electric & Accents: Trend colors for 2025 [4, 24]

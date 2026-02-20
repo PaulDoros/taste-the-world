@@ -357,7 +357,9 @@ export const PricingSection = ({
         <YStack
           padding="$5"
           gap="$4"
-          backgroundColor={IS_ANDROID ? 'white' : 'transparent'}
+          backgroundColor={
+            IS_ANDROID ? '$backgroundTransparent' : 'transparent'
+          }
         >
           <XStack alignItems="center" gap="$3">
             <View

@@ -13,7 +13,8 @@ import { enableFreeze, enableScreens } from 'react-native-screens';
 import 'react-native-reanimated';
 import Constants from 'expo-constants';
 import '../global.css';
-import { IS_IOS, IS_NATIVE_MOBILE } from '@/constants/platform';
+import { IS_ANDROID, IS_IOS, IS_NATIVE_MOBILE } from '@/constants/platform';
+import * as SystemUI from 'expo-system-ui';
 
 // Configure Reanimated logger to disable strict mode warnings
 import Animated, {
@@ -72,6 +73,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
 import { AchievementToast } from '@/components/gamification/AchievementToast';
 import LottieView from 'lottie-react-native';
+import { Colors } from '@/constants/Colors';
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
@@ -207,6 +209,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const { isAuthenticated, user, isLoading: authLoading, token } = useAuth();
   const { isPremium } = usePremium();
   useNotificationObserver(); // Handle notification taps
@@ -214,6 +217,13 @@ function RootLayoutNav() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [showSplashOffer, setShowSplashOffer] = useState(false);
+
+  // Set the root system UI background to match the theme to prevent white flashes on Android
+  useEffect(() => {
+    if (IS_ANDROID) {
+      SystemUI.setBackgroundColorAsync(colors.background);
+    }
+  }, [colors.background]);
 
   // Sync Auth with Convex
   useEffect(() => {
@@ -292,6 +302,9 @@ function RootLayoutNav() {
               headerShown: false,
               gestureEnabled: true,
               gestureDirection: 'horizontal',
+              contentStyle: { backgroundColor: colors.background },
+              // Removed explicit 'fade' on Android to prevent lingering ghost screens
+              animation: 'default',
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

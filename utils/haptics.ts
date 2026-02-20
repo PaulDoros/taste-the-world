@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 /**
  * Haptic Feedback Utilities
  * Add tactile feedback like iOS/Android native apps
- * 
+ *
  * NOTE: Haptics DON'T work in Expo Go!
  * They require a custom development build.
  * These are safe to call - they just won't do anything in Expo Go.

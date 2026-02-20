@@ -5,6 +5,7 @@ This document explains how authentication and user tracking works in the Taste t
 ## 📋 Overview
 
 The app uses a **session-based authentication system** built on Convex:
+
 - Users sign up/sign in with email and password
 - Session tokens are stored securely in AsyncStorage
 - All user data (pantry, shopping list, favorites, etc.) is linked to user IDs
@@ -13,6 +14,7 @@ The app uses a **session-based authentication system** built on Convex:
 ## 🗄️ Database Schema
 
 ### Users Table
+
 - `email` - User's email (unique)
 - `passwordHash` - Hashed password (SHA-256, upgrade to bcrypt in production)
 - `name` - User's display name
@@ -21,11 +23,13 @@ The app uses a **session-based authentication system** built on Convex:
 - `subscriptionEndDate` - When premium expires
 
 ### Sessions Table
+
 - `userId` - Reference to user
 - `token` - Session token (64-character hex string)
 - `expiresAt` - Token expiration timestamp (30 days)
 
 ### Purchases Table
+
 - `userId` - Reference to user
 - `subscriptionType` - "monthly" or "yearly"
 - `amount` - Purchase amount in cents
@@ -35,23 +39,27 @@ The app uses a **session-based authentication system** built on Convex:
 ## 🔑 Authentication Flow
 
 ### 1. Sign Up
+
 ```typescript
 const { signUp } = useAuth();
-await signUp("user@example.com", "password123", "John Doe");
+await signUp('user@example.com', 'password123', 'John Doe');
 ```
 
 ### 2. Sign In
+
 ```typescript
 const { signIn } = useAuth();
-await signIn("user@example.com", "password123");
+await signIn('user@example.com', 'password123');
 ```
 
 ### 3. Check Authentication
+
 ```typescript
 const { isAuthenticated, user, isPremium } = useAuth();
 ```
 
 ### 4. Sign Out
+
 ```typescript
 const { signOut } = useAuth();
 await signOut();
@@ -81,11 +89,13 @@ When a user purchases premium:
 ## 🔒 Security Notes
 
 ### Current Implementation (Development)
+
 - Passwords are hashed with SHA-256
 - Session tokens are 64-character random hex strings
 - Tokens expire after 30 days
 
 ### Production Recommendations
+
 1. **Upgrade password hashing** to bcrypt or Argon2
 2. **Add rate limiting** to prevent brute force attacks
 3. **Implement password reset** functionality
@@ -97,6 +107,7 @@ When a user purchases premium:
 ## 📱 Using Auth in Components
 
 ### Example: Protected Component
+
 ```typescript
 import { useAuth } from "@/hooks/useAuth";
 
@@ -116,6 +127,7 @@ function MyComponent() {
 ```
 
 ### Example: Premium Feature Gate
+
 ```typescript
 import { useAuth } from "@/hooks/useAuth";
 
@@ -138,7 +150,7 @@ All Convex functions that need user data require a `token` parameter:
 // Example: Get pantry items
 const pantryItems = useQuery(
   api.pantry.getPantryItems,
-  token ? { userId: user._id } : "skip"
+  token ? { userId: user._id } : 'skip'
 );
 ```
 
@@ -159,6 +171,7 @@ The backend verifies the token and ensures the user can only access their own da
 ## 📊 Tracking User Activity
 
 All user actions are automatically tracked via `userId`:
+
 - **Pantry items** - `pantry.userId`
 - **Shopping lists** - `shoppingList.userId`
 - **Favorites** - `favorites.userId`
@@ -166,6 +179,7 @@ All user actions are automatically tracked via `userId`:
 - **Purchases** - `purchases.userId`
 
 This allows you to:
+
 - Show user-specific data
 - Sync across devices
 - Track user behavior
@@ -183,4 +197,3 @@ This allows you to:
 ---
 
 **Ready to use!** The authentication system is set up and ready. You just need to create the UI screens for login/signup.
-

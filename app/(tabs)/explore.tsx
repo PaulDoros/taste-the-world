@@ -174,9 +174,7 @@ export default function ExploreScreen() {
         <BlurView
           intensity={85}
           tint={colorScheme === 'dark' ? 'dark' : 'light'}
-          experimentalBlurMethod={
-            IS_ANDROID ? 'dimezisBlurView' : undefined
-          }
+          experimentalBlurMethod={IS_ANDROID ? 'dimezisBlurView' : undefined}
           style={headerContainerStyle}
         >
           {/* Header */}
@@ -206,9 +204,7 @@ export default function ExploreScreen() {
                 {t('explore_subtitle')}
               </Text>
             </View>
-            {IS_IOS ||
-            !isFocused ||
-            isAndroidAnimationsDisabled ? (
+            {IS_IOS || !isFocused || isAndroidAnimationsDisabled ? (
               <View
                 style={{
                   width: 80,

@@ -1,16 +1,16 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
 
 /**
  * Get all shopping list items for a user
  */
 export const getShoppingListItems = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("shoppingList")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .order("desc")
+      .query('shoppingList')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .order('desc')
       .collect();
   },
 });
@@ -20,14 +20,14 @@ export const getShoppingListItems = query({
  */
 export const addShoppingListItem = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     name: v.string(),
     measure: v.string(),
     recipeId: v.string(),
     recipeName: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("shoppingList", {
+    return await ctx.db.insert('shoppingList', {
       userId: args.userId,
       name: args.name,
       measure: args.measure,
@@ -44,7 +44,7 @@ export const addShoppingListItem = mutation({
  */
 export const addMultipleShoppingListItems = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.id('users'),
     items: v.array(
       v.object({
         name: v.string(),
@@ -58,7 +58,7 @@ export const addMultipleShoppingListItems = mutation({
     const now = Date.now();
     const itemIds = await Promise.all(
       args.items.map((item) =>
-        ctx.db.insert("shoppingList", {
+        ctx.db.insert('shoppingList', {
           userId: args.userId,
           name: item.name,
           measure: item.measure,
@@ -77,10 +77,10 @@ export const addMultipleShoppingListItems = mutation({
  * Toggle item checked status
  */
 export const toggleShoppingListItemChecked = mutation({
-  args: { itemId: v.id("shoppingList") },
+  args: { itemId: v.id('shoppingList') },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.itemId);
-    if (!item) throw new Error("Item not found");
+    if (!item) throw new Error('Item not found');
     await ctx.db.patch(args.itemId, {
       checked: !item.checked,
     });
@@ -91,7 +91,7 @@ export const toggleShoppingListItemChecked = mutation({
  * Remove item from shopping list
  */
 export const removeShoppingListItem = mutation({
-  args: { itemId: v.id("shoppingList") },
+  args: { itemId: v.id('shoppingList') },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.itemId);
   },
@@ -101,12 +101,12 @@ export const removeShoppingListItem = mutation({
  * Clear all checked items
  */
 export const clearCheckedItems = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     const checkedItems = await ctx.db
-      .query("shoppingList")
-      .withIndex("by_user_and_checked", (q) =>
-        q.eq("userId", args.userId).eq("checked", true)
+      .query('shoppingList')
+      .withIndex('by_user_and_checked', (q) =>
+        q.eq('userId', args.userId).eq('checked', true)
       )
       .collect();
 
@@ -118,14 +118,13 @@ export const clearCheckedItems = mutation({
  * Clear all shopping list items
  */
 export const clearShoppingList = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.id('users') },
   handler: async (ctx, args) => {
     const items = await ctx.db
-      .query("shoppingList")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('shoppingList')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .collect();
 
     await Promise.all(items.map((item) => ctx.db.delete(item._id)));
   },
 });
-
