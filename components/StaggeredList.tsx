@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 
 /**
  * StaggeredList Component
@@ -19,6 +20,10 @@ export const StaggeredListItem = ({
   index,
   staggerDelay = 30, // Slightly increased for better visibility
 }: StaggeredListItemProps) => {
+  if (isAndroidAnimationsDisabled) {
+    return <View style={{ flex: 1, width: '100%' }}>{children}</View>;
+  }
+
   // Limit stagger effect to first 20 items for performance
   const delay = index < 20 ? index * staggerDelay : 0;
 

@@ -3,7 +3,6 @@ import {
   Switch,
   Modal,
   Pressable,
-  Platform,
   Alert,
   View,
   ActivityIndicator,
@@ -56,6 +55,9 @@ import { AvatarSelector } from '@/components/settings/AvatarSelector';
 import { AVATARS } from '@/constants/Avatars';
 import { BADGES } from '@/constants/Badges';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
+import { cancelAllNotifications } from '@/utils/notifications';
+import { IS_IOS } from '@/constants/platform';
 
 interface SettingsItemProps {
   icon: string;
@@ -408,7 +410,7 @@ export default function SettingsScreen() {
   const handleThemeChange = () => {
     haptics.selection();
     // Use Alert with custom buttons for theme selection
-    if (Platform.OS === 'ios') {
+    if (IS_IOS) {
       // iOS ActionSheet style via Alert
       Alert.alert('Choose Theme', 'Select your preferred appearance', [
         {
@@ -465,7 +467,9 @@ export default function SettingsScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <AmbientBackground scrollable height={4000} />
+        {!isAndroidAnimationsDisabled && (
+          <AmbientBackground scrollable height={4000} />
+        )}
         <View style={{ padding: 16 }}>
           {/* Header - Removed redundant profile view */}
 
@@ -894,8 +898,6 @@ export default function SettingsScreen() {
                     confirmText: 'Reset',
                   },
                   async () => {
-                    const { cancelAllNotifications } =
-                      await import('@/utils/notifications');
                     await cancelAllNotifications();
                     showSuccess('All notifications cleared');
                   }

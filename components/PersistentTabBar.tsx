@@ -13,15 +13,13 @@ import {
   StyleSheet,
   LayoutChangeEvent,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useRouter, usePathname } from 'expo-router';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
   withTiming,
-  withSpring,
   Easing,
 } from 'react-native-reanimated';
 
@@ -38,8 +36,6 @@ import { isAndroidLowPerf, shouldUseGlassBlur } from '@/constants/Performance';
 const TAB_CONFIG = [
   {
     name: 'index',
-    href: '/(tabs)',
-    path: '/',
     title: 'Home',
     icon: 'home',
     color: '#0ea5e9',
@@ -47,8 +43,6 @@ const TAB_CONFIG = [
   },
   {
     name: 'explore',
-    href: '/(tabs)/explore',
-    path: '/explore',
     title: 'Explore',
     icon: 'globe-americas',
     color: '#10b981',
@@ -56,8 +50,6 @@ const TAB_CONFIG = [
   },
   {
     name: 'chef',
-    href: '/(tabs)/chef',
-    path: '/chef',
     title: 'AI Chat',
     icon: 'robot',
     color: '#14b8a6',
@@ -65,8 +57,6 @@ const TAB_CONFIG = [
   },
   {
     name: 'more',
-    href: '/(tabs)/more',
-    path: '/more',
     title: 'More',
     icon: 'th-large',
     color: '#a855f7',
@@ -74,8 +64,6 @@ const TAB_CONFIG = [
   },
   {
     name: 'settings',
-    href: '/(tabs)/settings',
-    path: '/settings',
     title: 'Settings',
     icon: 'user-circle',
     color: '#8b5cf6',
@@ -83,44 +71,17 @@ const TAB_CONFIG = [
   },
 ];
 
-const normalizePath = (value?: string) => {
-  if (!value) return '';
-  let normalized =
-    value.length > 1 && value.endsWith('/') ? value.slice(0, -1) : value;
-
-  if (
-    normalized === '/index' ||
-    normalized === '/(tabs)' ||
-    normalized === '/(tabs)/index'
-  ) {
-    return '/';
-  }
-
-  if (normalized.startsWith('/(tabs)')) {
-    normalized = normalized.replace('/(tabs)', '') || '/';
-  }
-
-  return normalized === '/index' ? '/' : normalized;
-};
-
-const isTabPathMatch = (currentPath: string, tabPath: string) => {
-  if (tabPath === '/') {
-    return currentPath === '/';
-  }
-  return currentPath === tabPath || currentPath.startsWith(`${tabPath}/`);
-};
-
 /**
  * Persistent Tab Bar Component
  * Shows on all screens for easy navigation
  */
-const PersistentTabBarComponent = () => {
-  const router = useRouter();
-  const pathname = usePathname();
+const PersistentTabBarComponent = ({
+  state,
+  navigation,
+}: BottomTabBarProps) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isAndroid = Platform.OS === 'android';
-  const insets = useSafeAreaInsets();
   const useBlur = Platform.OS === 'ios' && shouldUseGlassBlur;
   const colors = Colors[colorScheme ?? 'light'];
   const glass = glassTokens[isDark ? 'dark' : 'light'];
@@ -134,19 +95,18 @@ const PersistentTabBarComponent = () => {
   const bubbleElevation = Platform.OS === 'android' ? 0 : 20;
 
   const tabWidth = barWidth > 0 ? barWidth / TAB_CONFIG.length : 0;
-
-  const normalizedPath = useMemo(() => normalizePath(pathname), [pathname]);
-
-  // Find matching tab, including nested routes like /settings/profile.
+  const activeRouteName = state.routes[state.index]?.name;
   const activeTabIndex = useMemo(
-    () =>
-      TAB_CONFIG.findIndex((tab) => isTabPathMatch(normalizedPath, tab.path)),
-    [normalizedPath]
+    () => TAB_CONFIG.findIndex((tab) => tab.name === activeRouteName),
+    [activeRouteName]
   );
 
   // Track last visited tab (for detail screens where no tab matches).
   const lastActiveTabRef = useRef(0);
-  const pendingPressedTabRef = useRef<number | null>(null);
+  const androidTabSwitchLockRef = useRef(false);
+  const androidTabSwitchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   if (activeTabIndex >= 0) {
     lastActiveTabRef.current = activeTabIndex;
   }
@@ -160,8 +120,6 @@ const PersistentTabBarComponent = () => {
   const activeColor = activeTabConfig.color;
   const activeBgColor = activeTabConfig.backgroundColor;
   const androidHaloRestOpacity = isAndroidLowPerf ? 0.2 : 0.27;
-  const androidSpringDamping = isAndroidLowPerf ? 38 : 26;
-  const androidSpringStiffness = isAndroidLowPerf ? 250 : 195;
   const haloOpacity = useSharedValue(isAndroid ? androidHaloRestOpacity : 0.3);
   const bubbleBorderColor = isDark
     ? 'rgba(148, 163, 184, 0.24)'
@@ -184,6 +142,25 @@ const PersistentTabBarComponent = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!isAndroid) {
+      return;
+    }
+    androidTabSwitchLockRef.current = false;
+    if (androidTabSwitchTimerRef.current) {
+      clearTimeout(androidTabSwitchTimerRef.current);
+      androidTabSwitchTimerRef.current = null;
+    }
+  }, [activeTabIndex, isAndroid]);
+
+  useEffect(() => {
+    return () => {
+      if (androidTabSwitchTimerRef.current) {
+        clearTimeout(androidTabSwitchTimerRef.current);
+      }
+    };
+  }, []);
+
   // Keep tab motion lightweight and deterministic.
   useEffect(() => {
     if (tabWidth <= 0) {
@@ -193,15 +170,9 @@ const PersistentTabBarComponent = () => {
     const targetX = displayTabIndex * tabWidth;
 
     if (isAndroid) {
-      if (pendingPressedTabRef.current === displayTabIndex) {
-        pendingPressedTabRef.current = null;
-        return;
-      }
-      bubbleX.value = withSpring(targetX, {
-        damping: androidSpringDamping,
-        stiffness: androidSpringStiffness,
-        mass: 1,
-      });
+      bubbleX.value = targetX;
+      bubbleScale.value = 1;
+      haloOpacity.value = androidHaloRestOpacity;
       return;
     }
 
@@ -235,8 +206,7 @@ const PersistentTabBarComponent = () => {
     activeTabIndex,
     tabWidth,
     isAndroid,
-    androidSpringDamping,
-    androidSpringStiffness,
+    androidHaloRestOpacity,
   ]);
 
   const bubbleStyle = useAnimatedStyle(() => ({
@@ -253,54 +223,44 @@ const PersistentTabBarComponent = () => {
   const shouldRenderHalo = !isAndroid && !isAndroidLowPerf && tabWidth > 0;
 
   const handleTabPress = (tab: (typeof TAB_CONFIG)[0], tabIndex: number) => {
-    if (!isAndroidLowPerf) {
+    if (!isAndroidLowPerf && !isAndroid) {
       haptics.light();
     }
 
-    const alreadyActive =
-      activeTabIndex === tabIndex && isTabPathMatch(normalizedPath, tab.path);
+    const alreadyActive = activeTabIndex === tabIndex;
     if (alreadyActive) {
       return;
     }
 
-    if (isAndroid && tabWidth > 0) {
-      pendingPressedTabRef.current = tabIndex;
-      bubbleX.value = withSpring(tabIndex * tabWidth, {
-        damping: androidSpringDamping,
-        stiffness: androidSpringStiffness,
-        mass: 1,
-      });
-      bubbleScale.value = withSequence(
-        withTiming(isAndroidLowPerf ? 1.012 : 1.024, {
-          duration: isAndroidLowPerf ? 70 : 90,
-          easing: Easing.out(Easing.quad),
-        }),
-        withTiming(1, {
-          duration: isAndroidLowPerf ? 110 : 135,
-          easing: Easing.out(Easing.quad),
-        })
-      );
-      haloOpacity.value = withSequence(
-        withTiming(isAndroidLowPerf ? 0.28 : 0.36, {
-          duration: isAndroidLowPerf ? 100 : 120,
-          easing: Easing.out(Easing.quad),
-        }),
-        withTiming(androidHaloRestOpacity, {
-          duration: isAndroidLowPerf ? 140 : 190,
-          easing: Easing.out(Easing.quad),
-        })
-      );
+    if (isAndroid && androidTabSwitchLockRef.current) {
+      return;
+    }
+
+    const targetRoute = state.routes.find((route) => route.name === tab.name);
+    const tabPressEvent = navigation.emit({
+      type: 'tabPress',
+      target: targetRoute?.key,
+      canPreventDefault: true,
+    });
+    if (tabPressEvent.defaultPrevented) {
+      return;
+    }
+
+    if (isAndroid) {
+      androidTabSwitchLockRef.current = true;
+      if (androidTabSwitchTimerRef.current) {
+        clearTimeout(androidTabSwitchTimerRef.current);
+      }
+      // Fallback unlock in case route events are delayed.
+      androidTabSwitchTimerRef.current = setTimeout(() => {
+        androidTabSwitchLockRef.current = false;
+        androidTabSwitchTimerRef.current = null;
+      }, 260);
     }
 
     lastActiveTabRef.current = tabIndex;
-    router.navigate(tab.href as any);
+    navigation.navigate(tab.name);
   };
-
-  // Hide on auth screens (check after all hooks are called)
-  const isAuthScreen = pathname?.startsWith('/auth/');
-  if (isAuthScreen) {
-    return null;
-  }
 
   return (
     <View

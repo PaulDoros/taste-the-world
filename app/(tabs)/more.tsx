@@ -14,6 +14,7 @@ import { PremiumLockModal } from '@/components/PremiumLockModal';
 import { XPProgress } from '@/components/gamification/XPProgress';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
 import { useState } from 'react';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 
 export default function MoreScreen() {
   const router = useRouter();
@@ -139,7 +140,7 @@ export default function MoreScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <AmbientBackground />
+        {!isAndroidAnimationsDisabled && <AmbientBackground />}
         {/* Gamification Stats */}
         <View style={{ marginBottom: 24, paddingHorizontal: 16 }}>
           <XStack

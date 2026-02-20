@@ -8,7 +8,6 @@ import {
   Pressable,
   Image,
   KeyboardAvoidingView,
-  Platform,
   Linking,
   LayoutChangeEvent,
 } from 'react-native';
@@ -66,6 +65,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTierLimit } from '@/hooks/useTierLimit';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
+import { IS_IOS } from '@/constants/platform';
 
 // Local assets
 const CHEF_AVATAR = require('@/assets/images/chef-avatar.jpg');
@@ -169,7 +170,7 @@ export default function ChefScreen() {
   const quickActionAnim = useSharedValue(0);
 
   useEffect(() => {
-    if (!isFocused) {
+    if (!isFocused || isAndroidAnimationsDisabled) {
       activeQuickAction.value = null;
       quickActionAnim.value = 0;
       return;
@@ -200,7 +201,7 @@ export default function ChefScreen() {
     timeoutId = setTimeout(triggerAnimation, 2000); // Start after 2s
 
     return () => clearTimeout(timeoutId);
-  }, [isFocused]);
+  }, [isFocused, isAndroidAnimationsDisabled]);
 
   const handleRecipeGenerate = (config: {
     style: CookingStyle;
@@ -549,11 +550,11 @@ export default function ChefScreen() {
 
   return (
     <ScreenLayout edges={['bottom']} disableBackground>
-      <AmbientBackground />
+      {!isAndroidAnimationsDisabled && <AmbientBackground />}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={IS_IOS ? 'padding' : undefined}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={IS_IOS ? 0 : 0}
       >
         {/* Header with Glassmorphism */}
         <GlassCard
@@ -820,16 +821,24 @@ export default function ChefScreen() {
               opacity={0.5}
               gap="$4"
             >
-              <LottieView
-                source={
-                  mode === 'chef'
-                    ? require('@/assets/animations/Cooking.json')
-                    : require('@/assets/animations/travel.json')
-                }
-                autoPlay
-                loop
-                style={{ width: 200, height: 200 }}
-              />
+              {!isAndroidAnimationsDisabled ? (
+                <LottieView
+                  source={
+                    mode === 'chef'
+                      ? require('@/assets/animations/Cooking.json')
+                      : require('@/assets/animations/travel.json')
+                  }
+                  autoPlay
+                  loop
+                  style={{ width: 200, height: 200 }}
+                />
+              ) : (
+                <FontAwesome5
+                  name={mode === 'chef' ? 'utensils' : 'globe-americas'}
+                  size={56}
+                  color={theme.tint.get()}
+                />
+              )}
               <Text fontSize="$4" textAlign="center">
                 {mode === 'chef'
                   ? t('chef_start_conversation_chef')

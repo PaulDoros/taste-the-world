@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Pressable,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   Dimensions,
 } from 'react-native';
 import {
@@ -17,18 +15,8 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  FadeInLeft,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import {
-  YStack,
-  XStack,
-  Text,
-  Paragraph,
-  Button,
-  Card,
-  Separator,
-} from 'tamagui';
+import { YStack, XStack, Text, Paragraph, Separator } from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { Colors } from '@/constants/Colors';
@@ -47,11 +35,13 @@ import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { IS_ANDROID, IS_IOS, PLATFORM_OS } from '@/constants/platform';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
+  const isAndroid = IS_ANDROID;
 
   const router = useRouter();
   const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
@@ -112,15 +102,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoBack = () => {
-    haptics.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
-
   // Handle Google OAuth response
   useEffect(() => {
     if (response?.type === 'success') {
@@ -157,7 +138,7 @@ export default function LoginScreen() {
     try {
       if (!isGoogleOAuthConfigured) {
         console.error('[Auth] Google OAuth not configured', {
-          platform: Platform.OS,
+          platform: PLATFORM_OS,
         });
         alert(googleOAuthMissingConfigMessage);
         return;
@@ -188,15 +169,15 @@ export default function LoginScreen() {
         backgroundColor={colorScheme === 'dark' ? '#000000' : '#FFFFFF'}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={IS_IOS ? 'padding' : undefined}
         className="flex-1"
       >
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: 20,
+            paddingTop: isAndroid ? 12 : 20,
             minHeight: Dimensions.get('window').height,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom + (isAndroid ? 14 : 20),
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -206,31 +187,34 @@ export default function LoginScreen() {
             {/* Header with Icon */}
             <Animated.View
               entering={FadeInUp.delay(90)}
-              style={{ marginBottom: 24, alignItems: 'center' }}
+              style={{
+                marginBottom: isAndroid ? 16 : 24,
+                alignItems: 'center',
+              }}
             >
               <YStack ai="center" mb="$3">
                 {/* App Icon */}
                 <Animated.View
                   entering={FadeInDown.delay(120)}
                   style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 8,
+                    width: isAndroid ? 46 : 50,
+                    height: isAndroid ? 46 : 50,
+                    borderRadius: isAndroid ? 12 : 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: colors.tint,
                     shadowColor: colors.tint,
                     shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.7,
-                    shadowRadius: 5,
-                    elevation: 6,
+                    shadowOpacity: isAndroid ? 0.25 : 0.7,
+                    shadowRadius: isAndroid ? 4 : 5,
+                    elevation: isAndroid ? 4 : 6,
                   }}
                 >
                   <FontAwesome5 name="utensils" size={18} color="#FFFFFF" />
                 </Animated.View>
               </YStack>
               <Text
-                fontSize="$9"
+                fontSize={isAndroid ? '$8' : '$9'}
                 fontWeight="700"
                 color="$color"
                 textAlign="center"
@@ -252,15 +236,15 @@ export default function LoginScreen() {
             {/* iOS-style login card */}
             <GlassCard
               borderRadiusInside={0}
-              borderRadius={24}
-              shadowRadius={4}
+              borderRadius={isAndroid ? 20 : 24}
+              shadowRadius={isAndroid ? 2 : 4}
               style={{
-                padding: 24,
-                marginBottom: 20,
+                padding: isAndroid ? 18 : 24,
+                marginBottom: isAndroid ? 16 : 20,
               }}
             >
               {/* Form fields */}
-              <YStack space="$4" mb="$4">
+              <YStack space="$4" mb="$4" paddingLeft={10} paddingRight={10}>
                 <Input
                   label={t('auth_email_label')}
                   placeholder={t('auth_email_placeholder')}
@@ -279,6 +263,7 @@ export default function LoginScreen() {
                   autoCorrect={false}
                   leftIcon="envelope"
                   error={errors.email}
+                  variant="inset"
                 />
 
                 <Input
@@ -330,34 +315,38 @@ export default function LoginScreen() {
               )}
 
               {/* Forgot Password - iOS style */}
-              <GlassButton
-                onPress={() => {
-                  haptics.light();
-                  // TODO: Implement forgot password flow
-                  alert(t('auth_forgot_password_soon'));
-                }}
-                size="small"
-                label={t('auth_forgot_password')}
-                textColor={colors.tint}
-                backgroundColor={colors.tint}
-                backgroundOpacity={0.1}
-                style={{ alignSelf: 'flex-end', marginBottom: 12, padding: 3 }}
-              />
+              <YStack paddingLeft={10} paddingRight={10}>
+                <GlassButton
+                  onPress={() => {
+                    haptics.light();
+                    // TODO: Implement forgot password flow
+                    alert(t('auth_forgot_password_soon'));
+                  }}
+                  size="small"
+                  label={t('auth_forgot_password')}
+                  textColor={colors.tint}
+                  backgroundColor={colors.tint}
+                  backgroundOpacity={0.1}
+                  style={{
+                    alignSelf: 'flex-end',
+                    marginBottom: 12,
+                  }}
+                />
 
-              {/* Primary button - iOS style */}
-              <GlassButton
-                onPress={handleLogin}
-                disabled={!!isLoading}
-                size="large"
-                label={
-                  isLoading ? t('auth_logging_in') : t('auth_login_button')
-                }
-                backgroundColor={colors.tint}
-                textColor="#FFFFFF"
-                backgroundOpacity={1}
-                style={{ width: '100%', marginBottom: 12, padding: 3 }}
-              />
-
+                {/* Primary button - iOS style */}
+                <GlassButton
+                  onPress={handleLogin}
+                  disabled={!!isLoading}
+                  size="large"
+                  label={
+                    isLoading ? t('auth_logging_in') : t('auth_login_button')
+                  }
+                  backgroundColor={colors.tint}
+                  textColor="#FFFFFF"
+                  backgroundOpacity={1}
+                  style={{ width: '100%', marginBottom: 12 }}
+                />
+              </YStack>
               {/* Divider - iOS style */}
               <XStack ai="center" my="$4" space="$2">
                 <Separator flex={1} borderColor="$color5" />
@@ -368,7 +357,7 @@ export default function LoginScreen() {
               </XStack>
 
               {/* OAuth buttons */}
-              <YStack space="$3">
+              <YStack space="$3" padding={10}>
                 <OAuthButton
                   provider="google"
                   onPress={handleGoogleSignIn}
@@ -382,7 +371,7 @@ export default function LoginScreen() {
             {/* Sign up footer - iOS style */}
             <Animated.View
               entering={FadeInUp.delay(260)}
-              style={{ alignItems: 'center', marginTop: 32 }}
+              style={{ alignItems: 'center', marginTop: isAndroid ? 20 : 32 }}
             >
               <XStack ai="center" space="$2">
                 <Text fontSize="$3" color="$color11">

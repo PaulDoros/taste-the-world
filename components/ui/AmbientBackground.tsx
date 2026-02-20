@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, Dimensions, Platform } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useColorScheme } from '@/components/useColorScheme';
 import Animated, {
@@ -13,7 +13,11 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useSettingsStore } from '@/store/settingsStore';
-import { isAndroidLowPerf } from '@/constants/Performance';
+import {
+  isAndroidAnimationsDisabled,
+  isAndroidLowPerf,
+} from '@/constants/Performance';
+import { IS_ANDROID } from '@/constants/platform';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -164,7 +168,7 @@ export const AmbientBackground = ({
       BUBBLE_CONFIG.MAX_BUBBLE_COUNT
     );
 
-    if (Platform.OS === 'android') {
+    if (IS_ANDROID) {
       count = Math.min(count, BUBBLE_CONFIG.ANDROID_MAX_BUBBLE_COUNT);
     }
 
@@ -186,7 +190,8 @@ export const AmbientBackground = ({
   if (!isAmbientBackgroundEnabled) return null;
 
   // Android: stop background bubbles for non-focused tabs to avoid accumulated jank.
-  if (Platform.OS === 'android' && !isFocused) return null;
+  if (IS_ANDROID && !isFocused) return null;
+  if (isAndroidAnimationsDisabled) return null;
 
   return (
     <View

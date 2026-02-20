@@ -2,9 +2,10 @@ import React, { useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { PersistentTabBar } from '@/components/PersistentTabBar';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome5>['name'];
@@ -20,19 +21,23 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const renderTabBar = useCallback(() => <PersistentTabBar />, []);
+  const renderTabBar = useCallback(
+    (props: BottomTabBarProps) => <PersistentTabBar {...props} />,
+    []
+  );
 
   return (
     <Tabs
       tabBar={renderTabBar}
-      detachInactiveScreens={Platform.OS === 'android' ? false : true}
+      detachInactiveScreens={IS_ANDROID ? false : true}
       screenOptions={{
         headerShown: false,
-        // Tabs are usually smoothest on Android without screen animation.
-        animation: Platform.OS === 'android' ? 'none' : 'fade',
+        // Android tab switches are most stable without scene animation.
+        animation: IS_ANDROID ? 'none' : 'fade',
+        // Keep Android lazy to avoid mounting all tabs at once.
         lazy: true,
-        // Android: freeze inactive tabs to stop background work after visiting many tabs.
-        freezeOnBlur: Platform.OS === 'android' ? true : undefined,
+        // Freeze inactive Android tabs to cut background JS/UI work.
+        freezeOnBlur: IS_ANDROID ? true : undefined,
         sceneStyle: {
           backgroundColor: colors.background,
         },
@@ -52,7 +57,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Explore',
-          lazy: Platform.OS === 'ios' ? false : true,
+          lazy: IS_IOS ? false : undefined,
         }}
       />
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Linking } from 'react-native';
 import {
   YStack,
   Text,
@@ -19,6 +19,7 @@ import { useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
+import { IS_IOS } from '@/constants/platform';
 
 interface TripPlannerModalProps {
   visible: boolean;
@@ -67,7 +68,7 @@ export const TripPlannerModal = ({
 
     let url = '';
 
-    if (Platform.OS === 'ios') {
+    if (IS_IOS) {
       // Use universal link which opens Google Maps app if installed
       url = `https://www.google.com/maps/search/?api=1&query=${query}`;
       if (latLng) {

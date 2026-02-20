@@ -1,5 +1,6 @@
-import React, { useRef, useMemo } from 'react';
-import { View, StyleSheet, ViewProps, Platform } from 'react-native';
+import React, { useRef } from 'react';
+import { View, StyleSheet, ViewProps } from 'react-native';
+import { IS_ANDROID } from '@/constants/platform';
 // import { BlurTargetView } from 'expo-blur'; // Not available in SDK 54
 
 export const BlurTargetContext =
@@ -19,7 +20,7 @@ export function ScreenWithBlurTarget({ children, style, ...props }: ViewProps) {
     </BlurTargetContext.Provider>
   );
 
-  if (Platform.OS === 'android') {
+  if (IS_ANDROID) {
     return (
       <View style={[styles.container, style]} {...props}>
         {/* Using View as the target owner. The methods in expo-blur (experimental)

@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Platform } from 'react-native';
+import { View } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from '@/utils/admob';
 import { usePremium } from '@/hooks/usePremium';
 import { YStack } from 'tamagui';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
-const productionAdUnitId = Platform.select({
-  ios: process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID,
-  android: process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID,
-});
+const productionAdUnitId = IS_IOS
+  ? process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID
+  : IS_ANDROID
+    ? process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID
+    : undefined;
 
 const adUnitId = __DEV__
   ? TestIds.BANNER

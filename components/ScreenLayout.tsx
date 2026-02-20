@@ -1,14 +1,14 @@
 import React from 'react';
 import { ViewStyle } from 'react-native'; // Removed View, StyleSheet
-import { useColorScheme } from '@/components/useColorScheme';
 // Removed gradients, lightTheme, darkTheme
 import {
   SafeAreaView,
   SafeAreaViewProps,
 } from 'react-native-safe-area-context';
-import { YStack, useTheme } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -27,12 +27,11 @@ export const ScreenLayout = ({
   disableBackground = false,
   backgroundStyle,
 }: ScreenLayoutProps) => {
-  const colorScheme = useColorScheme();
-  const theme = useTheme();
-
   return (
     <YStack flex={1} backgroundColor="$background">
-      {!disableGradient && !disableBackground && <AmbientBackground />}
+      {!disableGradient &&
+        !disableBackground &&
+        !isAndroidAnimationsDisabled && <AmbientBackground />}
       <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
         {children}
       </SafeAreaView>

@@ -6,11 +6,11 @@ import { getGuestUser, clearGuestData } from '@/utils/guestUser';
 import { useShoppingListStore } from '@/store/shoppingListStore';
 import { Id } from '@/convex/_generated/dataModel';
 import * as WebBrowser from 'expo-web-browser';
-import { Platform } from 'react-native';
 import { useUserStore } from '@/store/useUserStore';
+import { IS_WEB } from '@/constants/platform';
 
 // Complete OAuth session for web
-if (Platform.OS === 'web') {
+if (IS_WEB) {
   WebBrowser.maybeCompleteAuthSession();
 }
 

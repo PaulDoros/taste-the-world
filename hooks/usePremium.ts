@@ -6,7 +6,8 @@ import Purchases, {
   CustomerInfo,
 } from 'react-native-purchases';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
+import { IS_ANDROID, IS_IOS, IS_WEB } from '@/constants/platform';
 
 export type SubscriptionType = 'free' | 'weekly' | 'monthly' | 'yearly';
 
@@ -25,7 +26,7 @@ export function usePremium() {
   useEffect(() => {
     const setup = async () => {
       try {
-        if (Platform.OS === 'web') {
+        if (IS_WEB) {
           setIsReady(true);
           return;
         }
@@ -166,9 +167,9 @@ export function usePremium() {
   };
 
   const cancelSubscription = async () => {
-    if (Platform.OS === 'ios') {
+    if (IS_IOS) {
       Linking.openURL('https://apps.apple.com/account/subscriptions');
-    } else if (Platform.OS === 'android') {
+    } else if (IS_ANDROID) {
       Linking.openURL('https://play.google.com/store/account/subscriptions');
     }
   };

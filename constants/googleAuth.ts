@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 const PLACEHOLDER_VALUES = new Set([
   'your_client_id',
@@ -38,15 +38,15 @@ export const googleAuthRequestConfig = {
 };
 
 export const isGoogleOAuthConfigured =
-  Platform.OS === 'android'
+  IS_ANDROID
     ? Boolean(androidClientId ?? fallbackClientId)
-    : Platform.OS === 'ios'
+    : IS_IOS
       ? Boolean(iosClientId ?? fallbackClientId)
       : Boolean(webClientId ?? fallbackClientId);
 
 export const googleOAuthMissingConfigMessage =
-  Platform.OS === 'android'
+  IS_ANDROID
     ? 'Google sign-in is not configured for Android. Add EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID in EAS environment variables and rebuild.'
-    : Platform.OS === 'ios'
+    : IS_IOS
       ? 'Google sign-in is not configured for iOS. Add EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID in EAS environment variables and rebuild.'
       : 'Google sign-in is not configured. Add EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in EAS environment variables.';

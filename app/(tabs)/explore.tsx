@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, RefreshControl, Platform } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -26,7 +26,11 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
-import { shouldUseGlassBlur } from '@/constants/Performance';
+import {
+  isAndroidAnimationsDisabled,
+  shouldUseGlassBlur,
+} from '@/constants/Performance';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 // Define filter types
 type RegionFilter =
@@ -56,7 +60,7 @@ export default function ExploreScreen() {
   const isFocused = useIsFocused();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const useBlur = shouldUseGlassBlur;
+  const useBlur = shouldUseGlassBlur && !isAndroidAnimationsDisabled;
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const bottomPadding = tabBarHeight + insets.bottom + 16;
@@ -171,7 +175,7 @@ export default function ExploreScreen() {
           intensity={85}
           tint={colorScheme === 'dark' ? 'dark' : 'light'}
           experimentalBlurMethod={
-            Platform.OS === 'android' ? 'dimezisBlurView' : undefined
+            IS_ANDROID ? 'dimezisBlurView' : undefined
           }
           style={headerContainerStyle}
         >
@@ -202,7 +206,9 @@ export default function ExploreScreen() {
                 {t('explore_subtitle')}
               </Text>
             </View>
-            {Platform.OS === 'ios' || !isFocused ? (
+            {IS_IOS ||
+            !isFocused ||
+            isAndroidAnimationsDisabled ? (
               <View
                 style={{
                   width: 80,
@@ -351,6 +357,7 @@ export default function ExploreScreen() {
       colors.tint,
       insets.top,
       isFocused,
+      isAndroidAnimationsDisabled,
       searchQuery,
       selectedRegion,
       selectedPremium,
@@ -385,7 +392,7 @@ export default function ExploreScreen() {
 
   return (
     <ScreenLayout edges={['left', 'right']} disableBackground>
-      <AmbientBackground />
+      {!isAndroidAnimationsDisabled && <AmbientBackground />}
       {/* Countries Grid with Sticky Header */}
       <View style={{ flex: 1 }}>
         <FlatList
@@ -404,7 +411,7 @@ export default function ExploreScreen() {
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          removeClippedSubviews={Platform.OS === 'android'}
+          removeClippedSubviews={IS_ANDROID}
           initialNumToRender={8}
           maxToRenderPerBatch={8}
           windowSize={7}

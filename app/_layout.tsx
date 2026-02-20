@@ -8,10 +8,12 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { enableFreeze, enableScreens } from 'react-native-screens';
 import 'react-native-reanimated';
 import Constants from 'expo-constants';
 import '../global.css';
+import { IS_IOS, IS_NATIVE_MOBILE } from '@/constants/platform';
 
 // Configure Reanimated logger to disable strict mode warnings
 import Animated, {
@@ -27,6 +29,17 @@ configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false, // Disable strict mode warnings for production-like behavior
 });
+
+// Required by React Navigation for freezeOnBlur to be effective.
+enableScreens(true);
+enableFreeze(true);
+
+// Avoid JS-thread overhead from debug logs in release builds.
+if (!__DEV__) {
+  console.log = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+}
 
 // Suppress React Native Web deprecation warning for pointerEvents
 if (__DEV__) {
@@ -105,7 +118,7 @@ export default function RootLayout() {
       configureNotifications(); // Setup notifications
 
       // Initialize RevenueCat
-      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      if (IS_NATIVE_MOBILE) {
         const setupRevenueCat = async () => {
           const appleKey = process.env.EXPO_PUBLIC_RC_APPLE_KEY;
           const googleKey = process.env.EXPO_PUBLIC_RC_GOOGLE_KEY;
@@ -120,7 +133,7 @@ export default function RootLayout() {
           if (isExpoGo) {
             // Expo Go cannot access native stores, so only the RC Test Store key is valid.
             apiKey = testKey || customKey;
-          } else if (Platform.OS === 'ios') {
+          } else if (IS_IOS) {
             apiKey = appleKey;
           } else {
             apiKey = googleKey;

@@ -10,6 +10,7 @@ import {
   useTheme,
 } from 'tamagui';
 import { useColorScheme } from '@/components/useColorScheme';
+import { IS_ANDROID } from '@/constants/platform';
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -39,6 +40,7 @@ export const Input = React.forwardRef<any, InputProps>(
     const theme = useTheme();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const isAndroid = IS_ANDROID;
     const [isFocused, setIsFocused] = useState(false);
     const isInset = variant === 'inset';
 
@@ -58,6 +60,24 @@ export const Input = React.forwardRef<any, InputProps>(
     const insetBottomEdge = isDark
       ? 'rgba(148, 163, 184, 0.24)'
       : 'rgba(255, 255, 255, 0.92)';
+    const androidInsetBackground = isDark
+      ? 'rgba(15, 23, 42, 0.82)'
+      : 'rgba(248, 250, 252, 1)';
+    const androidInsetFocusedBackground = isDark
+      ? 'rgba(15, 23, 42, 0.92)'
+      : 'rgba(255, 255, 255, 1)';
+    const androidInsetBorder = isDark
+      ? 'rgba(148, 163, 184, 0.28)'
+      : 'rgba(15, 23, 42, 0.14)';
+    const defaultAndroidBackground = isDark
+      ? 'rgba(30, 41, 59, 0.72)'
+      : 'rgba(255, 255, 255, 1)';
+    const inactiveIconColor = isAndroid
+      ? isDark
+        ? 'rgba(148, 163, 184, 0.95)'
+        : '#64748b'
+      : theme.color11.val;
+    const activeIconColor = theme.tint.val;
 
     return (
       <YStack space="$2" {...containerStyle}>
@@ -75,28 +95,69 @@ export const Input = React.forwardRef<any, InputProps>(
         <XStack
           alignItems="center"
           borderRadius="$4"
-          borderWidth={isFocused && !isInset ? 2 : 1}
+          borderWidth={isFocused && !isInset && !isAndroid ? 2 : 1}
           borderColor={getBorderColor()}
-          backgroundColor={isInset ? insetBaseBackground : '$background'}
+          backgroundColor={
+            isInset
+              ? isAndroid
+                ? isFocused
+                  ? androidInsetFocusedBackground
+                  : androidInsetBackground
+                : insetBaseBackground
+              : isAndroid
+                ? defaultAndroidBackground
+                : '$background'
+          }
           paddingHorizontal="$3"
           minHeight={52}
           style={
             isInset
               ? {
-                  borderTopColor: error ? theme.red10.val : insetTopEdge,
-                  borderLeftColor: error ? theme.red10.val : insetTopEdge,
-                  borderBottomColor: error ? theme.red10.val : insetBottomEdge,
-                  borderRightColor: error ? theme.red10.val : insetBottomEdge,
-                  shadowColor: isDark ? '#000000' : '#0f172a',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: isDark ? 0.22 : 0.08,
-                  shadowRadius: 2,
-                  elevation: 1,
+                  borderTopColor: error
+                    ? theme.red10.val
+                    : isAndroid
+                      ? isFocused
+                        ? activeIconColor
+                        : androidInsetBorder
+                      : insetTopEdge,
+                  borderLeftColor: error
+                    ? theme.red10.val
+                    : isAndroid
+                      ? isFocused
+                        ? activeIconColor
+                        : androidInsetBorder
+                      : insetTopEdge,
+                  borderBottomColor: error
+                    ? theme.red10.val
+                    : isAndroid
+                      ? isFocused
+                        ? activeIconColor
+                        : androidInsetBorder
+                      : insetBottomEdge,
+                  borderRightColor: error
+                    ? theme.red10.val
+                    : isAndroid
+                      ? isFocused
+                        ? activeIconColor
+                        : androidInsetBorder
+                      : insetBottomEdge,
+                  shadowColor:
+                    !isAndroid && isDark
+                      ? '#000000'
+                      : !isAndroid
+                        ? '#0f172a'
+                        : undefined,
+                  shadowOffset: !isAndroid
+                    ? { width: 0, height: 1 }
+                    : undefined,
+                  shadowOpacity: !isAndroid ? (isDark ? 0.22 : 0.08) : 0,
+                  shadowRadius: !isAndroid ? 2 : 0,
+                  elevation: 0,
                 }
               : undefined
           }
           // Animation for smooth focus transition
-          animation="quick"
+          animation={isAndroid ? undefined : 'quick'}
         >
           {leftIcon && (
             <FontAwesome5
@@ -106,8 +167,8 @@ export const Input = React.forwardRef<any, InputProps>(
                 error
                   ? theme.red10.val
                   : isFocused
-                    ? theme.tint.val
-                    : theme.color11.val
+                    ? activeIconColor
+                    : inactiveIconColor
               }
               style={{ marginRight: 12 }}
             />
@@ -124,6 +185,9 @@ export const Input = React.forwardRef<any, InputProps>(
             placeholderTextColor="$color11"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
+            selectionColor={activeIconColor}
+            underlineColorAndroid="transparent"
+            style={style}
             {...props}
           />
 
@@ -139,8 +203,8 @@ export const Input = React.forwardRef<any, InputProps>(
                   error
                     ? theme.red10.val
                     : isFocused
-                      ? theme.tint.val
-                      : theme.color11.val
+                      ? activeIconColor
+                      : inactiveIconColor
                 }
                 style={{ marginLeft: 12 }}
               />

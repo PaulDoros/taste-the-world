@@ -1,8 +1,9 @@
 import React from 'react';
-import { Modal, Platform, Pressable } from 'react-native';
+import { Modal, Pressable } from 'react-native';
 import { YStack, XStack, Button, Heading, ScrollView, Text } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { IS_IOS } from '@/constants/platform';
 
 interface PlannerHistoryModalProps {
   visible: boolean;
@@ -29,7 +30,7 @@ export const PlannerHistoryModal = ({
       onRequestClose={onClose}
     >
       <YStack flex={1} backgroundColor="$background">
-        <YStack height={Platform.OS === 'ios' ? 44 : 0} />
+        <YStack height={IS_IOS ? 44 : 0} />
         {/* Header */}
         <XStack
           padding="$4"

@@ -27,6 +27,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { Loading } from '@/components/shared/Loading';
 import { useLanguage } from '@/context/LanguageContext';
 import { AppBannerAd } from '@/components/ads/BannerAd';
+import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 
 /**
  * Home Screen
@@ -123,7 +124,9 @@ export default function HomeScreen() {
             paddingTop: 16,
           }}
         >
-          <AmbientBackground scrollable height={4000} />
+          {!isAndroidAnimationsDisabled && (
+            <AmbientBackground scrollable height={4000} />
+          )}
 
           {/* Hero Section */}
           <YStack marginBottom="$6" paddingHorizontal="$4">

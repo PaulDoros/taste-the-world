@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet, ScrollView, Alert } from 'react-native';
+import { StyleSheet, ScrollView, Alert } from 'react-native';
 import { View } from '@/components/Themed';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { PricingSection } from '@/components/settings/PricingSection';
@@ -16,6 +16,7 @@ import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
+import { IS_IOS } from '@/constants/platform';
 
 export default function ModalScreen() {
   const { feature } = useLocalSearchParams<{ feature: string }>();
@@ -128,7 +129,7 @@ export default function ModalScreen() {
       </ScrollView>
 
       {/* Use a light status bar on iOS to account for the black space above the modal */}
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+      <StatusBar style={IS_IOS ? 'light' : 'auto'} />
     </View>
   );
 }
