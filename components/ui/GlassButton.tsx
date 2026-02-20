@@ -63,6 +63,7 @@ export const GlassButton = ({
   shadowOpacity,
   shadowRadius = 2,
   textColor: customTextColor,
+  style,
   rightIcon,
   solid,
 
@@ -274,6 +275,7 @@ export const GlassButton = ({
           borderRadius: r,
           backgroundColor: isAndroid ? 'rgba(0,0,0,0.01)' : 'transparent',
         },
+        style,
       ]}
     >
       {/* ✅ Android shadow as absolute background (no layout impact, no translate) */}

@@ -44,7 +44,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   intensity,
   shadowOpacity,
   shadowColor,
-  shadowRadius = 12,
+  shadowRadius = 2,
   variant = 'default',
   backgroundColor,
   backgroundOpacity,
@@ -94,7 +94,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     (isThin ? (isDark ? 0.35 : 0.18) : isDark ? 0.5 : 0.25);
   const startColor = `rgba(0,0,0,${shadowAlpha})`;
   const resolvedAndroidShadowDistance =
-    androidShadowDistance ?? (isThin ? 3 : 3);
+    androidShadowDistance ?? (isThin ? 2 : 3);
   const resolvedAndroidShadowOffsetY = androidShadowOffsetY ?? (isThin ? 1 : 3);
 
   return (

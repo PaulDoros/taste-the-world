@@ -6,14 +6,15 @@ import {
   XStack,
   Input as TamaguiInput,
   Text,
-  styled,
   GetProps,
   useTheme,
 } from 'tamagui';
+import { useColorScheme } from '@/components/useColorScheme';
 
-interface InputProps extends TextInputProps {
+export interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
+  variant?: 'default' | 'inset';
   leftIcon?: keyof typeof FontAwesome5.glyphMap;
   rightIcon?: keyof typeof FontAwesome5.glyphMap;
   onRightIconPress?: () => void;
@@ -25,6 +26,7 @@ export const Input = React.forwardRef<any, InputProps>(
     {
       label,
       error,
+      variant = 'default',
       leftIcon,
       rightIcon,
       onRightIconPress,
@@ -35,14 +37,27 @@ export const Input = React.forwardRef<any, InputProps>(
     ref
   ) => {
     const theme = useTheme();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
     const [isFocused, setIsFocused] = useState(false);
+    const isInset = variant === 'inset';
 
     // Determine border color based on state
     const getBorderColor = () => {
-      if (error) return '$red10'; // or '$error' if defined, defaulting to a standard red token
-      if (isFocused) return '$tint';
-      return '$borderColor';
+      if (error) return theme.red10.val;
+      if (isFocused) return theme.tint.val;
+      return theme.borderColor.val;
     };
+
+    const insetBaseBackground = isDark
+      ? 'rgba(15, 23, 42, 0.28)'
+      : 'rgba(148, 163, 184, 0.12)';
+    const insetTopEdge = isDark
+      ? 'rgba(2, 6, 23, 0.75)'
+      : 'rgba(15, 23, 42, 0.12)';
+    const insetBottomEdge = isDark
+      ? 'rgba(148, 163, 184, 0.24)'
+      : 'rgba(255, 255, 255, 0.92)';
 
     return (
       <YStack space="$2" {...containerStyle}>
@@ -60,11 +75,26 @@ export const Input = React.forwardRef<any, InputProps>(
         <XStack
           alignItems="center"
           borderRadius="$4"
-          borderWidth={isFocused ? 2 : 1}
+          borderWidth={isFocused && !isInset ? 2 : 1}
           borderColor={getBorderColor()}
-          backgroundColor="$background" // or '$surface' depending on design
+          backgroundColor={isInset ? insetBaseBackground : '$background'}
           paddingHorizontal="$3"
           minHeight={52}
+          style={
+            isInset
+              ? {
+                  borderTopColor: error ? theme.red10.val : insetTopEdge,
+                  borderLeftColor: error ? theme.red10.val : insetTopEdge,
+                  borderBottomColor: error ? theme.red10.val : insetBottomEdge,
+                  borderRightColor: error ? theme.red10.val : insetBottomEdge,
+                  shadowColor: isDark ? '#000000' : '#0f172a',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: isDark ? 0.22 : 0.08,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }
+              : undefined
+          }
           // Animation for smooth focus transition
           animation="quick"
         >

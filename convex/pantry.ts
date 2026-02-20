@@ -64,6 +64,7 @@ export const addPantryItem = mutation({
       name: args.name.toLowerCase(),
       displayName: args.displayName,
       measure: args.measure,
+      isChecked: false,
       addedAt: Date.now(),
     });
   },
@@ -90,6 +91,23 @@ export const updatePantryItemQuantity = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.itemId, {
       measure: args.measure,
+    });
+  },
+});
+
+/**
+ * Toggle pantry item checked state
+ */
+export const togglePantryItemChecked = mutation({
+  args: {
+    itemId: v.id('pantry'),
+  },
+  handler: async (ctx, args) => {
+    const item = await ctx.db.get(args.itemId);
+    if (!item) return;
+
+    await ctx.db.patch(args.itemId, {
+      isChecked: !Boolean(item.isChecked),
     });
   },
 });

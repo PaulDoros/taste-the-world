@@ -37,9 +37,16 @@ import { Input } from '@/components/forms/Input';
 
 import { OAuthButton } from '@/components/auth/OAuthButton';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  googleAuthRequestConfig,
+  googleOAuthMissingConfigMessage,
+  isGoogleOAuthConfigured,
+} from '@/constants/googleAuth';
 
 import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
@@ -51,12 +58,9 @@ export default function LoginScreen() {
   const { t } = useLanguage();
 
   // Google OAuth
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  });
+  const [request, response, promptAsync] = Google.useAuthRequest(
+    googleAuthRequestConfig
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -151,22 +155,19 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
+      if (!isGoogleOAuthConfigured) {
+        console.error('[Auth] Google OAuth not configured', {
+          platform: Platform.OS,
+        });
+        alert(googleOAuthMissingConfigMessage);
+        return;
+      }
       if (!request) return;
       await promptAsync();
     } catch (err) {
       console.error('Google sign in error:', err);
       haptics.error();
     }
-  };
-
-  const handleAppleSignIn = async () => {
-    haptics.light();
-    alert(t('auth_apple_coming_soon'));
-  };
-
-  const handleFacebookSignIn = async () => {
-    haptics.light();
-    alert(t('auth_facebook_coming_soon'));
   };
 
   return (
@@ -193,6 +194,7 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
+            paddingTop: 20,
             minHeight: Dimensions.get('window').height,
             paddingBottom: insets.bottom + 20,
           }}
@@ -211,16 +213,16 @@ export default function LoginScreen() {
                 <Animated.View
                   entering={FadeInDown.delay(120)}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 50,
+                    height: 50,
                     borderRadius: 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: colors.tint,
                     shadowColor: colors.tint,
                     shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 12,
+                    shadowOpacity: 0.7,
+                    shadowRadius: 5,
                     elevation: 6,
                   }}
                 >
@@ -248,26 +250,14 @@ export default function LoginScreen() {
             </Animated.View>
 
             {/* iOS-style login card */}
-            <Card
-              elevate
-              bordered
-              borderRadius="$5"
-              padding="$5"
-              backgroundColor={
-                colorScheme === 'dark'
-                  ? 'rgba(28,28,30,0.95)'
-                  : 'rgba(255,255,255,1)'
-              }
-              borderColor={
-                colorScheme === 'dark'
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.06)'
-              }
-              shadowColor="#000"
-              shadowOffset={{ width: 0, height: 4 }}
-              shadowOpacity={0.08}
-              shadowRadius={20}
-              elevation={6}
+            <GlassCard
+              borderRadiusInside={0}
+              borderRadius={24}
+              shadowRadius={4}
+              style={{
+                padding: 24,
+                marginBottom: 20,
+              }}
             >
               {/* Form fields */}
               <YStack space="$4" mb="$4">
@@ -294,6 +284,7 @@ export default function LoginScreen() {
                 <Input
                   label={t('auth_password_label')}
                   placeholder={t('auth_password_placeholder')}
+                  variant="inset"
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -339,39 +330,33 @@ export default function LoginScreen() {
               )}
 
               {/* Forgot Password - iOS style */}
-              <Button
+              <GlassButton
                 onPress={() => {
                   haptics.light();
                   // TODO: Implement forgot password flow
                   alert(t('auth_forgot_password_soon'));
                 }}
-                size="$3"
-                alignSelf="flex-end"
-                mb="$4"
-                chromeless
-                pressStyle={{ opacity: 0.6 }}
-              >
-                <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                  {t('auth_forgot_password')}
-                </Text>
-              </Button>
+                size="small"
+                label={t('auth_forgot_password')}
+                textColor={colors.tint}
+                backgroundColor={colors.tint}
+                backgroundOpacity={0.1}
+                style={{ alignSelf: 'flex-end', marginBottom: 12, padding: 3 }}
+              />
 
               {/* Primary button - iOS style */}
-              <Button
+              <GlassButton
                 onPress={handleLogin}
                 disabled={!!isLoading}
-                size="$4"
+                size="large"
+                label={
+                  isLoading ? t('auth_logging_in') : t('auth_login_button')
+                }
                 backgroundColor={colors.tint}
-                color="white"
-                fontWeight="700"
-                width="100%"
-                mb="$3"
-                borderRadius="$4"
-                pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                opacity={isLoading ? 0.6 : 1}
-              >
-                {isLoading ? t('auth_logging_in') : t('auth_login_button')}
-              </Button>
+                textColor="#FFFFFF"
+                backgroundOpacity={1}
+                style={{ width: '100%', marginBottom: 12, padding: 3 }}
+              />
 
               {/* Divider - iOS style */}
               <XStack ai="center" my="$4" space="$2">
@@ -388,25 +373,11 @@ export default function LoginScreen() {
                   provider="google"
                   onPress={handleGoogleSignIn}
                   loading={!!isLoading}
+                  disabled={!isGoogleOAuthConfigured || !request}
                   delay={220}
                 />
-                {/* Social Logins - Hidden for v1.0
-                {Platform.OS === 'ios' && (
-                  <OAuthButton
-                    provider="apple"
-                    onPress={handleAppleSignIn}
-                    loading={!!isLoading}
-                    delay={260}
-                  />
-                )}
-                <OAuthButton
-                  provider="facebook"
-                  onPress={handleFacebookSignIn}
-                  loading={!!isLoading}
-                  delay={Platform.OS === 'ios' ? 300 : 260}
-                /> */}
               </YStack>
-            </Card>
+            </GlassCard>
 
             {/* Sign up footer - iOS style */}
             <Animated.View
@@ -417,19 +388,18 @@ export default function LoginScreen() {
                 <Text fontSize="$3" color="$color11">
                   {t('auth_no_account')}
                 </Text>
-                <Button
+                <GlassButton
                   onPress={() => {
                     haptics.light();
                     router.push('/auth/signup');
                   }}
-                  size="$3"
-                  chromeless
-                  pressStyle={{ opacity: 0.6 }}
-                >
-                  <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                    {t('auth_signup_link')}
-                  </Text>
-                </Button>
+                  size="small"
+                  label={t('auth_signup_link')}
+                  textColor={colors.tint}
+                  backgroundColor={colors.tint}
+                  backgroundOpacity={0.1}
+                  style={{ marginBottom: 5 }}
+                />
               </XStack>
             </Animated.View>
           </YStack>

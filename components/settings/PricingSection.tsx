@@ -57,7 +57,7 @@ const AnimatedPricingCard = ({
   style?: any;
 }) => {
   const progress = useSharedValue(isSelected ? 1 : 0);
-
+  const isAndroid = Platform.OS === 'android';
   useEffect(() => {
     progress.value = withTiming(isSelected ? 1 : 0, {
       duration: Platform.OS === 'android' ? 220 : 300,
@@ -134,9 +134,10 @@ export const PricingSection = ({
   const isPerformanceMode = Platform.OS === 'android' && isAndroidLowPerf;
   const isAndroidUi = Platform.OS === 'android';
   const androidShadowBase = colorScheme === 'dark' ? '#000000' : '#0f172a';
-  const androidBorderSoft = colorScheme === 'dark'
-    ? 'rgba(148, 163, 184, 0.2)'
-    : 'rgba(15, 23, 42, 0.08)';
+  const androidBorderSoft =
+    colorScheme === 'dark'
+      ? 'rgba(148, 163, 184, 0.2)'
+      : 'rgba(15, 23, 42, 0.08)';
   const [showAllBenefits, setShowAllBenefits] = useState(false);
   const { offerings } = usePremium();
 
@@ -147,51 +148,54 @@ export const PricingSection = ({
   const isPro = selectedTier === 'pro';
 
   // Robust helper to find a package by tier + period — computed fresh every render
-  const findPackage = useCallback((tier: string, period: string) => {
-    const term = period.toLowerCase();
-    const tierName = tier.toLowerCase();
+  const findPackage = useCallback(
+    (tier: string, period: string) => {
+      const term = period.toLowerCase();
+      const tierName = tier.toLowerCase();
 
-    // 1. Explicit known formats based on RevenueCat setup
-    const knownIds: string[] = [];
+      // 1. Explicit known formats based on RevenueCat setup
+      const knownIds: string[] = [];
 
-    // Personal tier has "-base" suffix for monthly/yearly
-    if (tierName === 'personal') {
-      if (term === 'monthly') knownIds.push('personal-monthly-base');
-      if (term === 'yearly') knownIds.push('personal-yearly-base');
-      if (term === 'weekly') knownIds.push('personal-weekly'); // no base suffix for weekly
-    }
+      // Personal tier has "-base" suffix for monthly/yearly
+      if (tierName === 'personal') {
+        if (term === 'monthly') knownIds.push('personal-monthly-base');
+        if (term === 'yearly') knownIds.push('personal-yearly-base');
+        if (term === 'weekly') knownIds.push('personal-weekly'); // no base suffix for weekly
+      }
 
-    // Pro tier uses standard dash format
-    if (tierName === 'pro') {
+      // Pro tier uses standard dash format
+      if (tierName === 'pro') {
+        knownIds.push(`${tierName}-${term}`);
+      }
+
+      // Also fallback to standard formats just in case
+      knownIds.push(`${tierName}_${term}`);
       knownIds.push(`${tierName}-${term}`);
-    }
 
-    // Also fallback to standard formats just in case
-    knownIds.push(`${tierName}_${term}`);
-    knownIds.push(`${tierName}-${term}`);
-
-    const exact = offerings.find((o) =>
-      knownIds.includes(o.product.identifier.toLowerCase())
-    );
-    if (exact) return exact;
-
-    // 2. Simple identifier fallback
-    if (tierName === 'personal' || tierName === 'free') {
-      const simpleMatch = offerings.find(
-        (o) => o.product.identifier.toLowerCase() === term
+      const exact = offerings.find((o) =>
+        knownIds.includes(o.product.identifier.toLowerCase())
       );
-      if (simpleMatch) return simpleMatch;
-    }
+      if (exact) return exact;
 
-    // 3. Robust Fuzzy
-    return (
-      offerings.find((o) => {
-        const id = o.product.identifier.toLowerCase();
-        return id.includes(tierName) && id.includes(term);
-      }) ||
-      offerings.find((o) => o.product.identifier.toLowerCase().includes(term))
-    );
-  }, [offerings]);
+      // 2. Simple identifier fallback
+      if (tierName === 'personal' || tierName === 'free') {
+        const simpleMatch = offerings.find(
+          (o) => o.product.identifier.toLowerCase() === term
+        );
+        if (simpleMatch) return simpleMatch;
+      }
+
+      // 3. Robust Fuzzy
+      return (
+        offerings.find((o) => {
+          const id = o.product.identifier.toLowerCase();
+          return id.includes(tierName) && id.includes(term);
+        }) ||
+        offerings.find((o) => o.product.identifier.toLowerCase().includes(term))
+      );
+    },
+    [offerings]
+  );
 
   // Derive current package directly
   const currentPackage = findPackage(selectedTier, selectedSubscription);
@@ -373,11 +377,7 @@ export const PricingSection = ({
                     ? 0.15
                     : 0.12
                   : 0.3,
-                shadowRadius: isAndroidUi
-                  ? isAndroidLowPerf
-                    ? 8
-                    : 6
-                  : 8,
+                shadowRadius: isAndroidUi ? (isAndroidLowPerf ? 8 : 6) : 8,
                 elevation: isAndroidUi ? (isAndroidLowPerf ? 4 : 3) : 5,
               }}
             >
@@ -437,14 +437,12 @@ export const PricingSection = ({
                         ? 0.14
                         : 0.1
                       : 0.1,
-                    shadowRadius: isAndroidUi
-                      ? isAndroidLowPerf
-                        ? 7
-                        : 5
-                      : 4,
+                    shadowRadius: isAndroidUi ? (isAndroidLowPerf ? 7 : 5) : 4,
                     elevation: isAndroidUi ? (isAndroidLowPerf ? 4 : 3) : 3,
                     borderWidth: isAndroidUi ? 1 : 0,
-                    borderColor: isAndroidUi ? androidBorderSoft : 'transparent',
+                    borderColor: isAndroidUi
+                      ? androidBorderSoft
+                      : 'transparent',
                   },
                   animatedTabStyle,
                 ]}

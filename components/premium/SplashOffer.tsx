@@ -6,8 +6,9 @@ import {
   Pressable,
   LayoutChangeEvent,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
-import { YStack, XStack, Heading, Text, Button, ScrollView } from 'tamagui';
+import { YStack, XStack, Heading, Text } from 'tamagui';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -29,7 +30,7 @@ import { GlassButton } from '@/components/ui/GlassButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { SUBSCRIPTION_PRICES } from '@/constants/Config';
-import { useMemo } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SplashOfferProps {
   visible: boolean;
@@ -45,6 +46,100 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
+  const isUltraCompactDevice = screenHeight < 680 || screenWidth < 350;
+  const isVeryCompactDevice =
+    isUltraCompactDevice || screenHeight < 700 || screenWidth < 360;
+  const isCompactDevice =
+    isVeryCompactDevice || screenHeight < 760 || screenWidth < 370;
+  const headerHeight = isUltraCompactDevice
+    ? 190
+    : isVeryCompactDevice
+      ? 220
+      : isCompactDevice
+        ? 260
+        : 350;
+  const lottieSize = isUltraCompactDevice
+    ? 150
+    : isVeryCompactDevice
+      ? 180
+      : isCompactDevice
+        ? 210
+        : 280;
+  const contentOverlap = isUltraCompactDevice
+    ? 118
+    : isVeryCompactDevice
+      ? 96
+      : isCompactDevice
+        ? 72
+        : 30;
+  const contentPadding = isVeryCompactDevice
+    ? isUltraCompactDevice
+      ? '$2'
+      : '$3'
+    : isCompactDevice
+      ? '$4'
+      : '$5';
+  const contentPaddingTop = isVeryCompactDevice
+    ? isUltraCompactDevice
+      ? '$1'
+      : '$3'
+    : isCompactDevice
+      ? '$4'
+      : '$6';
+  const cardSpacing = isVeryCompactDevice
+    ? isUltraCompactDevice
+      ? '$2'
+      : '$3'
+    : isCompactDevice
+      ? '$4'
+      : '$5';
+  const pricingCardPadding = isVeryCompactDevice
+    ? isUltraCompactDevice
+      ? 8
+      : 10
+    : isCompactDevice
+      ? 12
+      : 16;
+  const toggleHeight = isUltraCompactDevice
+    ? 38
+    : isVeryCompactDevice
+      ? 42
+      : 48;
+  const toggleThumbHeight = isUltraCompactDevice
+    ? 30
+    : isVeryCompactDevice
+      ? 34
+      : 40;
+  const featureIconSize = isUltraCompactDevice ? 20 : 24;
+  const featureIconRadius = isUltraCompactDevice ? 10 : 12;
+  const featureCheckSize = isUltraCompactDevice ? 11 : 12;
+  const featureTextSize = isUltraCompactDevice
+    ? '$2'
+    : isVeryCompactDevice
+      ? '$3'
+      : '$4';
+  const priceTitleSize = isUltraCompactDevice ? '$4' : '$5';
+  const priceValueSize = isUltraCompactDevice ? '$5' : '$6';
+  const sheetBottomPadding = isCompactDevice
+    ? Math.max(insets.bottom, 6)
+    : Math.max(insets.bottom + 12, 16);
+  const contentStackLift = isUltraCompactDevice
+    ? 56
+    : isVeryCompactDevice
+      ? 34
+      : isCompactDevice
+        ? 18
+        : 0;
+  const [contentStackHeight, setContentStackHeight] = useState(0);
+  const minSheetTop = insets.top + (isUltraCompactDevice ? 4 : 10);
+  const baseSheetTop = headerHeight - (contentOverlap + contentStackLift);
+  const baseSheetHeight = screenHeight - baseSheetTop;
+  const requiredLift = Math.max(0, contentStackHeight - baseSheetHeight);
+  const maxLift = Math.max(0, baseSheetTop - minSheetTop);
+  const appliedLift = Math.min(requiredLift, maxLift);
+  const sheetTop = Math.max(minSheetTop, baseSheetTop - appliedLift);
 
   // State for Personal vs Pro Tab
   const [selectedTier, setSelectedTier] = useState<'personal' | 'pro'>(
@@ -235,72 +330,109 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
         t('splash_feature_itinerary'),
         'Standard Support',
       ];
+  const visibleFeatures = isVeryCompactDevice ? features.slice(0, 3) : features;
 
   // Dynamic pricing from offerings (fallback if not loaded)
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
+        {/* Header Image / Animation */}
+        <View
+          style={{
+            height: headerHeight,
+            width: '100%',
+            position: 'relative',
+          }}
         >
-          {/* Header Image / Animation */}
-          <View style={{ height: 350, width: '100%', position: 'relative' }}>
-            <LinearGradient
-              colors={[accentColor, isPro ? '#4338ca' : '#2563EB']}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+          <LinearGradient
+            colors={[accentColor, isPro ? '#4338ca' : '#2563EB']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingTop: isUltraCompactDevice
+                ? 8
+                : isVeryCompactDevice
+                  ? 14
+                  : isCompactDevice
+                    ? 20
+                    : 40,
+            }}
+          >
+            <LottieView
+              source={require('../../assets/animations/travel.json')}
+              autoPlay
+              loop
+              style={{ width: lottieSize, height: lottieSize }}
             />
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingTop: 40,
-              }}
-            >
-              <LottieView
-                source={require('../../assets/animations/travel.json')}
-                autoPlay
-                loop
-                style={{ width: 280, height: 280 }}
-              />
-            </View>
-
-            {/* Close Button */}
-            <View style={{ position: 'absolute', top: 50, right: 20 }}>
-              <GlassButton
-                label=""
-                onPress={handleClose}
-                size="small"
-                icon="times"
-                backgroundColor="rgba(0,0,0,0.3)"
-                textColor="white"
-                backgroundOpacity={1}
-              />
-            </View>
           </View>
 
+          {/* Close Button */}
+          <View
+            style={{
+              position: 'absolute',
+              top:
+                insets.top +
+                (isUltraCompactDevice ? 4 : isCompactDevice ? 8 : 12),
+              right: isUltraCompactDevice ? 10 : isCompactDevice ? 14 : 20,
+            }}
+          >
+            <GlassButton
+              label=""
+              onPress={handleClose}
+              size="small"
+              icon="times"
+              backgroundColor="rgba(0,0,0,0.3)"
+              textColor="white"
+              backgroundOpacity={1}
+            />
+          </View>
+        </View>
+
+        <YStack
+          position="absolute"
+          left={0}
+          right={0}
+          bottom={0}
+          top={sheetTop}
+          backgroundColor="$background"
+          borderTopLeftRadius={isVeryCompactDevice ? 24 : 30}
+          borderTopRightRadius={isVeryCompactDevice ? 24 : 30}
+          overflow="hidden"
+        >
           <YStack
-            flex={1}
-            backgroundColor="$background"
-            borderTopLeftRadius={30}
-            borderTopRightRadius={30}
-            marginTop={-30}
-            padding="$5"
-            paddingTop="$6"
-            gap="$5"
+            onLayout={(event) => {
+              const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+              if (nextHeight !== contentStackHeight) {
+                setContentStackHeight(nextHeight);
+              }
+            }}
+            padding={contentPadding}
+            paddingTop={contentPaddingTop}
+            paddingBottom={sheetBottomPadding}
+            gap={cardSpacing}
           >
             <YStack alignItems="center" gap="$2">
               <Heading
-                size="$9"
+                size={
+                  isUltraCompactDevice
+                    ? '$6'
+                    : isVeryCompactDevice
+                      ? '$7'
+                      : isCompactDevice
+                        ? '$8'
+                        : '$9'
+                }
                 textAlign="center"
                 fontWeight="900"
                 color={colors.text}
@@ -319,7 +451,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                   padding: 4,
                   flexDirection: 'row',
                   position: 'relative',
-                  height: 48,
+                  height: toggleHeight,
                   width: '100%',
                 }}
               >
@@ -330,7 +462,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                         position: 'absolute',
                         top: 4,
                         left: 4,
-                        height: 40,
+                        height: toggleThumbHeight,
                         borderRadius: 10,
                         backgroundColor: accentColor,
                         shadowColor: '#000',
@@ -379,18 +511,21 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
             </YStack>
 
             {/* Features */}
-            <YStack gap="$3">
-              {features.map((feature, index) => (
+            <YStack gap={isUltraCompactDevice ? '$2' : '$3'}>
+              {visibleFeatures.map((feature, index) => (
                 <Animated.View
                   key={index}
                   entering={FadeInDown.delay(300 + index * 100)}
                 >
-                  <XStack alignItems="center" gap="$3">
+                  <XStack
+                    alignItems="center"
+                    gap={isUltraCompactDevice ? '$2' : '$3'}
+                  >
                     <View
                       style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
+                        width: featureIconSize,
+                        height: featureIconSize,
+                        borderRadius: featureIconRadius,
                         backgroundColor: `${accentColor}20`,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -398,11 +533,15 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                     >
                       <FontAwesome5
                         name="check"
-                        size={12}
+                        size={featureCheckSize}
                         color={accentColor}
                       />
                     </View>
-                    <Text fontSize="$4" fontWeight="600" color={colors.text}>
+                    <Text
+                      fontSize={featureTextSize}
+                      fontWeight="600"
+                      color={colors.text}
+                    >
                       {feature}
                     </Text>
                   </XStack>
@@ -411,7 +550,10 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
             </YStack>
 
             {/* Pricing Cards */}
-            <YStack gap="$3" marginTop="$2">
+            <YStack
+              gap={isUltraCompactDevice ? '$2' : '$3'}
+              marginTop={isUltraCompactDevice ? '$1' : '$2'}
+            >
               {/* Weekly Special Offer */}
               <Animated.View entering={FadeInUp.delay(600).springify()}>
                 <GlassCard
@@ -422,21 +564,25 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                   <Pressable
                     onPress={() => handleSubscribe('weekly' as any)} // Cast as any if 'weekly' isn't in main type yet, or just map to monthly/weekly
                     style={({ pressed }) => ({
-                      padding: 16,
+                      padding: pricingCardPadding,
                       opacity: pressed ? 0.9 : 1,
                     })}
                   >
                     <XStack justifyContent="space-between" alignItems="center">
                       <YStack>
-                        <Heading size="$5" color={colors.text}>
+                        <Heading size={priceTitleSize} color={colors.text}>
                           {t('splash_weekly_pass')}
                         </Heading>
-                        <Text color={colors.text} opacity={0.7} fontSize="$3">
+                        <Text
+                          color={colors.text}
+                          opacity={0.7}
+                          fontSize={isUltraCompactDevice ? '$2' : '$3'}
+                        >
                           {weeklyPrice} / week
                         </Text>
                       </YStack>
                       <YStack alignItems="flex-end">
-                        <Heading size="$6" color={accentColor}>
+                        <Heading size={priceValueSize} color={accentColor}>
                           {weeklyPrice}
                         </Heading>
                         <Text fontSize="$2" color={colors.text} opacity={0.7}>
@@ -461,7 +607,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                     <Pressable
                       onPress={() => handleSubscribe('yearly')}
                       style={({ pressed }) => ({
-                        padding: 16,
+                        padding: pricingCardPadding,
                         opacity: pressed ? 0.9 : 1,
                         borderWidth: 2,
                         borderColor: accentColor,
@@ -476,21 +622,25 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                           <Text
                             color={accentColor}
                             fontWeight="800"
-                            fontSize="$3"
+                            fontSize={isUltraCompactDevice ? '$2' : '$3'}
                             textTransform="uppercase"
                             marginBottom="$1"
                           >
                             Best Value
                           </Text>
-                          <Heading size="$6" color={colors.text}>
+                          <Heading size={priceValueSize} color={colors.text}>
                             {t('pricing_yearly')}
                           </Heading>
-                          <Text color={colors.text} opacity={0.7} fontSize="$3">
+                          <Text
+                            color={colors.text}
+                            opacity={0.7}
+                            fontSize={isUltraCompactDevice ? '$2' : '$3'}
+                          >
                             {yearlyPrice} / year
                           </Text>
                         </YStack>
                         <YStack alignItems="flex-end">
-                          <Heading size="$6" color={accentColor}>
+                          <Heading size={priceValueSize} color={accentColor}>
                             {yearlyPrice}
                           </Heading>
                           <Text fontSize="$2" color={colors.text} opacity={0.7}>
@@ -504,7 +654,12 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
                   {/* Savings Badge Animation (Popped Out) */}
                   <Animated.View
                     style={[
-                      { position: 'absolute', top: -8, right: -4, zIndex: 10 },
+                      {
+                        position: 'absolute',
+                        top: -8,
+                        right: -4,
+                        zIndex: 10,
+                      },
                       animatedBadgeStyle,
                     ]}
                   >
@@ -538,7 +693,7 @@ export const SplashOffer = ({ visible, onClose }: SplashOfferProps) => {
               textColor={colors.text}
             />
           </YStack>
-        </ScrollView>
+        </YStack>
       </View>
     </Modal>
   );

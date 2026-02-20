@@ -62,6 +62,9 @@ const RecipeDetailsScreen = () => {
   const [showConversions, setShowConversions] = useState(false);
   const [isCooked, setIsCooked] = useState(false); // New state for visual feedback
   const favScale = useSharedValue(1); // Animation value for favorite icon
+  const favoriteIconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: favScale.value }],
+  }));
 
   const [imageError, setImageError] = useState(false);
 
@@ -682,11 +685,7 @@ const RecipeDetailsScreen = () => {
                         label=""
                         icon="heart" // Fallback, overridden by iconComponent
                         iconComponent={
-                          <Animated.View
-                            style={useAnimatedStyle(() => ({
-                              transform: [{ scale: favScale.value }],
-                            }))}
-                          >
+                          <Animated.View style={favoriteIconAnimatedStyle}>
                             <FontAwesome5
                               name="heart"
                               size={18} // Slightly larger

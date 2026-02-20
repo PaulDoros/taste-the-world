@@ -9,6 +9,7 @@ export interface PantryItem {
   name: string; // Ingredient name (normalized to lowercase for matching)
   displayName: string; // Original display name
   measure: string; // Quantity (e.g., "500g", "2 cups", "1 lb")
+  isChecked?: boolean; // Optional selection state used in pantry UI
   addedAt: number; // Timestamp when added
 }
 

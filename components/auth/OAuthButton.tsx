@@ -1,14 +1,13 @@
 import React from 'react';
-import { View, Text, Pressable, Platform } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface OAuthButtonProps {
-  provider: 'google' | 'apple' | 'facebook';
+  provider: 'google';
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
@@ -16,30 +15,14 @@ interface OAuthButtonProps {
 }
 
 const PROVIDER_CONFIG = {
-  google: {
-    name: 'Google',
-    icon: 'google' as const,
-    color: '#4285F4',
-    bgColor: '#4285F4',
-    textColor: '#3C4043',
-    borderColor: '#DADCE0',
-  },
-  apple: {
-    name: 'Apple',
-    icon: 'apple' as const,
-    color: '#000000',
-    bgColor: '#000000',
-    textColor: '#FFFFFF',
-    borderColor: '#000000',
-  },
-  facebook: {
-    name: 'Facebook',
-    icon: 'facebook' as const,
-    color: '#1877F2',
-    bgColor: '#1877F2',
-    textColor: '#FFFFFF',
-    borderColor: '#1877F2',
-  },
+  name: 'Google',
+  bgColor: '#FFFFFF',
+  textColor: '#3C4043',
+  borderColor: '#DADCE0',
+};
+
+const PROVIDER_ICON_ASSET = {
+  google: require('../../assets/icons/google.png'),
 };
 
 /**
@@ -50,75 +33,44 @@ export const OAuthButton = React.memo<OAuthButtonProps>(
   ({ provider, onPress, loading = false, disabled = false, delay = 0 }) => {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
-    const config = PROVIDER_CONFIG[provider];
+    const config = PROVIDER_CONFIG;
     const { t } = useLanguage();
 
     const handlePress = () => {
       if (disabled || loading) return;
-      haptics.medium();
       onPress();
     };
 
-    // Hide Apple button on Android
-    if (provider === 'apple' && Platform.OS === 'android') {
-      return null;
-    }
-
     return (
       <Animated.View entering={FadeInDown.delay(delay)}>
-        <Pressable
+        <GlassButton
           onPress={handlePress}
           disabled={loading || disabled}
+          shadowRadius={3}
+          size="medium"
+          label={
+            loading
+              ? t('oauth_connecting')
+              : t('oauth_continue_with', { provider: config.name })
+          }
+          iconComponent={
+            <Image
+              source={PROVIDER_ICON_ASSET[provider]}
+              style={{ width: 18, height: 18 }}
+              resizeMode="contain"
+            />
+          }
+          backgroundColor={
+            colorScheme === 'dark' ? config.bgColor + '15' : config.bgColor
+          }
+          backgroundOpacity={1}
+          textColor={colorScheme === 'dark' ? colors.text : config.textColor}
           style={{
-            borderRadius: 16,
-            padding: 14,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor:
-              colorScheme === 'dark' && provider !== 'google'
-                ? config.bgColor + '15'
-                : config.bgColor,
-            borderWidth: 1,
-            borderColor:
-              colorScheme === 'dark' && provider !== 'google'
-                ? config.borderColor + '30'
-                : config.borderColor,
             minHeight: 52,
+            padding: 4,
             opacity: loading ? 0.6 : 1,
           }}
-          accessibilityRole="button"
-          accessibilityLabel={`Sign in with ${config.name}`}
-        >
-          <FontAwesome5
-            name={config.icon}
-            size={20}
-            color={
-              provider === 'google'
-                ? config.color
-                : provider === 'apple'
-                  ? config.textColor
-                  : '#FFFFFF'
-            }
-            style={{ marginRight: 12 }}
-          />
-          <Text
-            style={{
-              color:
-                provider === 'google'
-                  ? colorScheme === 'dark'
-                    ? colors.text
-                    : config.textColor
-                  : config.textColor,
-              fontSize: 15,
-              fontWeight: '700',
-            }}
-          >
-            {loading
-              ? t('oauth_connecting')
-              : t('oauth_continue_with', { provider: config.name })}
-          </Text>
-        </Pressable>
+        />
       </Animated.View>
     );
   }

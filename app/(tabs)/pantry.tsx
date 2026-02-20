@@ -37,6 +37,7 @@ export default function PantryScreen() {
   const addPantryItem = useMutation(api.pantry.addPantryItem);
   const removePantryItem = useMutation(api.pantry.removePantryItem);
   const clearPantry = useMutation(api.pantry.clearPantry);
+  const togglePantryItemChecked = useMutation(api.pantry.togglePantryItemChecked);
   const logActivity = useMutation(api.gamification.logActivity);
 
   // Fetch pantry items
@@ -94,6 +95,11 @@ export default function PantryScreen() {
     confirmDelete(item.displayName, () => {
       removePantryItem({ itemId: item.id as Id<'pantry'> });
     });
+  };
+
+  const handleToggleItem = async (item: PantryItem) => {
+    haptics.selection();
+    await togglePantryItemChecked({ itemId: item.id as Id<'pantry'> });
   };
 
   const handleClearAll = () => {
@@ -326,6 +332,7 @@ export default function PantryScreen() {
               <PantryItemCard
                 item={item}
                 index={index}
+                onToggle={() => handleToggleItem(item)}
                 onDelete={() => handleDeleteItem(item)}
               />
             )}

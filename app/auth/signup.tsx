@@ -17,25 +17,24 @@ import Animated, {
   FadeInUp,
   FadeInLeft,
 } from 'react-native-reanimated';
-import {
-  YStack,
-  XStack,
-  Text,
-  Paragraph,
-  Button,
-  Card,
-  Separator,
-} from 'tamagui';
+import { YStack, XStack, Text, Paragraph, Separator } from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Input } from '@/components/forms/Input';
 import { OAuthButton } from '@/components/auth/OAuthButton';
+import {
+  googleAuthRequestConfig,
+  googleOAuthMissingConfigMessage,
+  isGoogleOAuthConfigured,
+} from '@/constants/googleAuth';
 
 import { useAuth } from '@/hooks/useAuth';
 import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 export default function SignUpScreen() {
   const colorScheme = useColorScheme();
@@ -47,11 +46,9 @@ export default function SignUpScreen() {
   const { t } = useLanguage();
 
   // Google OAuth
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  });
+  const [request, response, promptAsync] = Google.useAuthRequest(
+    googleAuthRequestConfig
+  );
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -170,22 +167,19 @@ export default function SignUpScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
+      if (!isGoogleOAuthConfigured) {
+        console.error('[Auth] Google OAuth not configured', {
+          platform: Platform.OS,
+        });
+        alert(googleOAuthMissingConfigMessage);
+        return;
+      }
       if (!request) return;
       await promptAsync();
     } catch (err) {
       console.error('Google sign in error:', err);
       haptics.error();
     }
-  };
-
-  const handleAppleSignIn = async () => {
-    haptics.light();
-    alert(t('auth_apple_coming_soon'));
-  };
-
-  const handleFacebookSignIn = async () => {
-    haptics.light();
-    alert(t('auth_facebook_coming_soon'));
   };
 
   return (
@@ -241,58 +235,51 @@ export default function SignUpScreen() {
                     shadowRadius: 12,
                     elevation: 6,
                     marginBottom: 16,
+                    marginTop: 20,
                   }}
                 >
                   <FontAwesome5 name="user-plus" size={26} color="#FFFFFF" />
                 </Animated.View>
               </YStack>
-              <Text
-                fontSize="$10"
-                fontWeight="700"
-                mb="$2"
-                color="$color"
-                textAlign="center"
-              >
-                {t('auth_create_account_title')}
-              </Text>
-              <Paragraph
-                size="$4"
-                lineHeight="$2"
-                color="$color11"
-                textAlign="center"
-                maxWidth={280}
-              >
-                {t('auth_signup_subtitle')}
-              </Paragraph>
+              <YStack ai={'center'}>
+                <Text
+                  fontSize="$10"
+                  fontWeight="700"
+                  mb="$2"
+                  color="$color"
+                  textAlign="center"
+                >
+                  {t('auth_create_account_title')}
+                </Text>
+                <Paragraph
+                  size="$4"
+                  lineHeight="$2"
+                  color="$color11"
+                  textAlign="center"
+                  maxWidth={280}
+                >
+                  {t('auth_signup_subtitle')}
+                </Paragraph>
+              </YStack>
             </Animated.View>
 
             {/* iOS-style signup card */}
             <Animated.View entering={FadeInDown.delay(140)}>
-              <Card
-                borderRadius="$5"
-                padding="$5"
-                backgroundColor={
-                  colorScheme === 'dark'
-                    ? 'rgba(28,28,30,0.95)'
-                    : 'rgba(255,255,255,1)'
-                }
-                borderColor={
-                  colorScheme === 'dark'
-                    ? 'rgba(255,255,255,0.1)'
-                    : 'rgba(0,0,0,0.06)'
-                }
-                borderWidth={1}
-                shadowColor="#000"
-                shadowOffset={{ width: 0, height: 4 }}
-                shadowOpacity={0.08}
-                shadowRadius={20}
-                elevation={6}
+              <GlassCard
+                borderRadiusInside={0}
+                borderRadius={24}
+                shadowRadius={4}
+                style={{
+                  padding: 24,
+                  marginBottom: 20,
+                }}
               >
                 {/* Form fields */}
                 <YStack space="$4" mb="$4">
                   <Input
                     label={t('auth_name_label')}
                     placeholder={t('auth_name_placeholder')}
+                    variant="inset"
                     value={name}
                     onChangeText={(text) => {
                       setName(text);
@@ -311,6 +298,7 @@ export default function SignUpScreen() {
                   <Input
                     label={t('auth_email_label')}
                     placeholder={t('auth_email_placeholder')}
+                    variant="inset"
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
@@ -331,6 +319,7 @@ export default function SignUpScreen() {
                   <Input
                     label={t('auth_password_label')}
                     placeholder={t('auth_password_create_placeholder')}
+                    variant="inset"
                     value={password}
                     onChangeText={(text) => {
                       setPassword(text);
@@ -354,6 +343,7 @@ export default function SignUpScreen() {
                   <Input
                     label={t('auth_confirm_password_label')}
                     placeholder={t('auth_confirm_password_placeholder')}
+                    variant="inset"
                     value={confirmPassword}
                     onChangeText={(text) => {
                       setConfirmPassword(text);
@@ -462,23 +452,20 @@ export default function SignUpScreen() {
                 )}
 
                 {/* Primary button - iOS style */}
-                <Button
+                <GlassButton
                   onPress={handleSignUp}
                   disabled={!!isLoading}
-                  size="$4"
+                  size="large"
+                  label={
+                    isLoading
+                      ? t('auth_creating_account')
+                      : t('auth_create_account_button')
+                  }
                   backgroundColor={colors.tint}
-                  color="white"
-                  fontWeight="700"
-                  width="100%"
-                  mb="$3"
-                  borderRadius="$4"
-                  pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                  opacity={isLoading ? 0.6 : 1}
-                >
-                  {isLoading
-                    ? t('auth_creating_account')
-                    : t('auth_create_account_button')}
-                </Button>
+                  textColor="#FFFFFF"
+                  backgroundOpacity={1}
+                  style={{ width: '100%', marginBottom: 12, padding: 3 }}
+                />
 
                 {/* Divider - iOS style */}
                 <XStack ai="center" my="$4" space="$2">
@@ -495,25 +482,11 @@ export default function SignUpScreen() {
                     provider="google"
                     onPress={handleGoogleSignIn}
                     loading={!!isLoading}
-                    disabled={!request}
+                    disabled={!isGoogleOAuthConfigured || !request}
                     delay={220}
                   />
-                  {Platform.OS === 'ios' && (
-                    <OAuthButton
-                      provider="apple"
-                      onPress={handleAppleSignIn}
-                      loading={!!isLoading}
-                      delay={260}
-                    />
-                  )}
-                  <OAuthButton
-                    provider="facebook"
-                    onPress={handleFacebookSignIn}
-                    loading={!!isLoading}
-                    delay={Platform.OS === 'ios' ? 300 : 260}
-                  />
                 </YStack>
-              </Card>
+              </GlassCard>
             </Animated.View>
 
             {/* Sign in footer - iOS style */}
@@ -525,19 +498,18 @@ export default function SignUpScreen() {
                 <Text fontSize="$3" color="$color11">
                   {t('auth_already_have_account')}
                 </Text>
-                <Button
+                <GlassButton
                   onPress={() => {
                     haptics.light();
                     router.push('/auth/login');
                   }}
-                  size="$3"
-                  chromeless
-                  pressStyle={{ opacity: 0.6 }}
-                >
-                  <Text fontSize="$3" fontWeight="600" color={colors.tint}>
-                    {t('auth_login_link')}
-                  </Text>
-                </Button>
+                  size="small"
+                  label={t('auth_login_link')}
+                  textColor={colors.tint}
+                  backgroundColor={colors.tint}
+                  backgroundOpacity={0.1}
+                  style={{ marginBottom: 5 }}
+                />
               </XStack>
             </Animated.View>
           </YStack>
