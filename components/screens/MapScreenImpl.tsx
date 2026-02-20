@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
-  Platform,
   Linking,
 } from 'react-native';
 import MapView, {
@@ -33,6 +32,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { AdUnlockModal } from '@/components/AdUnlockModal';
 import { useTierLimit } from '@/hooks/useTierLimit';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 // Import local GeoJSON asset
 const geoJsonData = require('../../assets/countries.json');
@@ -90,11 +90,11 @@ export default function MapScreen() {
   };
 
   const openOfflineMaps = () => {
-    const url = Platform.select({
-      ios: 'comgooglemaps://',
-      android: 'https://www.google.com/maps',
-      default: 'https://www.google.com/maps',
-    });
+    const url = IS_IOS
+      ? 'comgooglemaps://'
+      : IS_ANDROID
+        ? 'https://www.google.com/maps'
+        : 'https://www.google.com/maps';
 
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {

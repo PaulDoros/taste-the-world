@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { ScrollView, KeyboardAvoidingView } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -15,7 +10,6 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  FadeInLeft,
 } from 'react-native-reanimated';
 import { YStack, XStack, Text, Paragraph, Separator } from 'tamagui';
 import * as Google from 'expo-auth-session/providers/google';
@@ -35,11 +29,13 @@ import { haptics } from '@/utils/haptics';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { IS_ANDROID, IS_IOS, PLATFORM_OS } from '@/constants/platform';
 
 export default function SignUpScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
+  const isAndroid = IS_ANDROID;
 
   const router = useRouter();
   const { signUp, signInWithOAuth, isLoading, error, clearError } = useAuth();
@@ -124,15 +120,6 @@ export default function SignUpScreen() {
     }
   };
 
-  const handleGoBack = () => {
-    haptics.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
-
   // Handle Google OAuth response
   useEffect(() => {
     if (response?.type === 'success') {
@@ -169,7 +156,7 @@ export default function SignUpScreen() {
     try {
       if (!isGoogleOAuthConfigured) {
         console.error('[Auth] Google OAuth not configured', {
-          platform: Platform.OS,
+          platform: PLATFORM_OS,
         });
         alert(googleOAuthMissingConfigMessage);
         return;
@@ -200,13 +187,14 @@ export default function SignUpScreen() {
         backgroundColor={colorScheme === 'dark' ? '#000000' : '#FFFFFF'}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={IS_IOS ? 'padding' : undefined}
         className="flex-1"
       >
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom + (isAndroid ? 14 : 20),
+            paddingTop: isAndroid ? 10 : 0,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -216,34 +204,38 @@ export default function SignUpScreen() {
             {/* iOS-style Header */}
             <Animated.View
               entering={FadeInUp.delay(90)}
-              style={{ marginBottom: 20 }}
+              style={{ marginBottom: isAndroid ? 14 : 20 }}
             >
               <YStack ai="center" mb="$4">
                 {/* App Icon */}
                 <Animated.View
                   entering={FadeInDown.delay(120)}
                   style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 16,
+                    width: isAndroid ? 48 : 56,
+                    height: isAndroid ? 48 : 56,
+                    borderRadius: isAndroid ? 14 : 16,
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: colors.tint,
                     shadowColor: colors.tint,
                     shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 12,
-                    elevation: 6,
-                    marginBottom: 16,
-                    marginTop: 20,
+                    shadowOpacity: isAndroid ? 0.2 : 0.25,
+                    shadowRadius: isAndroid ? 6 : 12,
+                    elevation: isAndroid ? 4 : 6,
+                    marginBottom: isAndroid ? 12 : 16,
+                    marginTop: isAndroid ? 12 : 20,
                   }}
                 >
-                  <FontAwesome5 name="user-plus" size={26} color="#FFFFFF" />
+                  <FontAwesome5
+                    name="user-plus"
+                    size={isAndroid ? 22 : 26}
+                    color="#FFFFFF"
+                  />
                 </Animated.View>
               </YStack>
               <YStack ai={'center'}>
                 <Text
-                  fontSize="$10"
+                  fontSize={isAndroid ? '$9' : '$10'}
                   fontWeight="700"
                   mb="$2"
                   color="$color"
@@ -267,15 +259,15 @@ export default function SignUpScreen() {
             <Animated.View entering={FadeInDown.delay(140)}>
               <GlassCard
                 borderRadiusInside={0}
-                borderRadius={24}
-                shadowRadius={4}
+                borderRadius={isAndroid ? 20 : 24}
+                shadowRadius={isAndroid ? 2 : 4}
                 style={{
-                  padding: 24,
-                  marginBottom: 20,
+                  padding: isAndroid ? 18 : 24,
+                  marginBottom: isAndroid ? 16 : 20,
                 }}
               >
                 {/* Form fields */}
-                <YStack space="$4" mb="$4">
+                <YStack space="$4" mb="$4" paddingLeft={10} paddingRight={10}>
                   <Input
                     label={t('auth_name_label')}
                     placeholder={t('auth_name_placeholder')}
@@ -452,21 +444,22 @@ export default function SignUpScreen() {
                 )}
 
                 {/* Primary button - iOS style */}
-                <GlassButton
-                  onPress={handleSignUp}
-                  disabled={!!isLoading}
-                  size="large"
-                  label={
-                    isLoading
-                      ? t('auth_creating_account')
-                      : t('auth_create_account_button')
-                  }
-                  backgroundColor={colors.tint}
-                  textColor="#FFFFFF"
-                  backgroundOpacity={1}
-                  style={{ width: '100%', marginBottom: 12, padding: 3 }}
-                />
-
+                <YStack paddingLeft={10} paddingRight={10}>
+                  <GlassButton
+                    onPress={handleSignUp}
+                    disabled={!!isLoading}
+                    size="large"
+                    label={
+                      isLoading
+                        ? t('auth_creating_account')
+                        : t('auth_create_account_button')
+                    }
+                    backgroundColor={colors.tint}
+                    textColor="#FFFFFF"
+                    backgroundOpacity={1}
+                    style={{ width: '100%', marginBottom: 12 }}
+                  />
+                </YStack>
                 {/* Divider - iOS style */}
                 <XStack ai="center" my="$4" space="$2">
                   <Separator flex={1} borderColor="$color5" />
@@ -477,7 +470,7 @@ export default function SignUpScreen() {
                 </XStack>
 
                 {/* OAuth buttons */}
-                <YStack space="$3">
+                <YStack space="$3" padding={10}>
                   <OAuthButton
                     provider="google"
                     onPress={handleGoogleSignIn}
@@ -492,7 +485,7 @@ export default function SignUpScreen() {
             {/* Sign in footer - iOS style */}
             <Animated.View
               entering={FadeInUp.delay(260)}
-              style={{ alignItems: 'center', marginTop: 32 }}
+              style={{ alignItems: 'center', marginTop: isAndroid ? 20 : 32 }}
             >
               <XStack ai="center" space="$2">
                 <Text fontSize="$3" color="$color11">

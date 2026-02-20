@@ -1,10 +1,4 @@
-import {
-  View,
-  LayoutChangeEvent,
-  StyleSheet,
-  Platform,
-  Pressable,
-} from 'react-native';
+import { View, LayoutChangeEvent, StyleSheet, Pressable } from 'react-native';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { YStack, XStack, Text, Button, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -30,6 +24,7 @@ import { GlassButton } from '@/components/ui/GlassButton';
 import { usePremium } from '@/hooks/usePremium';
 import { PurchasesPackage } from 'react-native-purchases';
 import { isAndroidLowPerf } from '@/constants/Performance';
+import { IS_ANDROID } from '@/constants/platform';
 import { useIsFocused } from '@react-navigation/native';
 
 interface PricingSectionProps {
@@ -57,12 +52,12 @@ const AnimatedPricingCard = ({
   style?: any;
 }) => {
   const progress = useSharedValue(isSelected ? 1 : 0);
-  const isAndroid = Platform.OS === 'android';
+  const isAndroid = IS_ANDROID;
   useEffect(() => {
     progress.value = withTiming(isSelected ? 1 : 0, {
-      duration: Platform.OS === 'android' ? 220 : 300,
+      duration: isAndroid ? 220 : 300,
     });
-  }, [isSelected]);
+  }, [isAndroid, isSelected]);
 
   const animatedBgStyle = useAnimatedStyle(() => {
     return {
@@ -76,7 +71,7 @@ const AnimatedPricingCard = ({
 
   const animatedBorderStyle = useAnimatedStyle(() => {
     return {
-      borderWidth: Platform.OS === 'android' ? 1 : 2,
+      borderWidth: isAndroid ? 1 : 2,
       borderColor: interpolateColor(
         progress.value,
         [0, 1],
@@ -131,8 +126,8 @@ export const PricingSection = ({
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const isFocused = useIsFocused();
-  const isPerformanceMode = Platform.OS === 'android' && isAndroidLowPerf;
-  const isAndroidUi = Platform.OS === 'android';
+  const isPerformanceMode = IS_ANDROID && isAndroidLowPerf;
+  const isAndroidUi = IS_ANDROID;
   const androidShadowBase = colorScheme === 'dark' ? '#000000' : '#0f172a';
   const androidBorderSoft =
     colorScheme === 'dark'
@@ -359,7 +354,11 @@ export const PricingSection = ({
           }}
         />
 
-        <YStack padding="$5" gap="$4">
+        <YStack
+          padding="$5"
+          gap="$4"
+          backgroundColor={IS_ANDROID ? 'white' : 'transparent'}
+        >
           <XStack alignItems="center" gap="$3">
             <View
               style={{
@@ -406,7 +405,7 @@ export const PricingSection = ({
             onLayout={handleLayout}
             style={{
               backgroundColor:
-                Platform.OS === 'android' && isAndroidLowPerf
+                IS_ANDROID && isAndroidLowPerf
                   ? colorScheme === 'dark'
                     ? 'rgba(30, 41, 59, 0.6)'
                     : 'rgba(248, 250, 252, 0.82)'

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  Platform,
   ViewProps,
   StyleProp,
   ViewStyle,
@@ -13,6 +12,7 @@ import { Shadow } from 'react-native-shadow-2';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
 import { shouldUseGlassBlur } from '@/constants/Performance';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 interface GlassCardProps extends ViewProps {
   children: React.ReactNode;
@@ -57,7 +57,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const isAndroid = Platform.OS === 'android';
+  const isAndroid = IS_ANDROID;
   const glass = glassTokens[isDark ? 'dark' : 'light'];
 
   const blurIntensity = intensity ?? glass.blurIntensity;
@@ -79,7 +79,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     androidFallbackBase ||
     (isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)');
 
-  const allowIOSBlur = Platform.OS === 'ios' && shouldUseGlassBlur;
+  const allowIOSBlur = IS_IOS && shouldUseGlassBlur;
 
   // --- Android absolute shadow sizing ---
   const [measured, setMeasured] = React.useState({ w: 0, h: 0 });
@@ -104,7 +104,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         {
           borderRadius,
           backgroundColor: 'transparent',
-          ...(Platform.OS === 'ios'
+          ...(IS_IOS
             ? {
                 shadowColor: shadowColor ?? (isDark ? '#000' : '#0f172a'),
                 shadowOffset: { width: 0, height: 4 },
@@ -148,7 +148,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       <View
         style={[StyleSheet.absoluteFill, { borderRadius, overflow: 'hidden' }]}
       >
-        {Platform.OS === 'ios' && allowIOSBlur ? (
+        {IS_IOS && allowIOSBlur ? (
           <BlurView
             intensity={blurIntensity}
             tint={isDark ? 'dark' : 'light'}

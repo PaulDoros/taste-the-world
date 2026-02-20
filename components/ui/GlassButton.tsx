@@ -3,7 +3,6 @@ import {
   Pressable,
   StyleSheet,
   View,
-  Platform,
   LayoutChangeEvent,
 } from 'react-native';
 import Animated, {
@@ -19,6 +18,7 @@ import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
 import { Shadow } from 'react-native-shadow-2';
+import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 interface GlassButtonProps {
   onPress: () => void;
@@ -80,7 +80,7 @@ export const GlassButton = ({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const glass = glassTokens[isDark ? 'dark' : 'light'];
-  const isAndroid = Platform.OS === 'android';
+  const isAndroid = IS_ANDROID;
 
   // ✅ Press state just for Android shadow collapse (no "jump up")
   const [pressed, setPressed] = React.useState(false);
@@ -322,7 +322,7 @@ export const GlassButton = ({
             { borderRadius: r, overflow: 'hidden' },
           ]}
         >
-          {Platform.OS === 'ios' ? (
+          {IS_IOS ? (
             <BlurView
               intensity={intensity ?? glass.blurIntensity}
               tint={isDark ? 'dark' : 'light'}

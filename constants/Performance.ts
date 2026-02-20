@@ -1,8 +1,11 @@
-import { Platform } from 'react-native';
+import { IS_ANDROID } from '@/constants/platform';
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 
-function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
+function parseBooleanFlag(
+  value: string | undefined,
+  fallback: boolean
+): boolean {
   if (value == null) return fallback;
   const normalized = value.trim().toLowerCase();
   if (normalized.length === 0) return fallback;
@@ -18,6 +21,17 @@ const androidLowPerfEnabled = parseBooleanFlag(
 );
 
 export const isAndroidLowPerf =
-  Platform.OS === 'android' && androidLowPerfEnabled;
+  IS_ANDROID && androidLowPerfEnabled;
+
+// Diagnostics switch:
+// true  -> disable most motion-heavy effects on Android for A/B perf testing
+// false -> keep normal animation behavior
+const androidDisableAnimationsEnabled = parseBooleanFlag(
+  process.env.EXPO_PUBLIC_ANDROID_DISABLE_ANIMATIONS,
+  false
+);
+
+export const isAndroidAnimationsDisabled =
+  IS_ANDROID && androidDisableAnimationsEnabled;
 
 export const shouldUseGlassBlur = !isAndroidLowPerf;

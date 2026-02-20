@@ -7,13 +7,13 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { haptics } from '@/utils/haptics';
+import { IS_IOS } from '@/constants/platform';
 
 export type CookingStyle = 'quick' | 'family' | 'gourmet';
 export type IngredientSource = 'random' | 'pantry';
@@ -110,7 +110,7 @@ export const RecipeSetupModal: React.FC<RecipeSetupModalProps> = ({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={IS_IOS ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <View

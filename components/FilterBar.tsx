@@ -1,9 +1,10 @@
-import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { IS_ANDROID } from '@/constants/platform';
 
 /**
  * FilterBar Component
@@ -45,7 +46,7 @@ export const FilterBar = ({
   onClearAll,
 }: FilterBarProps) => {
   const colorScheme = useColorScheme();
-  const isAndroid = Platform.OS === 'android';
+  const isAndroid = IS_ANDROID;
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const hasActiveFilters =

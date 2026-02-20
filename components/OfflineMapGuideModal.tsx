@@ -1,11 +1,12 @@
 import React from 'react';
-import { Modal, Platform } from 'react-native';
+import { Modal } from 'react-native';
 import { YStack, XStack, Text, Button, Card, Separator } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
+import { IS_IOS } from '@/constants/platform';
 
 interface OfflineMapGuideModalProps {
   visible: boolean;
@@ -42,7 +43,7 @@ export const OfflineMapGuideModal = ({
           padding: 20,
         }}
       >
-        {Platform.OS === 'ios' && (
+        {IS_IOS && (
           <BlurView
             intensity={20}
             style={{
