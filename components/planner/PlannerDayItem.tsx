@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from 'tamagui';
-import { Pressable } from 'react-native';
+import { Pressable, Platform } from 'react-native';
 import Animated, {
   FadeInRight,
   useAnimatedStyle,
@@ -55,6 +55,11 @@ export const PlannerDayItem = ({
         onPress={() => {
           haptics.light();
           setActiveDay(index);
+        }}
+        android_ripple={{
+          color: Platform.OS === 'android' ? `${colors.tint}30` : undefined,
+          borderless: true,
+          radius: 40,
         }}
       >
         <Animated.View style={scaleStyle}>

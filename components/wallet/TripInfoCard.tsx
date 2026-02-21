@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import {
   YStack,
   XStack,
@@ -36,7 +36,7 @@ export const TripInfoCard = ({
   return (
     <GlassCard
       variant="default"
-      shadowRadius={3}
+      shadowRadius={Platform.OS === 'ios' ? 3 : 0}
       contentContainerStyle={{ padding: 16 }}
     >
       <XStack gap="$4" alignItems="center">

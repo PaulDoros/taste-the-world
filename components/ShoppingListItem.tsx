@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { XStack, YStack, Paragraph, useTheme } from 'tamagui';
@@ -65,6 +65,12 @@ export const ShoppingListItem = ({
           <Pressable
             onPress={handleToggle}
             hitSlop={8}
+            android_ripple={{
+              color:
+                Platform.OS === 'android' ? `${theme.tint.get()}30` : undefined,
+              borderless: true,
+              radius: 20,
+            }}
             style={{
               width: 24,
               height: 24,
@@ -108,7 +114,17 @@ export const ShoppingListItem = ({
                   <Paragraph size="$3" color="$color" opacity={0.4}>
                     •
                   </Paragraph>
-                  <Pressable onPress={onNavigateToRecipe}>
+                  <Pressable
+                    onPress={onNavigateToRecipe}
+                    android_ripple={{
+                      color:
+                        Platform.OS === 'android'
+                          ? `${theme.tint.get()}20`
+                          : undefined,
+                      borderless: true,
+                      radius: 100,
+                    }}
+                  >
                     <Paragraph
                       size="$3"
                       color="$tint"

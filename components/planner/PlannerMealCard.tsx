@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ActivityIndicator } from 'react-native';
+import { Pressable, ActivityIndicator, Platform } from 'react-native';
 import { XStack, YStack, Text, Stack } from 'tamagui';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -114,8 +114,16 @@ export const PlannerMealCard = ({
             onPress={() => onViewRecipe(mealName)}
             disabled={generatingRecipe === mealName}
             hitSlop={10}
+            android_ripple={{
+              color: Platform.OS === 'android' ? `${colors.tint}30` : undefined,
+              borderless: true,
+              radius: 40,
+            }}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+            })}
           >
-            <XStack gap="$1" alignItems="center" opacity={0.8}>
+            <XStack gap="$1" alignItems="center">
               <Text fontSize="$2" fontWeight="600" color={colors.tint}>
                 {t('planner_see_recipe')}
               </Text>

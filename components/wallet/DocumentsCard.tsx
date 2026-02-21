@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Alert, Pressable } from 'react-native';
+import { Image, Alert, Pressable, Platform } from 'react-native';
 import { YStack, XStack, Text, Button, Heading, Spinner, Stack } from 'tamagui';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -88,10 +88,16 @@ export const DocumentsCard = ({
         {trip.ticketUrl && (
           <Pressable
             onPress={() => onViewImage(trip.ticketUrl)}
+            android_ripple={{
+              color:
+                Platform.OS === 'android' ? 'rgba(255,255,255,0.3)' : undefined,
+              borderless: false,
+              foreground: true,
+            }}
             style={({ pressed }) => ({
               width: '47%',
               height: 150,
-              opacity: pressed ? 0.9 : 1,
+              opacity: Platform.OS === 'ios' && pressed ? 0.9 : 1,
             })}
           >
             <GlassCard
@@ -123,10 +129,18 @@ export const DocumentsCard = ({
             <Pressable
               key={i}
               onPress={() => onViewImage(url)}
+              android_ripple={{
+                color:
+                  Platform.OS === 'android'
+                    ? 'rgba(255,255,255,0.3)'
+                    : undefined,
+                borderless: false,
+                foreground: true,
+              }}
               style={({ pressed }) => ({
                 width: '47%',
                 height: 150,
-                opacity: pressed ? 0.9 : 1,
+                opacity: Platform.OS === 'ios' && pressed ? 0.9 : 1,
               })}
             >
               <GlassCard

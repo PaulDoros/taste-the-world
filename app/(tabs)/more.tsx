@@ -1,6 +1,6 @@
 import React from 'react';
 import { XStack } from 'tamagui';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { useRouter } from 'expo-router';
@@ -176,16 +176,24 @@ export default function MoreScreen() {
               haptics.light();
               router.push('/gamification/achievements' as any);
             }}
+            android_ripple={{
+              color: Platform.OS === 'android' ? `${colors.tint}30` : undefined,
+              borderless: false,
+              foreground: true,
+            }}
             style={({ pressed }) => ({
               padding: 16,
-              backgroundColor: colors.card,
+              backgroundColor:
+                Platform.OS === 'android' && pressed
+                  ? `${colors.card}e0`
+                  : colors.card,
               borderRadius: 16,
               borderWidth: 1,
               borderColor: colors.border,
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              opacity: pressed ? 0.8 : 1,
+              opacity: Platform.OS === 'ios' && pressed ? 0.8 : 1,
               transform: [{ scale: pressed ? 0.98 : 1 }],
             })}
           >
@@ -211,8 +219,19 @@ export default function MoreScreen() {
               onPress={() =>
                 handleNavigate(item.route, item.locked, item.title)
               }
+              android_ripple={{
+                color:
+                  Platform.OS === 'android' ? `${item.color}30` : undefined,
+                borderless: false,
+                foreground: true,
+              }}
               style={({ pressed }) => ({
-                opacity: pressed ? 0.7 : item.locked ? 0.8 : 1,
+                opacity:
+                  Platform.OS === 'ios' && pressed
+                    ? 0.7
+                    : item.locked
+                      ? 0.8
+                      : 1,
               })}
             >
               <GlassCard

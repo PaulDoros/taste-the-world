@@ -842,7 +842,7 @@ const RecipeDetailsScreen = () => {
                 </View>
 
                 {/* Ingredients List */}
-                <View style={{ gap: 12 }}>
+                <View style={{ gap: 6 }}>
                   {ingredients.map((ingredient, index) => (
                     <Animated.View
                       key={index}
@@ -855,8 +855,8 @@ const RecipeDetailsScreen = () => {
                           backgroundColor: hasIngredient(ingredient.name)
                             ? '#f59e0b10'
                             : colors.background,
-                          padding: 12,
-                          borderRadius: 12,
+                          padding: 8,
+                          borderRadius: 10,
                           borderWidth: hasIngredient(ingredient.name) ? 1 : 0,
                           borderColor: hasIngredient(ingredient.name)
                             ? '#f59e0b30'
@@ -898,7 +898,7 @@ const RecipeDetailsScreen = () => {
                           style={{
                             flex: 1,
                             color: colors.text,
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: '500',
                           }}
                         >
@@ -921,7 +921,7 @@ const RecipeDetailsScreen = () => {
                           <Text
                             style={{
                               color: colors.text,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: '600',
                               opacity: 0.7,
                             }}

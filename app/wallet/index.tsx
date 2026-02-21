@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, FlatList, Alert, ScrollView, Pressable } from 'react-native';
+import {
+  View,
+  FlatList,
+  Alert,
+  ScrollView,
+  Pressable,
+  Platform,
+} from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/ScreenLayout';
@@ -87,7 +94,16 @@ export default function WalletScreen() {
       <Animated.View entering={FadeInDown.delay(index * 100).springify()}>
         <Pressable
           onPress={() => router.push(`/wallet/${item._id}` as any)}
-          style={{ marginBottom: 14, marginHorizontal: 12 }}
+          android_ripple={{
+            color: Platform.OS === 'android' ? `${colors.tint}20` : undefined,
+            borderless: false,
+            foreground: true,
+          }}
+          style={({ pressed }) => ({
+            marginBottom: 14,
+            marginHorizontal: 12,
+            opacity: Platform.OS === 'ios' && pressed ? 0.9 : 1,
+          })}
         >
           <GlassCard
             variant={isUpcoming ? 'default' : 'thin'}
@@ -95,7 +111,7 @@ export default function WalletScreen() {
             contentContainerStyle={{ overflow: 'hidden' }}
             backgroundColor={isUpcoming ? colors.tint : undefined}
             backgroundOpacity={isUpcoming ? 0.1 : 0.3}
-            shadowRadius={5} // Smaller shadow radius as requested
+            shadowRadius={Platform.OS === 'ios' ? 5 : 0} // Smaller shadow radius as requested
           >
             {isUpcoming && (
               <View
@@ -231,7 +247,7 @@ export default function WalletScreen() {
           <Loading fullScreen={false} />
         ) : trips.length === 0 ? (
           <GlassCard
-            shadowRadius={3}
+            shadowRadius={Platform.OS === 'ios' ? 3 : 0}
             variant="default"
             contentContainerStyle={{
               flex: 1,

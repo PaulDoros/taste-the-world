@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { FlatList, Pressable, TextInput, View } from 'react-native';
+import { FlatList, Platform, Pressable, TextInput, View } from 'react-native';
 import { playSound } from '@/utils/sounds';
 import {
   SafeAreaView,
@@ -319,8 +319,8 @@ export default function ShoppingListScreen() {
         <YStack paddingHorizontal="$4" marginBottom="$4">
           {!showAddInput ? (
             <GlassButton
-              shadowOpacity={0.5}
-              shadowRadius={5}
+              shadowOpacity={Platform.OS === 'ios' ? 0.5 : 0}
+              shadowRadius={Platform.OS === 'ios' ? 5 : 0}
               size="medium"
               backgroundColor={colors.tint}
               icon="plus"
@@ -337,7 +337,6 @@ export default function ShoppingListScreen() {
               borderRadius="$6"
               padding="$4"
               backgroundColor="$card"
-              elevation={2}
               borderWidth={1}
               borderColor="$borderColor"
             >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, TouchableOpacity, Switch } from 'react-native';
+import { Alert, Pressable, Platform, Switch } from 'react-native';
 import {
   YStack,
   XStack,
@@ -265,9 +265,17 @@ export const ChecklistCard = ({
                 backgroundOpacity={item.checked ? 0.3 : 0.1}
               >
                 <XStack alignItems="center" gap="$3">
-                  <TouchableOpacity
+                  <Pressable
                     onPress={() => handleToggleChecklist(index)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    hitSlop={10}
+                    android_ripple={{
+                      color:
+                        Platform.OS === 'android'
+                          ? `${theme.tint.get()}30`
+                          : undefined,
+                      borderless: true,
+                      radius: 20,
+                    }}
                   >
                     <FontAwesome5
                       name={item.checked ? 'check-circle' : 'circle'}
@@ -277,7 +285,7 @@ export const ChecklistCard = ({
                       }
                       style={{ opacity: item.checked ? 1 : 0.5 }}
                     />
-                  </TouchableOpacity>
+                  </Pressable>
                   <Text
                     flex={1}
                     fontSize="$3"
