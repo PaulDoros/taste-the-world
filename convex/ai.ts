@@ -358,6 +358,35 @@ export const generateRecipe = action({
 });
 
 /**
+ * Helper to call Gemini Embedding API
+ */
+export async function generateEmbedding(text: string, apiKey: string) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      model: 'models/text-embedding-004',
+      content: { parts: [{ text }] },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Gemini Embed API error: ${response.status} - ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+  return data.embedding.values as number[];
+}
+
+/**
  * Generate a weekly meal plan
  */
 export const generateMealPlan = action({
@@ -401,9 +430,9 @@ export const generateMealPlan = action({
 
     const isBaby = args.type === 'baby';
 
-    const languageInstruction = args.language
-      ? `You MUST reply in ${args.language} language.`
-      : '';
+    // Force English-only generation so all cached templates are universally English
+    const languageInstruction =
+      "IMPORTANT: You MUST reply in English ONLY, regardless of the user's language preferences.";
 
     // Construct Prompt with Cuisine
     let basePrompt = '';
@@ -652,15 +681,47 @@ export const generateRecipeByName = action({
       return existingRecipe.idMeal;
     }
 
-    // 2. Fallback to AI Generation
+    // 2. Vector Search for Similar Recipe (Optimization)
+    if (apiKey) {
+      try {
+        const queryEmbedding = await generateEmbedding(args.mealName, apiKey);
+
+        // Use Convex vector search in action
+        const results = await ctx.vectorSearch('recipes', 'by_embedding', {
+          vector: queryEmbedding,
+          limit: 1,
+        });
+
+        // Similarity threshold
+        if (results.length > 0 && results[0]._score > 0.85) {
+          const matchedRecipe = await ctx.runQuery(
+            api.recipes.getRecipeByIdInternal,
+            {
+              _id: results[0]._id,
+            }
+          );
+          if (matchedRecipe) {
+            console.log(
+              `✅ Vector Cache Hit for recipe: ${args.mealName} -> matched ${matchedRecipe.strMeal}`
+            );
+            return matchedRecipe.idMeal;
+          }
+        }
+      } catch (e) {
+        console.warn('Vector search failed, falling back to generation:', e);
+      }
+    }
+
+    // 3. Fallback to AI Generation
     if (!apiKey) {
       return 'mock_id';
     }
 
     const isBaby = args.type === 'baby';
-    const languageInstruction = args.language
-      ? `Output MUST be in ${args.language} language.`
-      : '';
+
+    // Force English-only generation so all cached templates are universally English
+    const languageInstruction =
+      "IMPORTANT: You MUST reply in English ONLY, regardless of the user's language preferences.";
 
     const prompt = `Create a detailed recipe for "${args.mealName}"${isBaby ? ' suitable for a baby (6-12 months)' : ''}.
     ${languageInstruction}
@@ -698,6 +759,14 @@ export const generateRecipeByName = action({
       const recipeData = JSON.parse(jsonString);
       const recipeId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+      // Generate embedding for the newly created recipe
+      let recipeEmbedding;
+      try {
+        recipeEmbedding = await generateEmbedding(recipeData.strMeal, apiKey);
+      } catch (e) {
+        console.warn('Failed to generate embedding for new recipe', e);
+      }
+
       // Save to recipes table
       await ctx.runMutation(api.recipes.saveRecipes, {
         recipes: [
@@ -711,6 +780,7 @@ export const generateRecipeByName = action({
               recipeData.strMealThumb || 'https://via.placeholder.com/300',
             ingredients: recipeData.ingredients || [],
             strTags: isBaby ? 'baby,homemade' : 'ai-generated',
+            embedding: recipeEmbedding,
           },
         ],
       });

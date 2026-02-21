@@ -119,7 +119,7 @@ export const CountryCardSkeleton = () => {
       shadowOffset={{ width: 0, height: 8 }}
       shadowOpacity={0.12}
       shadowRadius={16}
-      elevation={8}
+      elevation={2}
     >
       {/* Flag skeleton */}
       <YStack height={200} position="relative">
@@ -195,7 +195,7 @@ export const RecipeCardSkeleton = () => {
       shadowOffset={{ width: 0, height: 4 }}
       shadowOpacity={0.1}
       shadowRadius={12}
-      elevation={5}
+      elevation={2}
     >
       {/* Image Area */}
       <YStack height={180} position="relative">
@@ -334,7 +334,7 @@ export const DetailSkeleton = () => {
           shadowOffset={{ width: 0, height: 4 }}
           shadowOpacity={0.1}
           shadowRadius={12}
-          elevation={5}
+          elevation={2}
         >
           <Skeleton
             width="80%"

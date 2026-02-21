@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 interface RecipeOfTheWeekProps {
   recipe: Recipe;
@@ -122,7 +123,7 @@ export const RecipeOfTheWeek = React.memo<RecipeOfTheWeekProps>(
               borderRadius={24}
               style={{ height: 320, marginBottom: 24, marginHorizontal: 16 }}
             >
-              <Image
+              <FadeInImage
                 source={{ uri: recipe.strMealThumb }}
                 style={{ width: '100%', height: '100%' }}
                 resizeMode="cover"

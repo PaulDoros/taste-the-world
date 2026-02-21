@@ -5,6 +5,7 @@ import { RecipeHistoryItem } from '@/store/recipeHistoryStore';
 import { haptics } from '@/utils/haptics';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 interface HistoryItemCardProps {
   item: RecipeHistoryItem;
@@ -60,7 +61,7 @@ export const HistoryItemCard = ({
             marginRight: 14,
           }}
         >
-          <Image
+          <FadeInImage
             source={{ uri: item.image }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

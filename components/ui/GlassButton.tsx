@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View, LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,7 +12,6 @@ import { haptics } from '@/utils/haptics';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
-import { IS_ANDROID, IS_IOS } from '@/constants/platform';
 
 interface GlassButtonProps {
   onPress: () => void;
@@ -60,21 +59,11 @@ export const GlassButton = ({
   style,
   rightIcon,
   solid,
-
-  androidFallbackBase,
-  androidBorderColor,
-  androidOverlayOpacity,
-  androidElevation,
-
-  androidShadowDistance,
-  androidShadowOffsetY,
-  androidShadowOpacity: androidShadowOpacityProp,
 }: GlassButtonProps) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const glass = glassTokens[isDark ? 'dark' : 'light'];
-  const isAndroid = IS_ANDROID;
 
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -109,27 +98,18 @@ export const GlassButton = ({
   const currentSize = sizes[size];
   const r = currentSize.borderRadius;
 
-  // iOS shadows (kept)
   const shadowHeight = useSharedValue(4);
   const shadowOpacityVal = useSharedValue(shadowOpacity ?? glass.shadowOpacity);
   const shadowRadiusVal = useSharedValue(shadowRadius ?? 12);
 
-  // Android elevation (native) (kept)
-  const baseAndroidElevation = androidElevation ?? 8;
-  const elevationVal = useSharedValue(baseAndroidElevation);
-
-  // Inset press opacity
   const innerPressedOpacity = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { translateY: translateY.value }],
     opacity: opacity.value,
-
     shadowOffset: { width: 0, height: shadowHeight.value },
     shadowOpacity: shadowOpacityVal.value,
     shadowRadius: shadowRadiusVal.value,
-
-    elevation: isAndroid ? elevationVal.value : 0,
   }));
 
   const innerPressedStyle = useAnimatedStyle(() => ({
@@ -138,39 +118,23 @@ export const GlassButton = ({
 
   const handlePressIn = () => {
     if (disabled) return;
-
     scale.value = withSpring(0.98, { damping: 10, stiffness: 400 });
-
-    // ✅ press feel (button goes DOWN a bit)
     translateY.value = withTiming(2, { duration: 150 });
-
-    // iOS shadow collapse (kept)
     shadowHeight.value = withTiming(0, { duration: 150 });
     shadowRadiusVal.value = withTiming(0, { duration: 150 });
     shadowOpacityVal.value = withTiming(0, { duration: 150 });
-
-    // Android native elevation collapse (kept)
-    elevationVal.value = withTiming(0, { duration: 150 });
-
     innerPressedOpacity.value = withTiming(1, { duration: 150 });
   };
 
   const handlePressOut = () => {
     if (disabled) return;
-
     scale.value = withSpring(1, { damping: 10, stiffness: 400 });
     translateY.value = withTiming(0, { duration: 450 });
-
-    // iOS shadow restore (kept)
     shadowHeight.value = withTiming(4, { duration: 450 });
     shadowRadiusVal.value = withTiming(shadowRadius ?? 12, { duration: 450 });
     shadowOpacityVal.value = withTiming(shadowOpacity ?? glass.shadowOpacity, {
       duration: 450,
     });
-
-    // Android native elevation restore (kept)
-    elevationVal.value = withTiming(baseAndroidElevation, { duration: 300 });
-
     innerPressedOpacity.value = withTiming(0, { duration: 200 });
   };
 
@@ -203,28 +167,7 @@ export const GlassButton = ({
 
   const borderColorIOS = baseColor ? 'transparent' : glass.border;
 
-  const fallbackBase =
-    androidFallbackBase ||
-    (isDark ? 'rgba(30,41,59,0.92)' : 'rgba(255,255,255,0.92)');
-
-  const borderColorAndroid =
-    androidBorderColor ||
-    (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)');
-
-  const effectiveBorderColor = isAndroid ? borderColorAndroid : borderColorIOS;
-
-  const effectiveOverlayOpacity = isAndroid
-    ? (androidOverlayOpacity ?? overlayOpacity ?? 0.72)
-    : overlayOpacity;
-
-  const insetDark = isDark
-    ? isAndroid
-      ? 'rgba(0,0,0,0.24)'
-      : 'rgba(0,0,0,0.50)'
-    : isAndroid
-      ? 'rgba(0,0,0,0.14)'
-      : 'rgba(0,0,0,0.35)';
-
+  const insetDark = isDark ? 'rgba(0,0,0,0.50)' : 'rgba(0,0,0,0.35)';
   const insetLight = isDark
     ? 'rgba(255,255,255,0.08)'
     : 'rgba(255,255,255,0.20)';
@@ -235,7 +178,7 @@ export const GlassButton = ({
         animatedStyle,
         {
           borderRadius: r,
-          backgroundColor: isAndroid ? fallbackBase : 'transparent',
+          backgroundColor: 'transparent',
         },
         style,
       ]}
@@ -260,22 +203,20 @@ export const GlassButton = ({
             { borderRadius: r, overflow: 'hidden' },
           ]}
         >
-          {IS_IOS && (
-            <BlurView
-              intensity={intensity ?? glass.blurIntensity}
-              tint={isDark ? 'dark' : 'light'}
-              style={StyleSheet.absoluteFill}
-            />
-          )}
+          <BlurView
+            intensity={intensity ?? glass.blurIntensity}
+            tint={isDark ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
 
           <View
             style={[
               StyleSheet.absoluteFill,
               {
                 backgroundColor: glassOverlayColor,
-                opacity: effectiveOverlayOpacity,
+                opacity: overlayOpacity,
                 borderWidth: 1,
-                borderColor: effectiveBorderColor,
+                borderColor: borderColorIOS,
                 borderRadius: r,
               },
             ]}
@@ -293,8 +234,8 @@ export const GlassButton = ({
               style={{
                 ...StyleSheet.absoluteFillObject,
                 borderRadius: r,
-                borderTopWidth: isAndroid ? 2 : 4,
-                borderLeftWidth: isAndroid ? 2 : 3,
+                borderTopWidth: 4,
+                borderLeftWidth: 3,
                 borderRightWidth: 1,
                 borderBottomWidth: 1,
                 borderTopColor: insetDark,
@@ -309,8 +250,8 @@ export const GlassButton = ({
                 borderRadius: r,
                 borderTopWidth: 1,
                 borderLeftWidth: 1,
-                borderRightWidth: isAndroid ? 2 : 3,
-                borderBottomWidth: isAndroid ? 2 : 3,
+                borderRightWidth: 3,
+                borderBottomWidth: 3,
                 borderTopColor: 'transparent',
                 borderLeftColor: 'transparent',
                 borderRightColor: insetLight,

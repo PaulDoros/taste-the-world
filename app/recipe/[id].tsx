@@ -170,7 +170,7 @@ const RecipeDetailsScreen = () => {
     };
 
     translateContent();
-  }, [recipe?.idMeal, language]); // Effect dependency simplified to avoid infinite loops if recipe object reference changes but content doesn't.
+  }, [recipe?.idMeal, language, ingredients.length]);
 
   // Track recipe view in history
   useEffect(() => {

@@ -6,15 +6,7 @@ import {
   useColorScheme as useNativeColorScheme,
 } from 'react-native'; // Fallback
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import {
-  YStack,
-  XStack,
-  Heading,
-  Paragraph,
-  Card,
-  useTheme,
-  Image,
-} from 'tamagui';
+import { YStack, XStack, Heading, Paragraph, Card, useTheme } from 'tamagui';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { StreakCounter } from '@/components/gamification/StreakCounter';
 import { HOME_STATS } from '@/constants/HomeConfig';
@@ -23,6 +15,7 @@ import { useLanguage } from '@/context/LanguageContext';
 // Use local helper or context if needed.
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 // Sub-components
 import { WavingHand } from './hero/WavingHand';
@@ -118,7 +111,7 @@ export const HomeHero = React.memo<HomeHeroProps>(
               style={{ alignItems: 'center', width: '100%' }}
             >
               {/* Banner Image - Restored Fixed Dimensions */}
-              <Image
+              <FadeInImage
                 source={require('@/assets/images/taste-the-world-banner.png')}
                 style={{ width: 350, height: 200 }}
                 resizeMode="contain"

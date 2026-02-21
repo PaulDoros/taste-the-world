@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 import { Recipe } from '@/types';
 
@@ -64,7 +65,7 @@ export const RecipeCard = ({ recipe, onPress }: RecipeCardProps) => {
         <GlassCard borderRadius={24} shadowOpacity={0.3} shadowRadius={2}>
           {/* Recipe Image */}
           <View style={{ height: 180, position: 'relative' }}>
-            <Image
+            <FadeInImage
               source={
                 !imageError && recipe.strMealThumb
                   ? { uri: recipe.strMealThumb }

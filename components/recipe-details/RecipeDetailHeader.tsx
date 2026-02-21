@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 interface RecipeDetailHeaderProps {
   recipe: any;
@@ -28,7 +29,7 @@ export const RecipeDetailHeader = ({
   return (
     <View style={{ height: 300, width: '100%', position: 'relative' }}>
       {recipe.imageUrl ? (
-        <Image
+        <FadeInImage
           source={{ uri: recipe.imageUrl }}
           style={{ width: '100%', height: '100%' }}
           resizeMode="cover"

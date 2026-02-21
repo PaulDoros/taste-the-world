@@ -57,7 +57,7 @@ import { BADGES } from '@/constants/Badges';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
 import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 import { cancelAllNotifications } from '@/utils/notifications';
-import { IS_IOS } from '@/constants/platform';
+import { IS_IOS, IS_ANDROID } from '@/constants/platform';
 
 interface SettingsItemProps {
   icon: string;
@@ -98,7 +98,11 @@ const SettingsItem = ({
   };
 
   return (
-    <Animated.View entering={FadeInDown.delay(delay).springify()}>
+    <Animated.View
+      entering={FadeInDown.delay(delay).springify()}
+      needsOffscreenAlphaCompositing={IS_ANDROID}
+      renderToHardwareTextureAndroid={IS_ANDROID}
+    >
       <Animated.View style={animatedStyle}>
         <View style={{ marginBottom: 12 }}>
           <GlassCard borderRadius={16}>
@@ -478,6 +482,8 @@ export default function SettingsScreen() {
           {isGuest || !isAuthenticated ? (
             <Animated.View
               entering={FadeInDown.delay(100).springify()}
+              needsOffscreenAlphaCompositing={IS_ANDROID}
+              renderToHardwareTextureAndroid={IS_ANDROID}
               style={{ marginBottom: 24 }}
             >
               <GlassCard borderRadius={20}>
@@ -522,6 +528,8 @@ export default function SettingsScreen() {
           ) : (
             <Animated.View
               entering={FadeInDown.delay(100).springify()}
+              needsOffscreenAlphaCompositing={IS_ANDROID}
+              renderToHardwareTextureAndroid={IS_ANDROID}
               style={{ marginBottom: 24 }}
             >
               <GlassCard borderRadius={20}>
@@ -647,18 +655,13 @@ export default function SettingsScreen() {
                     <GlassCard
                       intensity={20}
                       borderRadius={16}
-                      backgroundColor={
-                        colorScheme === 'dark' ? '#fbbf24' : '#F59E0B'
-                      }
+                      backgroundColor={`${colors.tint}15`}
                       backgroundOpacity={0.1}
                       style={{
                         marginBottom: 20,
                         padding: 12,
                         borderWidth: 1,
-                        borderColor:
-                          colorScheme === 'dark'
-                            ? 'rgba(251, 191, 36, 0.3)'
-                            : 'rgba(245, 158, 11, 0.2)',
+                        borderColor: `${colors.tint}30`,
                       }}
                     >
                       <XStack alignItems="center" gap="$3">
@@ -667,10 +670,7 @@ export default function SettingsScreen() {
                             width: 40,
                             height: 40,
                             borderRadius: 20,
-                            backgroundColor:
-                              colorScheme === 'dark'
-                                ? 'rgba(251, 191, 36, 0.2)'
-                                : 'rgba(245, 158, 11, 0.2)',
+                            backgroundColor: `${colors.tint}20`,
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
@@ -678,9 +678,7 @@ export default function SettingsScreen() {
                           <FontAwesome5
                             name="crown"
                             size={20}
-                            color={
-                              colorScheme === 'dark' ? '#fbbf24' : '#d97706'
-                            }
+                            color={colors.tint}
                           />
                         </View>
                         <YStack flex={1}>
@@ -728,7 +726,11 @@ export default function SettingsScreen() {
 
           {/* Premium Upgrade Section */}
           {!isPremium && (
-            <Animated.View entering={FadeInDown.delay(150).springify()}>
+            <Animated.View
+              entering={FadeInDown.delay(150).springify()}
+              needsOffscreenAlphaCompositing={IS_ANDROID}
+              renderToHardwareTextureAndroid={IS_ANDROID}
+            >
               <PricingSection
                 selectedSubscription={selectedSubscription}
                 selectedTier={selectedTier}
@@ -747,6 +749,8 @@ export default function SettingsScreen() {
           {/* Account Section */}
           <Animated.View
             entering={FadeInDown.delay(200).springify()}
+            needsOffscreenAlphaCompositing={IS_ANDROID}
+            renderToHardwareTextureAndroid={IS_ANDROID}
             style={{ marginTop: 24 }}
           >
             <Text
@@ -920,7 +924,11 @@ export default function SettingsScreen() {
           </Animated.View>
 
           {/* App Section */}
-          <Animated.View entering={FadeInDown.delay(600).springify()}>
+          <Animated.View
+            entering={FadeInDown.delay(600).springify()}
+            needsOffscreenAlphaCompositing={IS_ANDROID}
+            renderToHardwareTextureAndroid={IS_ANDROID}
+          >
             <Text
               fontSize="$5"
               fontWeight="700"

@@ -32,6 +32,16 @@ export const getRecipeByName = query({
 });
 
 /**
+ * Internal helper to retrieve recipe by object ID
+ */
+export const getRecipeByIdInternal = query({
+  args: { _id: v.id('recipes') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args._id);
+  },
+});
+
+/**
  * Get recipe by ID
  */
 export const getRecipeById = query({
@@ -68,6 +78,7 @@ export const saveRecipes = mutation({
             measure: v.string(),
           })
         ),
+        embedding: v.optional(v.array(v.float64())),
       })
     ),
   },

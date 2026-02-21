@@ -70,11 +70,6 @@ export const PlannerDayItem = ({
               borderRadius: 35,
               borderWidth: isActive ? 0 : 1,
               borderColor: '$borderColor',
-              elevation: isActive ? 4 : 0,
-              shadowColor: colors.tint,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isActive ? 0.3 : 0,
-              shadowRadius: 8,
               marginVertical: 8,
             }}
           >

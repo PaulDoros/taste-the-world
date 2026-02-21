@@ -4,6 +4,7 @@ import { YStack, XStack, Text, Button, Heading, Spinner, Stack } from 'tamagui';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 interface DocumentsCardProps {
   trip: any;
@@ -97,7 +98,7 @@ export const DocumentsCard = ({
               style={{ width: '100%', height: '100%' }}
               contentContainerStyle={{ padding: 0 }}
             >
-              <Image
+              <FadeInImage
                 source={{ uri: trip.ticketUrl }}
                 style={{ width: '100%', height: '100%' }}
                 resizeMode="cover"
@@ -132,7 +133,7 @@ export const DocumentsCard = ({
                 style={{ width: '100%', height: '100%' }}
                 contentContainerStyle={{ padding: 0 }}
               >
-                <Image
+                <FadeInImage
                   source={{ uri: url }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="cover"

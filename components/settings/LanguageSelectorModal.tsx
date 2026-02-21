@@ -66,11 +66,11 @@ export function LanguageSelectorModal({
               key={lang}
               borderRadius={16}
               borderRadiusInside={16}
-              shadowRadius={5}
+              shadowRadius={0}
               backgroundColor={
                 language === lang ? `${colors.tint}20` : undefined
               }
-              intensity={language === lang ? 60 : 30}
+              intensity={language === lang ? 30 : 15}
               style={{ marginBottom: 12 }}
             >
               <Pressable

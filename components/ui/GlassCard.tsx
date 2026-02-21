@@ -5,13 +5,12 @@ import {
   ViewProps,
   StyleProp,
   ViewStyle,
-  LayoutChangeEvent,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/components/useColorScheme';
 import { glassTokens } from '@/theme/colors';
 import { shouldUseGlassBlur } from '@/constants/Performance';
-import { IS_ANDROID, IS_IOS } from '@/constants/platform';
+import { IS_IOS } from '@/constants/platform';
 
 interface GlassCardProps extends ViewProps {
   children: React.ReactNode;
@@ -26,10 +25,8 @@ interface GlassCardProps extends ViewProps {
   backgroundOpacity?: number;
   borderRadiusInside?: number;
 
-  // Android-specific
+  // Android-specific (kept for TS interface compatibility)
   androidFallbackBase?: string;
-
-  // Android Shadow-2 tuning (optional)
   androidShadowDistance?: number;
   androidShadowOffsetY?: number;
   androidShadowOpacity?: number;
@@ -56,11 +53,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const isAndroid = IS_ANDROID;
   const glass = glassTokens[isDark ? 'dark' : 'light'];
 
   const blurIntensity = intensity ?? glass.blurIntensity;
-  const isThin = variant === 'thin';
   const isTransparentSurface = backgroundColor === 'transparent';
 
   // Background/overlay colors
@@ -74,25 +69,14 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     ? 'rgba(255,255,255,0.12)'
     : 'rgba(0,0,0,0.06)';
 
-  const fallbackBase =
-    androidFallbackBase ||
-    (isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)');
-
   const allowIOSBlur = IS_IOS && shouldUseGlassBlur;
-
-  const resolvedAndroidShadowDistance =
-    androidShadowDistance ?? (isThin ? 2 : 3);
-
-  const containerBgColorAndroid = !isTransparentSurface
-    ? fallbackBase
-    : 'transparent';
 
   return (
     <View
       style={[
         {
           borderRadius,
-          backgroundColor: isAndroid ? containerBgColorAndroid : 'transparent',
+          backgroundColor: 'transparent',
           ...(IS_IOS
             ? {
                 shadowColor: shadowColor ?? (isDark ? '#000' : '#0f172a'),
@@ -100,9 +84,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                 shadowOpacity: shadowOpacity ?? glass.shadowOpacity,
                 shadowRadius,
               }
-            : !isTransparentSurface
-              ? { elevation: resolvedAndroidShadowDistance }
-              : null),
+            : null),
         },
         style,
       ]}
@@ -137,7 +119,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
             StyleSheet.absoluteFill,
             {
               borderWidth: isTransparentSurface ? 0 : 1,
-              borderColor: isAndroid ? activeBorderColor : glass.border,
+              borderColor: glass.border,
               borderRadius,
             },
           ]}

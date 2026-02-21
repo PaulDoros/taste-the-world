@@ -4,6 +4,7 @@ import { YStack, XStack, Text } from 'tamagui';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 interface RecipeBookCardProps {
   item: any;
@@ -26,7 +27,7 @@ export const RecipeBookCard = ({
         contentContainerStyle={{ padding: 0, overflow: 'hidden' }}
       >
         {item.imageUrl && (
-          <Image
+          <FadeInImage
             source={{ uri: item.imageUrl }}
             style={{ width: '100%', height: 150 }}
             resizeMode="cover"

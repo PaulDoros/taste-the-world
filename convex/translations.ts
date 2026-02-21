@@ -131,6 +131,11 @@ export const getTranslation = action({
 
         try {
           result = JSON.parse(jsonString);
+          // Safety fallback: If AI didn't return keys properly, just use original
+          if (!result || typeof result !== 'object') {
+            console.error('Translation JSON parse yielded non-object', result);
+            return args.content;
+          }
         } catch (e) {
           console.error('Failed to parse translation JSON', e);
           return args.content; // Fallback

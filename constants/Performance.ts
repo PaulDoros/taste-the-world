@@ -13,7 +13,7 @@ function parseBooleanFlag(
 }
 
 // Global performance switch:
-// true  -> favor smoothness on Android (disable costly blur paths)
+// true  -> favor smoothness on Android (disable costly blur paths)r
 // false -> allow full visual effects on Android
 const androidLowPerfEnabled = parseBooleanFlag(
   process.env.EXPO_PUBLIC_ANDROID_LOW_PERF,

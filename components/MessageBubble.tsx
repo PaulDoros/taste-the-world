@@ -301,6 +301,7 @@ export const MessageBubble = React.memo(
                   backgroundColor="rgba(33, 150, 243, 0.1)"
                   borderRadius={20}
                   intensity={50}
+                  androidShadowDistance={0}
                   style={{
                     padding: 12,
                     paddingBottom: 12,
@@ -365,6 +366,7 @@ export const MessageBubble = React.memo(
               <View style={{ alignSelf: 'flex-start', position: 'relative' }}>
                 <GlassCard
                   borderRadius={20}
+                  androidShadowDistance={0}
                   style={{
                     padding: 12,
                   }}

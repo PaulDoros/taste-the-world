@@ -31,7 +31,7 @@ export function AppBannerAd() {
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,
         }}
-        onAdFailedToLoad={(error) => {
+        onAdFailedToLoad={(error: any) => {
           console.error('Ad failed to load: ', error);
         }}
       />

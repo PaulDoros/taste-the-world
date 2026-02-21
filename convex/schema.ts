@@ -213,11 +213,13 @@ export default defineSchema({
     ),
     // Raw fields for full compatibility if needed
     raw: v.optional(v.any()),
+    embedding: v.optional(v.array(v.float64())),
     createdAt: v.number(),
   })
     .index('by_idMeal', ['idMeal'])
     .index('by_area', ['strArea'])
-    .index('by_name', ['strMeal']),
+    .index('by_name', ['strMeal'])
+    .vectorIndex('by_embedding', { vectorField: 'embedding', dimensions: 768 }),
 
   /**
    * Chats table

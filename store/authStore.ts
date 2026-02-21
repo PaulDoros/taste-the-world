@@ -11,7 +11,7 @@ export interface User {
   name?: string;
   image?: string;
   tier: 'guest' | 'free' | 'personal' | 'pro';
-  subscriptionType: 'free' | 'monthly' | 'yearly';
+  subscriptionType: 'free' | 'weekly' | 'monthly' | 'yearly';
   subscriptionStartDate?: number;
   subscriptionEndDate?: number;
   createdAt: number;

@@ -13,6 +13,7 @@ import {
   getTokens,
 } from 'tamagui';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { FadeInImage } from '@/components/ui/FadeInImage';
 
 import { Country } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
@@ -71,9 +72,9 @@ export const CountryCard = ({
       style={{ marginBottom: 16 }}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
-        <GlassCard borderRadius={24} shadowOpacity={0.3} shadowRadius={3}>
+        <GlassCard borderRadius={24} shadowOpacity={0} shadowRadius={0}>
           <View height={200}>
-            <Image
+            <FadeInImage
               source={{ uri: country.flags.png }}
               style={{
                 width: '100%',

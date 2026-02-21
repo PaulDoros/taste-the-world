@@ -13,6 +13,7 @@ import { useTierLimit } from '@/hooks/useTierLimit';
 import { PremiumLockModal } from '@/components/PremiumLockModal';
 import { XPProgress } from '@/components/gamification/XPProgress';
 import { AmbientBackground } from '@/components/ui/AmbientBackground';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { useState } from 'react';
 import { isAndroidAnimationsDisabled } from '@/constants/Performance';
 
@@ -211,84 +212,81 @@ export default function MoreScreen() {
                 handleNavigate(item.route, item.locked, item.title)
               }
               style={({ pressed }) => ({
-                backgroundColor: colors.card,
-                borderRadius: 16,
-                padding: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-                opacity: pressed ? 0.7 : item.locked ? 0.8 : 1, // Slight dim for locked items
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-                elevation: 2,
+                opacity: pressed ? 0.7 : item.locked ? 0.8 : 1,
               })}
             >
-              {/* Icon */}
-              <View
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 16,
-                  backgroundColor: `${item.color}15`,
+              <GlassCard
+                shadowRadius={2}
+                contentContainerStyle={{
+                  padding: 16,
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: 16,
                 }}
               >
-                <FontAwesome5
-                  name={item.icon as any}
-                  size={24}
-                  color={item.color}
-                />
-                {item.locked && (
-                  <View
+                {/* Icon */}
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 16,
+                    backgroundColor: `${item.color}15`,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome5
+                    name={item.icon as any}
+                    size={24}
+                    color={item.color}
+                  />
+                  {item.locked && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: -4,
+                        right: -4,
+                        backgroundColor: colors.card,
+                        borderRadius: 10,
+                        padding: 2,
+                      }}
+                    >
+                      <FontAwesome5 name="lock" size={12} color={colors.text} />
+                    </View>
+                  )}
+                </View>
+
+                {/* Text Content */}
+                <View style={{ flex: 1 }}>
+                  <Text
                     style={{
-                      position: 'absolute',
-                      bottom: -4,
-                      right: -4,
-                      backgroundColor: colors.card,
-                      borderRadius: 10,
-                      padding: 2,
+                      color: colors.text,
+                      fontSize: 17,
+                      fontWeight: '600',
+                      marginBottom: 2,
                     }}
                   >
-                    <FontAwesome5 name="lock" size={12} color={colors.text} />
-                  </View>
-                )}
-              </View>
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 13,
+                      opacity: 0.6,
+                    }}
+                  >
+                    {item.description}
+                  </Text>
+                </View>
 
-              {/* Text Content */}
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: 17,
-                    fontWeight: '600',
-                    marginBottom: 2,
-                  }}
-                >
-                  {item.title}
-                </Text>
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: 13,
-                    opacity: 0.6,
-                  }}
-                >
-                  {item.description}
-                </Text>
-              </View>
-
-              {/* Chevron or Lock */}
-              <FontAwesome5
-                name={item.locked ? 'lock' : 'chevron-right'}
-                size={16}
-                color={colors.tabIconDefault}
-                opacity={item.locked ? 0.5 : 1}
-              />
+                {/* Chevron or Lock */}
+                <FontAwesome5
+                  name={item.locked ? 'lock' : 'chevron-right'}
+                  size={16}
+                  color={colors.tabIconDefault}
+                  opacity={item.locked ? 0.5 : 1}
+                />
+              </GlassCard>
             </Pressable>
           ))}
         </View>

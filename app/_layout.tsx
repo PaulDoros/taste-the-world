@@ -7,7 +7,7 @@ import {
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { enableFreeze, enableScreens } from 'react-native-screens';
 import 'react-native-reanimated';

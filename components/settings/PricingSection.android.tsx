@@ -23,6 +23,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { usePremium } from '@/hooks/usePremium';
 import { PurchasesPackage } from 'react-native-purchases';
+import { isAndroidLowPerf } from '@/constants/Performance';
 import { useIsFocused } from '@react-navigation/native';
 
 interface PricingSectionProps {
@@ -52,7 +53,7 @@ const AnimatedPricingCard = ({
 
   useEffect(() => {
     progress.value = withTiming(isSelected ? 1 : 0, {
-      duration: 300,
+      duration: 220,
     });
   }, [isSelected]);
 
@@ -68,7 +69,7 @@ const AnimatedPricingCard = ({
 
   const animatedBorderStyle = useAnimatedStyle(() => {
     return {
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: interpolateColor(
         progress.value,
         [0, 1],
@@ -83,7 +84,6 @@ const AnimatedPricingCard = ({
       style={[{ flex: 1 }, style]}
       contentContainerStyle={{ flex: 1 }}
       backgroundColor="transparent"
-      intensity={isSelected ? 80 : 40}
       borderRadius={16}
       borderRadiusInside={16}
     >
@@ -121,6 +121,12 @@ export const PricingSection = ({
   const colors = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const isFocused = useIsFocused();
+  const isPerformanceMode = isAndroidLowPerf;
+  const androidShadowBase = colorScheme === 'dark' ? '#000000' : '#0f172a';
+  const androidBorderSoft =
+    colorScheme === 'dark'
+      ? 'rgba(148, 163, 184, 0.2)'
+      : 'rgba(15, 23, 42, 0.08)';
   const [showAllBenefits, setShowAllBenefits] = useState(false);
   const { offerings } = usePremium();
 
@@ -192,7 +198,14 @@ export const PricingSection = ({
 
   const PRO_COLOR = '#6366f1';
   const ACTIVE_COLOR = isPro ? PRO_COLOR : colors.tint;
-  const INACTIVE_COLOR = `${colors.text}10`;
+  const INACTIVE_COLOR =
+    colorScheme === 'dark'
+      ? isAndroidLowPerf
+        ? 'rgba(30, 41, 59, 0.55)'
+        : 'rgba(30, 41, 59, 0.45)'
+      : isAndroidLowPerf
+        ? 'rgba(255, 255, 255, 0.6)'
+        : 'rgba(255, 255, 255, 0.5)';
 
   const pulseScale = useSharedValue(1);
   const badgeScale = useSharedValue(1);
@@ -202,11 +215,11 @@ export const PricingSection = ({
 
   useEffect(() => {
     tabPosition.value = withSpring(selectedTier === 'pro' ? 1 : 0, {
-      damping: 24,
-      stiffness: 180,
+      damping: isPerformanceMode ? 36 : 24,
+      stiffness: isPerformanceMode ? 240 : 180,
       mass: 1,
     });
-  }, [selectedTier]);
+  }, [selectedTier, isPerformanceMode]);
 
   const animatedTabStyle = useAnimatedStyle(() => {
     const translateX = tabWidth * tabPosition.value;
@@ -217,7 +230,7 @@ export const PricingSection = ({
   });
 
   useEffect(() => {
-    if (hasInteracted || !isFocused) {
+    if (hasInteracted || isPerformanceMode || !isFocused) {
       return;
     }
 
@@ -226,10 +239,10 @@ export const PricingSection = ({
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [hasInteracted, selectedTier, onSelectTier, isFocused]);
+  }, [hasInteracted, selectedTier, onSelectTier, isPerformanceMode, isFocused]);
 
   useEffect(() => {
-    if (!isFocused) {
+    if (isPerformanceMode || !isFocused) {
       badgeScale.value = 1;
       badgeRotate.value = 0;
       return;
@@ -248,7 +261,7 @@ export const PricingSection = ({
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isFocused]);
+  }, [isPerformanceMode, isFocused]);
 
   const animatedBadgeStyle = useAnimatedStyle(() => ({
     transform: [
@@ -258,7 +271,7 @@ export const PricingSection = ({
   }));
 
   useEffect(() => {
-    if (!isFocused) {
+    if (isPerformanceMode || !isFocused) {
       pulseScale.value = 1;
       cancelAnimation(pulseScale);
       return;
@@ -277,7 +290,7 @@ export const PricingSection = ({
       cancelAnimation(pulseScale);
       pulseScale.value = 1;
     };
-  }, [isFocused]);
+  }, [isPerformanceMode, isFocused]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
@@ -291,7 +304,9 @@ export const PricingSection = ({
 
   const stopAutoToggle = () => {
     if (!hasInteracted) {
-      haptics.selection();
+      if (!isPerformanceMode) {
+        haptics.selection();
+      }
       setHasInteracted(true);
     }
   };
@@ -311,7 +326,7 @@ export const PricingSection = ({
           }}
         />
 
-        <YStack padding="$5" gap="$4" backgroundColor="transparent">
+        <YStack padding="$5" gap="$4" backgroundColor="$backgroundTransparent">
           <XStack alignItems="center" gap="$3">
             <View
               style={{
@@ -343,7 +358,13 @@ export const PricingSection = ({
           <View
             onLayout={handleLayout}
             style={{
-              backgroundColor: colorScheme === 'dark' ? '#1e293b' : '#f1f5f9',
+              backgroundColor: isAndroidLowPerf
+                ? colorScheme === 'dark'
+                  ? 'rgba(30, 41, 59, 0.6)'
+                  : 'rgba(248, 250, 252, 0.82)'
+                : colorScheme === 'dark'
+                  ? '#1e293b'
+                  : '#f1f5f9',
               borderRadius: 12,
               padding: 4,
               flexDirection: 'row',
@@ -361,8 +382,8 @@ export const PricingSection = ({
                     height: 40,
                     borderRadius: 10,
                     backgroundColor: isPro ? PRO_COLOR : 'white',
-                    borderWidth: 0,
-                    borderColor: 'transparent',
+                    borderWidth: 1,
+                    borderColor: androidBorderSoft,
                   },
                   animatedTabStyle,
                 ]}

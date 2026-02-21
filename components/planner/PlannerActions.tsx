@@ -19,7 +19,7 @@ export const PlannerActions = ({
   t,
 }: PlannerActionsProps) => {
   return (
-    <XStack gap="$3" marginTop="$6" marginBottom="$4">
+    <XStack gap="$3" marginTop="$6" marginBottom="$10">
       <Button
         flex={1}
         size="$4"
