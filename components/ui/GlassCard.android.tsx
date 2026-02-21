@@ -38,12 +38,13 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   borderRadiusInside = 15,
   androidFallbackBase,
   androidShadowDistance,
+  shadowRadius, // Received from props
   ...props
 }) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  // Apply explicit overrides, but default to the rock-solid more.tsx card style
+  // Apply explicit overrides
   const isTransparentSurface = backgroundColor === 'transparent';
   const hasTranslucency =
     isTransparentSurface ||
@@ -56,9 +57,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   const finalElevation =
     androidShadowDistance !== undefined
       ? androidShadowDistance
-      : hasTranslucency
+      : shadowRadius === 0
         ? 0
-        : 2;
+        : variant === 'thin' || hasTranslucency
+          ? 0
+          : 2;
 
   return (
     <View

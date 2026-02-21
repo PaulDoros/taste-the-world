@@ -168,6 +168,7 @@ export default function AddTripScreen() {
                 <GlassCard
                   variant="thin"
                   borderRadius={12}
+                  shadowRadius={0}
                   contentContainerStyle={{ paddingHorizontal: 12 }}
                 >
                   <Input
@@ -191,6 +192,7 @@ export default function AddTripScreen() {
                 <GlassCard
                   variant="thin"
                   borderRadius={12}
+                  shadowRadius={0}
                   contentContainerStyle={{
                     paddingHorizontal: 4,
                     flexDirection: 'row',

@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { TripInfoCard } from '@/components/wallet/TripInfoCard';
 import { ChecklistCard } from '@/components/wallet/ChecklistCard';
 import { DocumentsCard } from '@/components/wallet/DocumentsCard';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -126,7 +127,12 @@ export default function TripDetailScreen() {
           {trip.notes && (
             <YStack gap="$3">
               <Heading size="$5">Itinerary</Heading>
-              <Card padded bordered>
+              <GlassCard
+                variant="thin"
+                borderRadius={16}
+                shadowRadius={0}
+                contentContainerStyle={{ padding: 16 }}
+              >
                 <Markdown
                   style={{
                     body: { color: colors.text, fontSize: 16, lineHeight: 24 },
@@ -223,7 +229,7 @@ export default function TripDetailScreen() {
                 >
                   {trip.notes}
                 </Markdown>
-              </Card>
+              </GlassCard>
             </YStack>
           )}
         </YStack>

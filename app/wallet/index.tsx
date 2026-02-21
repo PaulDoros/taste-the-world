@@ -182,10 +182,20 @@ export default function WalletScreen() {
                     backgroundColor="$background"
                     backgroundOpacity={0.5}
                   >
-                    <Text color="$color10" fontSize="$2" fontWeight="600">
+                    <Text
+                      padding={10}
+                      color="$color10"
+                      fontSize="$2"
+                      fontWeight="600"
+                    >
                       ITINERARY PREVIEW
                     </Text>
-                    <Text color="$color10" fontSize="$3" numberOfLines={2}>
+                    <Text
+                      padding={10}
+                      color="$color10"
+                      fontSize="$3"
+                      numberOfLines={2}
+                    >
                       {item.notes}
                     </Text>
                   </GlassCard>

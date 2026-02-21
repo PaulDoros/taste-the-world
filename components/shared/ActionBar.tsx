@@ -34,8 +34,8 @@ export function ActionBar({ actions, columns }: ActionBarProps) {
         };
       case 'secondary':
         return {
-          backgroundColor: theme.color?.get(),
-          textColor: theme.color?.get(), // Text matches theme color
+          backgroundColor: theme.tint?.get(),
+          textColor: theme.tint?.get(),
           backgroundOpacity: 0.1,
         };
       case 'primary':

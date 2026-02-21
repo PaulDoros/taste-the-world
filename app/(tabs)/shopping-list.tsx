@@ -69,6 +69,7 @@ export default function ShoppingListScreen() {
   const [filter, setFilter] = useState<'all' | 'checked' | 'unchecked'>('all');
   const [showConversions, setShowConversions] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
+  const [showActionBar, setShowActionBar] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemMeasure, setNewItemMeasure] = useState('');
 
@@ -281,35 +282,66 @@ export default function ShoppingListScreen() {
             {/* Actions */}
             {(items?.length || 0) > 0 && (
               <YStack width="100%">
-                <ActionBar
-                  columns={2}
-                  actions={[
-                    {
-                      label: t('shopping_list_convert'),
-                      icon: 'exchange-alt',
-                      onPress: () => setShowConversions(!showConversions),
-                      variant: showConversions ? 'primary' : 'secondary',
-                    },
-                    {
-                      label: t('shopping_list_move_all'),
-                      icon: 'box',
-                      onPress: handleMoveAllCompletedToPantry,
-                      variant: 'secondary',
-                    },
-                    {
-                      label: t('shopping_list_clear_done'),
-                      icon: 'check-circle',
-                      onPress: handleClearCompleted,
-                      variant: 'secondary',
-                    },
-                    {
-                      label: t('shopping_list_clear_all'),
-                      icon: 'trash-alt',
-                      onPress: handleClearAll,
-                      variant: 'danger',
-                    },
-                  ]}
-                />
+                <Pressable
+                  onPress={() => {
+                    haptics.light();
+                    setShowActionBar(!showActionBar);
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <XStack
+                    alignItems="center"
+                    justifyContent="center"
+                    gap="$2"
+                    padding="$2"
+                    opacity={0.6}
+                  >
+                    <FontAwesome5
+                      name={showActionBar ? 'chevron-up' : 'chevron-down'}
+                      size={12}
+                      color={colors.text}
+                    />
+                    <Text fontSize="$2" fontWeight="600" color={colors.text}>
+                      {showActionBar
+                        ? t('common_hide_actions' as any)
+                        : t('common_show_actions' as any)}
+                    </Text>
+                  </XStack>
+                </Pressable>
+
+                {showActionBar && (
+                  <Animated.View entering={FadeInDown.springify()}>
+                    <ActionBar
+                      columns={2}
+                      actions={[
+                        {
+                          label: t('shopping_list_convert'),
+                          icon: 'exchange-alt',
+                          onPress: () => setShowConversions(!showConversions),
+                          variant: showConversions ? 'primary' : 'secondary',
+                        },
+                        {
+                          label: t('shopping_list_move_all'),
+                          icon: 'box',
+                          onPress: handleMoveAllCompletedToPantry,
+                          variant: 'secondary',
+                        },
+                        {
+                          label: t('shopping_list_clear_done'),
+                          icon: 'check-circle',
+                          onPress: handleClearCompleted,
+                          variant: 'secondary',
+                        },
+                        {
+                          label: t('shopping_list_clear_all'),
+                          icon: 'trash-alt',
+                          onPress: handleClearAll,
+                          variant: 'danger',
+                        },
+                      ]}
+                    />
+                  </Animated.View>
+                )}
               </YStack>
             )}
           </YStack>
@@ -317,73 +349,100 @@ export default function ShoppingListScreen() {
 
         {/* Add Custom Item Section */}
         <YStack paddingHorizontal="$4" marginBottom="$4">
-          {!showAddInput ? (
-            <GlassButton
-              shadowOpacity={Platform.OS === 'ios' ? 0.5 : 0}
-              shadowRadius={Platform.OS === 'ios' ? 5 : 0}
-              size="medium"
-              backgroundColor={colors.tint}
-              icon="plus"
-              label={t('shopping_list_custom_item')}
-              textColor="white"
+          <AnimatedYStack
+            entering={FadeIn}
+            borderRadius="$6"
+            padding="$4"
+            backgroundColor="$card"
+            borderWidth={1}
+            borderColor="$borderColor"
+            gap="$3"
+          >
+            <Pressable
               onPress={() => {
                 haptics.light();
-                setShowAddInput(true);
+                setShowAddInput(!showAddInput);
               }}
-            />
-          ) : (
-            <AnimatedYStack
-              entering={FadeIn}
-              borderRadius="$6"
-              padding="$4"
-              backgroundColor="$card"
-              borderWidth={1}
-              borderColor="$borderColor"
             >
-              <Input
-                value={newItemName}
-                onChangeText={setNewItemName}
-                placeholder={t('pantry_placeholder_name')}
-                autoFocus
-                size="$4"
-                marginBottom="$3"
-                backgroundColor="$background"
-              />
-              <Input
-                value={newItemMeasure}
-                onChangeText={setNewItemMeasure}
-                placeholder={t('pantry_placeholder_amount')}
-                size="$4"
-                marginBottom="$3"
-                backgroundColor="$background"
-                onSubmitEditing={handleAddCustomItem}
-              />
-              <XStack gap="$3">
-                <GlassButton
-                  shadowRadius={2}
-                  size="small"
-                  label={t('shopping_list_cancel')}
-                  onPress={() => {
-                    haptics.light();
-                    setShowAddInput(false);
-                    setNewItemName('');
-                    setNewItemMeasure('');
-                  }}
-                  backgroundColor={colors.background}
-                  backgroundOpacity={0.5}
-                  textColor={colors.text}
-                />
-                <GlassButton
-                  shadowRadius={2}
-                  size="small"
-                  label={t('shopping_list_add')}
-                  onPress={handleAddCustomItem}
-                  backgroundColor={colors.tint}
-                  textColor="white"
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack gap="$3" alignItems="center">
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: `${colors.tint}20`,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <FontAwesome5
+                      name={showAddInput ? 'minus' : 'plus'}
+                      size={14}
+                      color={colors.tint}
+                    />
+                  </View>
+                  <Heading size="$5" fontWeight="700">
+                    {t('shopping_list_custom_item')}
+                  </Heading>
+                </XStack>
+                <FontAwesome5
+                  name={showAddInput ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={colors.text}
+                  style={{ opacity: 0.3 }}
                 />
               </XStack>
-            </AnimatedYStack>
-          )}
+            </Pressable>
+
+            {showAddInput && (
+              <Animated.View entering={FadeInDown.springify().damping(20)}>
+                <YStack marginTop="$2">
+                  <Input
+                    value={newItemName}
+                    onChangeText={setNewItemName}
+                    placeholder={t('pantry_placeholder_name')}
+                    size="$4"
+                    marginBottom="$3"
+                    backgroundColor="$background"
+                  />
+                  <Input
+                    value={newItemMeasure}
+                    onChangeText={setNewItemMeasure}
+                    placeholder={t('pantry_placeholder_amount')}
+                    size="$4"
+                    marginBottom="$3"
+                    backgroundColor="$background"
+                    onSubmitEditing={handleAddCustomItem}
+                  />
+                  <XStack gap="$3">
+                    <GlassButton
+                      shadowRadius={2}
+                      size="small"
+                      label={t('shopping_list_cancel')}
+                      onPress={() => {
+                        haptics.light();
+                        setShowAddInput(false);
+                        setNewItemName('');
+                        setNewItemMeasure('');
+                      }}
+                      backgroundColor={colors.background}
+                      backgroundOpacity={0.5}
+                      textColor={colors.text}
+                    />
+                    <GlassButton
+                      shadowRadius={2}
+                      size="small"
+                      label={t('shopping_list_add')}
+                      onPress={handleAddCustomItem}
+                      backgroundColor={colors.tint}
+                      textColor="white"
+                    />
+                  </XStack>
+                </YStack>
+              </Animated.View>
+            )}
+          </AnimatedYStack>
         </YStack>
 
         {/* Filter Tabs */}
